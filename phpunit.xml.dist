@@ -1,10 +1,7 @@
 <phpunit
-	bootstrap="tests/phpunit/bootstrap.php"
+	bootstrap="tests/phpunit/includes/bootstrap.php"
 	backupGlobals="false"
 	colors="true"
-	convertErrorsToExceptions="true"
-	convertNoticesToExceptions="true"
-	convertWarningsToExceptions="true"
 	>
 	<testsuites>
 		<testsuite>

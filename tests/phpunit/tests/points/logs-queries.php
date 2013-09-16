@@ -268,7 +268,7 @@ class WordPoints_Points_Log_Query_Test extends WordPoints_Points_UnitTestCase {
 	/**
 	 * Test 'key' and 'value*' meta query args.
 	 *
-	 * @since $ver$
+	 * @since 1.0.0
 	 */
 	public function test_key_and_value_meta_query_args() {
 

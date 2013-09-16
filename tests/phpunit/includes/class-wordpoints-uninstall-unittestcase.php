@@ -58,7 +58,7 @@ abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 	/**
 	 * Asserts that no usermeta with a given prefix exists.
 	 *
-	 * @since $ver$
+	 * @since 1.0.0
 	 *
 	 * @param string $prefix  The prefix to check for.
 	 * @param string $message An optional message.
@@ -75,7 +75,7 @@ abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 	/**
 	 * Asserts that no postmeta with a given prefix exists.
 	 *
-	 * @since $ver$
+	 * @since 1.0.0
 	 *
 	 * @param string $prefix  The prefix to check for.
 	 * @param string $message An optional message.
@@ -92,7 +92,7 @@ abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 	/**
 	 * Asserts that no commentmeta with a given prefix exist.
 	 *
-	 * @since $ver$
+	 * @since 1.0.0
 	 *
 	 * @param string $prefix  The prefix to check for.
 	 * @param string $message An optional message.
@@ -171,14 +171,14 @@ class WordPoints_PHPUnit_Constraint_IsTableExistant extends PHPUnit_Framework_Co
 /**
  * Database table column has no rows with prefix constraint matcher.
  *
- * @since $ver$
+ * @since 1.0.0
  */
 class WordPoints_PHPUnit_Constraint_NoRowsWithPrefix extends PHPUnit_Framework_Constraint {
 
 	/**
 	 * The table to check in.
 	 *
-	 * @since $ver$
+	 * @since 1.0.0
 	 *
 	 * @type string $table
 	 */
@@ -187,7 +187,7 @@ class WordPoints_PHPUnit_Constraint_NoRowsWithPrefix extends PHPUnit_Framework_C
 	/**
 	 * The column to check in.
 	 *
-	 * @since $ver$
+	 * @since 1.0.0
 	 *
 	 * @type string $column
 	 */
@@ -196,7 +196,7 @@ class WordPoints_PHPUnit_Constraint_NoRowsWithPrefix extends PHPUnit_Framework_C
 	/**
 	 * The prefix that should not be present.
 	 *
-	 * @since $ver$
+	 * @since 1.0.0
 	 *
 	 * @type string $prefix
 	 */
@@ -205,7 +205,7 @@ class WordPoints_PHPUnit_Constraint_NoRowsWithPrefix extends PHPUnit_Framework_C
 	/**
 	 * The rows in the table that have the prefix.
 	 *
-	 * @since $ver$
+	 * @since 1.0.0
 	 *
 	 * @type array $prefixed_rows
 	 */
@@ -214,7 +214,7 @@ class WordPoints_PHPUnit_Constraint_NoRowsWithPrefix extends PHPUnit_Framework_C
 	/**
 	 * Construct the class.
 	 *
-	 * @since $ver$
+	 * @since 1.0.0
 	 *
 	 * @param string $table
 	 * @param string $column
@@ -230,7 +230,7 @@ class WordPoints_PHPUnit_Constraint_NoRowsWithPrefix extends PHPUnit_Framework_C
 	/**
 	 * Checks that no rows in the specified table column have the $prefix.
 	 *
-	 * @since $ver$
+	 * @since 1.0.0
 	 *
 	 * @param string $prefix The prefix that should not be present.
 	 *
@@ -270,7 +270,7 @@ class WordPoints_PHPUnit_Constraint_NoRowsWithPrefix extends PHPUnit_Framework_C
 	/**
 	 * Returns a string representation of the constraint.
 	 *
-	 * @since $ver$
+	 * @since 1.0.0
 	 *
 	 * @return string
 	 */
