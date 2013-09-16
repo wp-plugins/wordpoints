@@ -453,7 +453,7 @@ final class WordPoints_Modules {
 				 *
 				 * @since 1.0.0
 				 */
-				do_action( "wordpoints_modules_deactivate-{$slug}" );
+				do_action( "wordpoints_module_deactivate-{$slug}" );
 
 			} else {
 
