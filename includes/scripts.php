@@ -63,7 +63,7 @@ add_action( 'admin_enqueue_scripts', 'wordpoints_register_scripts', 5 );
  * functions directly, for forward compatibility.
  *
  * @since 1.0.0
- * @since $ver$ 'oLanguage' datatables argument may now be overridden.
+ * @since 1.0.1 'oLanguage' datatables argument may now be overridden.
  *
  * @param string $for  The selector for the the HTML elements to apply the JS to.
  * @param array  $args Arguments for the datatables constructor.

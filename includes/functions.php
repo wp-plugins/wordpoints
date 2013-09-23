@@ -510,7 +510,7 @@ function wordpoints_get_excluded_users( $context ) {
  * The error is only displayed to those with the 'manage_options' capability, or if
  * the shortcode is being displayed in a post that the current user can edit.
  *
- * @since $ver$
+ * @since 1.0.1
  *
  * @param string $message The error message.
  */
