@@ -84,8 +84,7 @@ function wordpoints_activate() {
 		 *
 		 * @since 1.0.0
 		 */
-		include_once WORDPOINTS_DIR . 'install.php';
-
+		require WORDPOINTS_DIR . 'install.php';
 	}
 }
 register_activation_hook( __FILE__, 'wordpoints_activate' );

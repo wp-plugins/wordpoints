@@ -11,6 +11,7 @@
 	<groups>
 		<exclude>
 			<group>uninstall</group>
+			<group>ui</group>
 		</exclude>
 	</groups>
 </phpunit>

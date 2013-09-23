@@ -76,7 +76,7 @@ function wordpoints_points_component_activate() {
 		 *
 		 * @since 1.0.0
 		 */
-		require_once dirname( __FILE__ ) . '/install.php';
+		require dirname( __FILE__ ) . '/install.php';
 	}
 }
 add_action( 'wordpoints_component_activate-points', 'wordpoints_points_component_activate' );
