@@ -20,7 +20,7 @@ if ( ! defined( 'WORDPOINTS_DIR' ) ) {
 
 if ( ! defined( 'WORDPOINTS_VERSION' ) ) {
 
-	define( 'WORDPOINTS_VERSION', '1.0.0' );
+	define( 'WORDPOINTS_VERSION', '1.0.1' );
 }
 
 // Dependencies for the uninstall routine.
