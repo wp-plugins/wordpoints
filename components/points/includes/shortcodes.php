@@ -34,17 +34,9 @@ function wordpoints_points_top_shortcode( $atts ) {
 		,'wordpoints_points_top'
 	);
 
-	// Initialize error message to return if there is an error.
-	$error_message = '';
-
 	if ( ! wordpoints_posint( $atts['users'] ) ) {
 
-		if ( current_user_can( 'manage_options' ) ) {
-
-			$error_message = '<p class="wordpoints-shortcode-error">' . __( 'Shortcode Error: the "users" attribute of the <code>[wordpoints_points_top]</code> shortcode must be a positive integer. Example: <code>[wordpoints_points_top <b>users="10"</b> type="points"]</code>.', 'wordpoints' ) . '</p>';
-		}
-
-		return $error_message;
+		return wordpoints_shortcode_error( __( 'The "users" attribute of the <code>[wordpoints_points_top]</code> shortcode must be a positive integer. Example: <code>[wordpoints_points_top <b>users="10"</b> type="points"]</code>.', 'wordpoints' ) );
 
 	} elseif ( ! wordpoints_is_points_type( $atts['points_type'] ) ) {
 
@@ -52,12 +44,7 @@ function wordpoints_points_top_shortcode( $atts ) {
 
 		if ( ! $atts['points_type'] ) {
 
-			if ( current_user_can( 'manage_options' ) ) {
-
-				$error_message = '<p class="wordpoints-shortcode-error">' . __( 'Shortcode Error: the "points_type" attribute of the <code>[wordpoints_points_top]</code> shortcode must be the slug of a points type. Example: <code>[wordpoints_points_top points_type="points"]</code>.', 'wordpoints' ) . '</p>';
-			}
-
-			return $error_message;
+			return wordpoints_shortcode_error( __( 'The "points_type" attribute of the <code>[wordpoints_points_top]</code> shortcode must be the slug of a points type. Example: <code>[wordpoints_points_top points_type="points"]</code>.', 'wordpoints' ) );
 		}
 	}
 
@@ -118,31 +105,18 @@ function wordpoints_points_logs_shortcode( $atts ) {
 		,'wordpoints_points_logs'
 	);
 
-	// Initialize error message in case there's an error.
-	$error_message = '';
-
 	if ( ! wordpoints_is_points_type( $atts['points_type'] ) ) {
 
 		$atts['points_type'] = wordpoints_get_default_points_type();
 
 		if ( ! $atts['points_type'] ) {
 
-			if ( current_user_can( 'manage_options' ) ) {
-
-				$error_message = '<p class="wordpoints-shortcode-error">' . __( 'Shortcode Error: the "points_type" attribute of the <code>[wordpoints_points_logs]</code> shortcode must be the slug of a points type. Example: <code>[wordpoints_points_logs points_type="points"]</code>.', 'wordpoints' ) . '</p>';
-			}
-
-			return $error_message;
+			return wordpoints_shortcode_error( __( 'The "points_type" attribute of the <code>[wordpoints_points_logs]</code> shortcode must be the slug of a points type. Example: <code>[wordpoints_points_logs points_type="points"]</code>.', 'wordpoints' ) );
 		}
 
 	} elseif ( ! wordpoints_is_points_logs_query( $atts['query'] ) ) {
 
-		if ( current_user_can( 'manage_options' ) ) {
-
-			$error_message = '<p class="wordpoints-shortcode-error">' . __( 'Shortcode Error: the "query" attribute of the <code>[wordpoints_points_logs]</code> shortcode must be the slug of a registered points log query. Example: <code>[wordpoints_points_logs <b>query="default"</b> points_type="points"]</code>.', 'wordpoints' ) . '</p>';
-		}
-
-		return $error_message;
+		return wordpoints_shortcode_error( __( 'The "query" attribute of the <code>[wordpoints_points_logs]</code> shortcode must be the slug of a registered points log query. Example: <code>[wordpoints_points_logs <b>query="default"</b> points_type="points"]</code>.', 'wordpoints' ) );
 	}
 
 	if ( false === wordpoints_int( $atts['datatables'] ) )

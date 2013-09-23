@@ -365,6 +365,8 @@ final class WordPoints_Modules {
 	 */
 	public function is_active( $slug ) {
 
+		$this->_reset_active();
+
 		$is_active = isset( $this->active[ $slug ] );
 
 		/**
