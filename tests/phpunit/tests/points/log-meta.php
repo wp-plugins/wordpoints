@@ -5,6 +5,8 @@
  *
  * @package WordPoints\Tests\Points
  * @since 1.0.0
+ *
+ * @group points
  */
 
 class WordPoints_Points_Logs_Meta_Test extends WordPoints_Points_UnitTestCase {

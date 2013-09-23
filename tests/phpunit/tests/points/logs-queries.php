@@ -5,6 +5,8 @@
  *
  * @package WordPoints\Points
  * @since 1.0.0
+ *
+ * @group points
  */
 
 class WordPoints_Points_Log_Query_Test extends WordPoints_Points_UnitTestCase {

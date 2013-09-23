@@ -5,6 +5,8 @@
  *
  * @package WordPoints\Tests\Points\Hooks
  * @since 1.0.0
+ *
+ * @group points
  */
 
 /**
@@ -21,7 +23,7 @@ class WordPoints_Included_Points_Hooks_Test extends WordPoints_Points_UnitTestCa
 	 */
 	function test_registration_points_hook() {
 
-		$this->new_points_hook_instance( 'wordpoints_registration_points_hook', array( 'points' => 10 ) );
+		wordpointstests_add_points_hook( 'wordpoints_registration_points_hook', array( 'points' => 10 ) );
 
 		$user_id = $this->factory->user->create();
 
@@ -35,7 +37,7 @@ class WordPoints_Included_Points_Hooks_Test extends WordPoints_Points_UnitTestCa
 	 */
 	function test_post_points_hook() {
 
-		$this->new_points_hook_instance( 'wordpoints_post_points_hook', array( 'publish' => 20, 'trash' => 20, 'post_type' => 'ALL' ) );
+		wordpointstests_add_points_hook( 'wordpoints_post_points_hook', array( 'publish' => 20, 'trash' => 20, 'post_type' => 'ALL' ) );
 
 		$user_id = $this->factory->user->create();
 		$post_id = $this->factory->post->create( array( 'post_author' => $user_id ) );
@@ -54,7 +56,7 @@ class WordPoints_Included_Points_Hooks_Test extends WordPoints_Points_UnitTestCa
 	 */
 	function test_comment_points_hook() {
 
-		$this->new_points_hook_instance( 'wordpoints_comment_points_hook', array( 'approve' => 10, 'disapprove' => 10 ) );
+		wordpointstests_add_points_hook( 'wordpoints_comment_points_hook', array( 'approve' => 10, 'disapprove' => 10 ) );
 
 		$user_id = $this->factory->user->create();
 		$comment_id = $this->factory->comment->create( array( 'user_id' => $user_id, 'comment_post_ID' => $this->factory->post->create() ) );
@@ -87,7 +89,7 @@ class WordPoints_Included_Points_Hooks_Test extends WordPoints_Points_UnitTestCa
 	 */
 	function test_periodic_points_hook() {
 
-		$this->new_points_hook_instance( 'wordpoints_periodic_points_hook', array( 'period' => DAY_IN_SECONDS, 'points' => 10 ) );
+		wordpointstests_add_points_hook( 'wordpoints_periodic_points_hook', array( 'period' => DAY_IN_SECONDS, 'points' => 10 ) );
 
 		$user_id = $this->factory->user->create();
 

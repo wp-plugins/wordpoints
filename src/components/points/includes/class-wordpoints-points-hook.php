@@ -68,15 +68,6 @@ abstract class WordPoints_Points_Hook {
 	 */
 	private $number = false;
 
-	/**
-	 * All instances of this hook.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @type array $instances
-	 */
-	private $instances;
-
 	//
 	// Abstract Methods.
 	//
@@ -243,7 +234,14 @@ abstract class WordPoints_Points_Hook {
 	 */
 	final public function get_instances() {
 
-		return $this->instances;
+		$instances = get_option( $this->option_name );
+
+		if ( ! is_array( $instances ) || empty( $instances ) )
+			$instances = array( 0 => array() );
+
+		unset( $instances['__i__'] );
+
+		return $instances;
 	}
 	/**
 	 * Update an instance's settings.
@@ -404,8 +402,6 @@ abstract class WordPoints_Points_Hook {
 		$this->options['_before_hook'] = '';
 		$this->options['_after_hook']  = '';
 
-		$this->_reset_instances();
-
 		// Register all instances of this hook.
 		foreach ( array_keys( $this->get_instances() ) as $number ) {
 
@@ -526,25 +522,6 @@ abstract class WordPoints_Points_Hook {
 		unset( $instances[0] );
 
 		update_option( $this->option_name, $instances );
-
-		$this->_reset_instances();
-	}
-
-	/**
-	 * Reset the $instances member var.
-	 *
-	 * @since 1.0.0
-	 */
-	final private function _reset_instances() {
-
-		$instances = get_option( $this->option_name );
-
-		if ( ! is_array( $instances ) || empty( $instances ) )
-			$instances = array( 0 => array() );
-
-		unset( $instances['__i__'] );
-
-		$this->instances = $instances;
 	}
 }
 

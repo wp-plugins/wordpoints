@@ -11,44 +11,52 @@
 
 $wordpoints_components = WordPoints_Components::instance();
 
+$components = $wordpoints_components->get();
+
 //
-// Process form submit.
+// Show messages and errors.
 //
 
-if ( isset( $_POST['wordpoints_component_name'], $_POST['_wpnonce'] ) ) {
+if ( isset( $_GET['wordpoints_component'], $_GET['_wpnonce'] ) && $wordpoints_components->is_registered( $_GET['wordpoints_component'] ) ) {
 
-	// A component is being activated/deactivated.
+	if ( isset( $_GET['message'] ) && wp_verify_nonce( $_GET['_wpnonce'], "wordpoints_component_message-{$_GET['wordpoints_component']}" ) ) {
 
-	$component_name = esc_html( $_POST['wordpoints_component_name'] );
+		switch ( $_GET['message'] ) {
 
-	if ( isset( $_POST['wordpoints_component_activate'] ) ) {
+			case '1':
+				if ( $wordpoints_components->is_active( $_GET['wordpoints_component'] ) )
+					$message = __( 'Component "%s" activated!', 'wordpoints' );
+			break;
 
-		// Component is being activated.
-
-		$component_slug = $_POST['wordpoints_component_activate'];
-
-		if ( 1 == wp_verify_nonce( $_POST['_wpnonce'], "wordpoints_activate_component-{$component_slug}" ) && $wordpoints_components->activate( $component_slug ) ) {
-
-			wordpoints_show_admin_message( sprintf( __( 'Component "%s" activated!', 'wordpoints' ), $component_name ) );
-
-		} else {
-
-			wordpoints_show_admin_error( sprintf( __( 'The component "%s" could not be activated. Please try again.', 'wordpoints' ), $component_name ) );
+			case '2':
+				if ( ! $wordpoints_components->is_active( $_GET['wordpoints_component'] ) )
+					$message = __( 'Component "%s" deactivated!', 'wordpoints' );
+			break;
 		}
 
-	} elseif ( isset( $_POST['wordpoints_component_deactivate'] ) ) {
+		if ( $message ) {
 
-		// Component is being deactivated.
+			wordpoints_show_admin_message( esc_html( sprintf( $message, $components[ $_GET['wordpoints_component'] ]['name'] ) ) );
+		}
 
-		$component_slug = $_POST['wordpoints_component_deactivate'];
+	} elseif ( isset( $_GET['error'] ) && wp_verify_nonce( $_GET['_wpnonce'], "wordpoints_component_error-{$_GET['wordpoints_component']}" ) ) {
 
-		if ( 1 == wp_verify_nonce( $_POST['_wpnonce'], "wordpoints_deactivate_component-{$component_slug}" ) && $wordpoints_components->deactivate( $component_slug ) ) {
+		switch ( $_GET['error'] ) {
 
-			wordpoints_show_admin_message( sprintf( __( 'Component "%s" deactivated!', 'wordpoints' ), $component_name ) );
+			case '1':
+				if ( ! $wordpoints_components->is_active( $_GET['wordpoints_component'] ) )
+					$message = __( 'The component "%s" could not be activated. Please try again.', 'wordpoints' );
+			break;
 
-		} else {
+			case '2':
+				if ( $wordpoints_components->is_active( $_GET['wordpoints_component'] ) )
+					$message = __( 'The component "%s" could not be deactivated. Please try again.', 'wordpoints' );
+			break;
+		}
 
-			wordpoints_show_admin_error( sprintf( __( 'The component "%s" could not be deactivated. Please try again.', 'wordpoints' ), $component_name ) );
+		if ( $error ) {
+
+			wordpoints_show_admin_error( esc_html( sprintf( $message, $components[ $_GET['wordpoints_component'] ]['name'] ) ) );
 		}
 	}
 }
@@ -93,8 +101,6 @@ do_action( 'wordpoints_admin_components_top' );
 
 	<?php
 
-	$components = $wordpoints_components->get();
-
 	foreach( $components as $component ) {
 
 		if ( $component['component_uri'] != '' )
@@ -113,6 +119,17 @@ do_action( 'wordpoints_admin_components_top' );
 			$author = ' | ' . sprintf( __( 'By %s', 'wordpoints' ), $author_name );
 		}
 
+		if ( $wordpoints_components->is_active( $component['slug'] ) ) {
+
+			$action = 'deactivate';
+			$button = __( 'Deactivate', 'wordpoints' );
+
+		} else {
+
+			$action = 'activate';
+			$button = __( 'Activate', 'wordpoints' );
+		}
+
 		?>
 
 		<tr>
@@ -120,38 +137,12 @@ do_action( 'wordpoints_admin_components_top' );
 			<td><?php echo $component['description'] . $author; ?></td>
 			<td><?php echo $component['version']; ?></td>
 			<td>
-
-				<?php
-
-				if ( $wordpoints_components->is_active( $component['slug'] ) ) {
-
-					?>
-
-					<form method="post" name="wordpoints_components_form_<?php echo esc_attr( $component['slug'] ); ?>">
-						<input type="hidden" name="wordpoints_component_deactivate" value="<?php echo esc_attr( $component['slug'] ); ?>" />
-						<input type="hidden" name="wordpoints_component_name" value="<?php echo esc_attr( $component['name'] ); ?>" />
-						<?php wp_nonce_field( "wordpoints_deactivate_component-{$component['slug']}" ); ?>
-						<button type="submit" class="button-secondary wordpoints-component-deactivate"><?php _e( 'Deactivate', 'wordpoints' ); ?></button>
-					</form>
-
-					<?php
-
-				} else {
-
-					?>
-
-					<form method="post" name="wordpoints_components_form_<?php echo esc_attr( $component['slug'] ); ?>">
-						<input type="hidden" name="wordpoints_component_activate" value="<?php echo esc_attr( $component['slug'] ); ?>" />
-						<input type="hidden" name="wordpoints_component_name" value="<?php echo esc_attr( $component['name'] ); ?>" />
-						<?php wp_nonce_field( "wordpoints_activate_component-{$component['slug']}" ); ?>
-						<button type="submit" class="button-secondary wordpoints-component-activate"><?php _e( 'Activate', 'wordpoints' ); ?></button>
-					</form>
-
-					<?php
-				}
-
-				?>
-
+				<form method="post" name="wordpoints_components_form_<?php echo esc_attr( $component['slug'] ); ?>">
+					<input type="hidden" name="wordpoints_component_action" value="<?php echo $action; ?>" />
+					<input type="hidden" name="wordpoints_component" value="<?php echo esc_attr( $component['slug'] ); ?>" />
+					<?php wp_nonce_field( "wordpoints_{$action}_component-{$component['slug']}" ); ?>
+					<?php submit_button( $button, "secondary wordpoints-component-{$action}", "wordpoints-component-{$action}_{$component['slug']}", false ); ?>
+				</form>
 			</td>
 		</tr>
 

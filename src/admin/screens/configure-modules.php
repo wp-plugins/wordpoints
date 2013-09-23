@@ -9,34 +9,52 @@
 
 $wordpoints_modules = WordPoints_Modules::instance();
 
+$modules = $wordpoints_modules->get();
+
 //
-// Process form submit.
+// Show messages and errors.
 //
 
-if ( isset( $_POST['wordpoints_module_name'], $_POST['_wpnonce'] ) ) {
+if ( isset( $_GET['wordpoints_module'], $_GET['_wpnonce'] ) && $wordpoints_modules->is_registered( $_GET['wordpoints_module'] ) ) {
 
-	$module_name = esc_html( $_POST['wordpoints_module_name'] );
+	if ( isset( $_GET['message'] ) && wp_verify_nonce( $_GET['_wpnonce'], "wordpoints_module_message-{$_GET['wordpoints_module']}" ) ) {
 
-	if ( isset( $_POST['wordpoints_module_activate'] ) ) {
+		switch ( $_GET['message'] ) {
 
-		if ( 1 == wp_verify_nonce( $_POST['_wpnonce'], "wordpoints_activate_module-{$_POST['wordpoints_module_activate']}" ) && $wordpoints_modules->activate( $_POST['wordpoints_module_activate'] ) ) {
+			case '1':
+				if ( $wordpoints_modules->is_active( $_GET['wordpoints_module'] ) )
+					$message = __( 'Module "%s" activated!', 'wordpoints' );
+			break;
 
-			wordpoints_show_admin_message( sprintf( __( 'Module "%s" activated!', 'wordpoints' ), $module_name ) );
-
-		} else {
-
-			wordpoints_show_admin_error( sprintf( __( 'The module "%s" could not be activated.', 'wordpoints' ), $module_name ) );
+			case '2':
+				if ( !  $wordpoints_modules->is_active( $_GET['wordpoints_module'] ) )
+					$message = __( 'Module "%s" deactivated!', 'wordpoints' );
+			break;
 		}
 
-	} elseif ( isset( $_POST['wordpoints_module_deactivate'] ) ) {
+		if ( $message ) {
 
-		if (  1 == wp_verify_nonce( $_POST['_wpnonce'], "wordpoints_deactivate_module-{$_POST['wordpoints_module_deactivate']}" ) && $wordpoints_modules->deactivate( $_POST['wordpoints_module_deactivate'] ) ) {
+			wordpoints_show_admin_message( esc_html( sprintf( $message, $modules[ $_GET['wordpoints_module'] ]['name'] ) ) );
+		}
 
-			wordpoints_show_admin_message( sprintf( __( 'Module "%s" deactivated!', 'wordpoints' ), $module_name ) );
+	} elseif ( isset( $_GET['error'] ) && wp_verify_nonce( $_GET['_wpnonce'], "wordpoints_module_error-{$_GET['wordpoints_module']}" ) ) {
 
-		} else {
+		switch ( $_GET['error'] ) {
 
-			wordpoints_show_admin_error( sprintf( __( 'The module "%s" could not be deactivated.', 'wordpoints' ), $module_name ) );
+			case '1':
+				if ( ! $wordpoints_modules->is_active( $_GET['wordpoints_module'] ) )
+					$message = __( 'The module "%s" could not be activated.', 'wordpoints' );
+			break;
+
+			case '2':
+				if ( $wordpoints_modules->is_active( $_GET['wordpoints_module'] ) )
+					$message = __( 'The module "%s" could not be deactivated.', 'wordpoints' );
+			break;
+		}
+
+		if ( $error ) {
+
+			wordpoints_show_admin_error( esc_html( sprintf( $message, $modules[ $_GET['wordpoints_module'] ]['name'] ) ) );
 		}
 	}
 }
@@ -56,13 +74,16 @@ wordpoints_enqueue_datatables(
 			array( 'bSortable' => false ),
 			array( 'bSortable' => false, 'bSearchable' => false ),
 		),
+		'oLanguage' => array(
+			'sEmptyTable' => __( 'You have not installed any modules.', 'wordpoints' ),
+		),
 	)
 );
 
 ?>
 
 <p><?php _e( 'View installed WordPoints modules.', 'wordpoints' ); ?></p>
-<p><?php _e( 'Currently WordPoints does not come with any modules installed.', 'wordpoints' ); ?> <?php echo sprintf( __( 'For information on extending the functionality of WordPoints by building your own custom modules, see <a href="%s">this link</a>.', 'wordpoints' ), 'http://wordpress.org/plugins/wordpoints/' ); ?></p>
+<p><?php _e( 'Currently WordPoints does not come with any modules installed.', 'wordpoints' ); ?> <?php echo sprintf( __( 'For information on extending the functionality of WordPoints by building your own custom modules, see <a href="%s">this link</a>.', 'wordpoints' ), 'http://wordpoints.org/developer-guide/modules/' ); ?></p>
 
 <table id="wordpoints_modules_table" class="widefat datatables">
 	<thead>
@@ -85,67 +106,54 @@ wordpoints_enqueue_datatables(
 
 		<?php
 
-		$modules = $wordpoints_modules->get();
+		foreach( $modules as $module ) {
 
-		if ( ! $modules ) {
+			if ( $module['module_uri'] != '' )
+				$module_name = '<a href="' . esc_url( $module['module_uri'] ) . '">' . esc_html( $module['name'] ) . '</a>';
+			else
+				$module_name = esc_html( $module['name'] );
 
-			?><tr><td colspan="4"><?php _e( 'You have not installed any modules.', 'wordpoints' ); ?></td></tr><?php
+			if ( $module['author'] != '' ) {
 
-		} else {
-
-			foreach( $modules as $module ) {
-
-				if ( $module['module_uri'] != '' )
-					$module_name = '<a href="' . esc_url( $module['module_uri'] ) . '">' . esc_html( $module['name'] ) . '</a>';
+				if ( $module['author_uri'] != '' )
+					$author_name = '<a href="' . esc_url( $module['author_uri'] ) . '">' . esc_html( $module['author'] ) . '</a>';
 				else
-					$module_name = esc_html( $module['name'] );
+					$author_name = esc_html( $module['author'] );
 
-				if ( $module['author'] != '' ) {
+				/* translators: %s is the module author's name. */
+				$author = ' | ' . sprintf( __( 'By %s', 'wordpoints' ), $author_name );
+			}
 
-					if ( $module['author_uri'] != '' )
-						$author_name = '<a href="' . esc_url( $module['author_url'] ) . '">' . esc_html( $module['author'] ) . '</a>';
-					else
-						$author_name = esc_html( $module['author'] );
+			if ( $wordpoints_modules->is_active( $module['slug'] ) ) {
 
-					/* translators: %s is the module author's name. */
-					$author = ' | ' . sprintf( __( 'By %s', 'wordpoints' ), $author_name );
-				}
+				$action = 'deactivate';
+				$button = __( 'Deactivate', 'wordpoints' );
 
-				?>
+			} else {
 
-				<tr>
-					<td><?php echo $module_name; ?></td>
-					<td><?php echo $module['description'] . $author; ?></td>
-					<td><?php echo $module['version']; ?></td>
-					<td>
+				$action = 'activate';
+				$button = __( 'Activate', 'wordpoints' );
+			}
 
-						<?php if ( $wordpoints_modules->is_active( $module['slug'] ) ) : ?>
+			?>
 
-							<form method="post" name="wordpoints_modules_form_<?php echo esc_attr( $module['slug'] ); ?>">
-								<input type="hidden" name="wordpoints_module_deactivate" value="<?php echo esc_attr( $module['slug'] ); ?>" />
-								<input type="hidden" name="wordpoints_module_name" value="<?php echo esc_attr( $module['name'] ); ?>" />
-								<?php wp_nonce_field( "wordpoints_deactivate_module-{$module['slug']}" ); ?>
-								<button type="submit" class="button-secondary wordpoints-module-deactivate"><?php _e( 'Deactivate', 'wordpoints' ); ?></button>
-							</form>
+			<tr>
+				<td><?php echo $module_name; ?></td>
+				<td><?php echo $module['description'] . $author; ?></td>
+				<td><?php echo $module['version']; ?></td>
+				<td>
+					<form method="post" name="wordpoints_modules_form_<?php echo esc_attr( $module['slug'] ); ?>">
+						<input type="hidden" name="wordpoints_module_action" value="<?php echo $action; ?>" />
+						<input type="hidden" name="wordpoints_module" value="<?php echo esc_attr( $module['slug'] ); ?>" />
+						<?php wp_nonce_field( "wordpoints_{$action}_module-{$module['slug']}" ); ?>
+						<?php submit_button( $button, "secondary wordpoints-module-{$action}", "wordpoints-component-{$action}_{$module['slug']}", false ); ?>
+					</form>
+				</td>
+			</tr>
 
-						<?php else : ?>
+			<?php
 
-							<form method="post" name="wordpoints_modules_form_<?php echo esc_attr( $module['slug'] ); ?>">
-								<input type="hidden" name="wordpoints_module_activate" value="<?php echo esc_attr( $module['slug'] ); ?>" />
-								<input type="hidden" name="wordpoints_module_name" value="<?php echo esc_attr( $module['name'] ); ?>" />
-								<?php wp_nonce_field( "wordpoints_activate_module-{$module['slug']}" ); ?>
-								<button type="submit" class="button-secondary wordpoints-module-activate"><?php _e( 'Activate', 'wordpoints' ); ?></button>
-							</form>
-
-						<?php endif; ?>
-
-					</td>
-				</tr>
-
-				<?php
-
-			} // foreach $module
-		}
+		} // foreach $module
 
 		?>
 

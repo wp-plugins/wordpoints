@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Test uninstallation.
+ * Test installation/uninstallation.
  *
  * @package WordPoints\Tests
  * @since 1.0.0
@@ -16,11 +16,92 @@ abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 	 *
 	 * @since 1.0.0
 	 */
-	public static function uninstall() {
+	public function uninstall() {
+
+		// We're going to do real table dropping, not temporary tables.
+		remove_filter( 'query', array( $this, '_drop_temporary_tables' ) );
 
 		define( 'WP_UNINSTALL_PLUGIN', WORDPOINTS_DIR . '/wordpoints.php' );
 
 		include WORDPOINTS_DIR . '/uninstall.php';
+
+		add_filter( 'query', array( $this, '_drop_temporary_tables' ) );
+
+		/**
+		 * Run uninstall tests.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param WordPoints_Uninstall_UnitTestCase The current instance.
+		 */
+		do_action( 'wordpoints_uninstall_tests', $this );
+	}
+
+	/**
+	 * Prepare to install.
+	 *
+	 * @since 1.0.1
+	 */
+	private function before_install() {
+
+		// We're going to do real table creating, not temporary tables.
+		remove_filter( 'dbdelta_create_queries', array( $this, '_create_temporary_tables' ) );
+	}
+
+	/**
+	 * Run the WordPoints install script.
+	 *
+	 * @since 1.0.1
+	 */
+	public function install() {
+
+		$this->before_install();
+
+		wordpoints_activate();
+
+		$this->after_install();
+	}
+
+	/**
+	 * Install a component.
+	 *
+	 * @since 1.0.1
+	 *
+	 * @param string $component The slug of the component to install.
+	 */
+	public function install_component( $component ) {
+
+		$this->berfore_install();
+
+		WordPoints_Components::instance()->activate( $component );
+
+		$this->after_install();
+	}
+
+	/**
+	 * Install a module.
+	 *
+	 * @since 1.0.1
+	 *
+	 * @param string $module The slug of the module to install.
+	 */
+	public function install_module( $module ) {
+
+		$this->berfore_install();
+
+		WordPoints_Modules::instance()->activate( $module );
+
+		$this->after_install();
+	}
+
+	/**
+	 * Clean up after install.
+	 *
+	 * @since 1.0.1
+	 */
+	private function after_install() {
+
+		add_filter( 'dbdelta_create_queries', array( $this, '_create_temporary_tables' ) );
 	}
 
 	/**
@@ -36,6 +117,21 @@ abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 	public static function assertTableNotExists( $table, $message = '' ) {
 
 		self::assertThat( $table, self::isNotInDatabase(), $message );
+	}
+
+	/**
+	 * Asserts that a database table exsists.
+	 *
+	 * @since 1.0.1
+	 *
+	 * @param string $table The table name.
+	 * @param string $message An optional message.
+	 *
+	 * @throws PHPUnit_Framework_AssertionFailedError
+	 */
+	public static function assertTableExists( $table, $message = '' ) {
+
+		self::assertThat( $table, self::isInDatabase(), $message );
 	}
 
 	/**
@@ -115,6 +211,18 @@ abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 	 */
 	public static function isNotInDatabase() {
 
+		return new WordPoints_PHPUnit_Constraint_IsTableNonExistant;
+	}
+
+	/**
+	 * Database table is in the database constraint.
+	 *
+	 * @since 1.0.1
+	 *
+	 * @return WordPoints_PHPUnit_Constraint_IsTableExistant
+	 */
+	public static function isInDatabase() {
+
 		return new WordPoints_PHPUnit_Constraint_IsTableExistant;
 	}
 
@@ -137,9 +245,9 @@ abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 /**
  * Database table not existant constraint matcher.
  *
- * @since 1.0.0
+ * @since 1.0.1
  */
-class WordPoints_PHPUnit_Constraint_IsTableExistant extends PHPUnit_Framework_Constraint {
+class WordPoints_PHPUnit_Constraint_IsTableNonExistant extends PHPUnit_Framework_Constraint {
 
 	/**
 	 * Checks if $table exists in the database.
@@ -165,6 +273,41 @@ class WordPoints_PHPUnit_Constraint_IsTableExistant extends PHPUnit_Framework_Co
 	public function toString() {
 
 		return 'is not a table in the database';
+	}
+}
+
+/**
+ * Database table exists constraint matcher.
+ *
+ * @since 1.0.0
+ * @since 1.0.1 Now checks that the table *does* exist. See IsTableNonExistant.
+ */
+class WordPoints_PHPUnit_Constraint_IsTableExistant extends PHPUnit_Framework_Constraint {
+
+	/**
+	 * Checks if $table exists in the database.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $table The name of the table that should exist.
+	 *
+	 * @return bool Whether the table exists.
+	 */
+	public function matches( $table ) {
+
+		return wordpoints_db_table_exists( $table );
+	}
+
+	/**
+	 * Returns a string representation of the constraint.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return string
+	 */
+	public function toString() {
+
+		return 'is a table in the database';
 	}
 }
 
@@ -277,8 +420,8 @@ class WordPoints_PHPUnit_Constraint_NoRowsWithPrefix extends PHPUnit_Framework_C
 	public function toString() {
 
 		return "prefix does not exist in `{$this->table}`.`{$this->column}`.\n"
-			. "The following rows were found:\n\t" . implode( "\t\n", $this->prefixed_rows ) . "\n";
+			. "The following rows were found:\n\t" . implode( "\n\t", $this->prefixed_rows ) . "\n";
 	}
 }
 
-// end of file.
+// end of file /tests/phpunit/includes/class-wordpoints-uninstall-unittestcase.php

@@ -63,6 +63,7 @@ add_action( 'admin_enqueue_scripts', 'wordpoints_register_scripts', 5 );
  * functions directly, for forward compatibility.
  *
  * @since 1.0.0
+ * @since 1.0.1 'oLanguage' datatables argument may now be overridden.
  *
  * @param string $for  The selector for the the HTML elements to apply the JS to.
  * @param array  $args Arguments for the datatables constructor.
@@ -92,7 +93,7 @@ function wordpoints_enqueue_datatables( $for = null, array $args = array() ) {
 			);
 		}
 
-		$args['oLanguage'] = array(
+		$lang_defaults = array(
 			'sEmptyTable'     => _x( 'No data available in table', 'datatable', 'wordpoints' ),
 			/* translators: _START_, _END_, and _TOTAL_ will be replaced with the correct values. */
 			'sInfo'           => _x( 'Showing _START_ to _END_ of _TOTAL_ entries', 'datatable', 'wordpoints' ),
@@ -114,6 +115,16 @@ function wordpoints_enqueue_datatables( $for = null, array $args = array() ) {
 				'sPrevious' => _x( 'Previous', 'datatable', 'wordpoints' ),
 			),
 		);
+
+		if ( isset( $args['oLanguage'] ) ) {
+
+			$args['oLanguage'] = array_merge( $lang_defaults, $args['oLanguage'] );
+			$args['oLanguage']['oPaginate'] = array_merge( $lang_defaults['oPaginate'], $args['oLanguage']['oPaginate'] );
+
+		} else {
+
+			$args['oLanguage'] = $lang_defaults;
+		}
 
 		wp_localize_script( 'wordpoints-datatables-init', 'WordPointsDataTable', array( 'selector' => $for, 'args' => $args ) );
 	}
