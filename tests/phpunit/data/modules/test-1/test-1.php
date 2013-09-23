@@ -4,13 +4,13 @@
  * Test module 1.
  *
  * @package WordPoints\Tests
- * @since $ver$
+ * @since 1.0.1
  */
 
 /**
  * Register the first test module.
  *
- * @since $ver$
+ * @since 1.0.1
  */
 function wordpoints_module_test_1_register() {
 

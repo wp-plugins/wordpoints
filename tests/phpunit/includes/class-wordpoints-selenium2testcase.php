@@ -12,7 +12,7 @@
  * as with WP_UnitTestCase.
  *
  * @package WordPoints\Tests
- * @since $ver$
+ * @since 1.0.1
  */
 
 class WordPoints_Selenium2TestCase extends PHPUnit_Extensions_Selenium2TestCase {
@@ -22,7 +22,7 @@ class WordPoints_Selenium2TestCase extends PHPUnit_Extensions_Selenium2TestCase 
 	 *
 	 * Set this to change from the default, which is those of a subscriber.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 *
 	 * @type string|array $user_capabilities
 	 */
@@ -33,7 +33,7 @@ class WordPoints_Selenium2TestCase extends PHPUnit_Extensions_Selenium2TestCase 
 	 *
 	 * Set this to change from the default, which is subscriber.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 *
 	 * @type array $user_roles
 	 */
@@ -46,7 +46,7 @@ class WordPoints_Selenium2TestCase extends PHPUnit_Extensions_Selenium2TestCase 
 	 * set up though, we check if we are logged into the site, and if not log in.
 	 * It's done before setup so we can possibly have persistent logins.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	protected function setUp() {
 
@@ -63,7 +63,7 @@ class WordPoints_Selenium2TestCase extends PHPUnit_Extensions_Selenium2TestCase 
 	/**
 	 * Log in the user on page set up.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	public function setUpPage() {
 
@@ -73,7 +73,7 @@ class WordPoints_Selenium2TestCase extends PHPUnit_Extensions_Selenium2TestCase 
 	/**
 	 * Clean up after each test.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	protected function tearDown() {
 
@@ -94,7 +94,7 @@ class WordPoints_Selenium2TestCase extends PHPUnit_Extensions_Selenium2TestCase 
 	 * was the simplest way to do it. It does sometimes misfire though. Needless to
 	 * say, it needs work.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	private function log_in() {
 
@@ -115,7 +115,7 @@ class WordPoints_Selenium2TestCase extends PHPUnit_Extensions_Selenium2TestCase 
 	 * Test that require different privledges must currently go in different test
 	 * cases.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 *
 	 * @param WP_User $user The user object.
 	 */
@@ -148,7 +148,7 @@ class WordPoints_Selenium2TestCase extends PHPUnit_Extensions_Selenium2TestCase 
 	 * This activates the symlink of the WordPoints plugin on the test suite
 	 * WordPress install.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	private function activate_plugin() {
 
@@ -169,7 +169,7 @@ class WordPoints_Selenium2TestCase extends PHPUnit_Extensions_Selenium2TestCase 
 	 *
 	 * Based on WP_UnitTestCase::flush_cache()
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	protected function flush_cache() {
 

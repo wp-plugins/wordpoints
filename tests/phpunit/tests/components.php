@@ -4,7 +4,7 @@
  * Test the WordPoints_Components class.
  *
  * @package WordPoints\Tests
- * @since $ver$
+ * @since 1.0.1
  *
  * @group components
  */
@@ -14,7 +14,7 @@ class WordPoints_Components_Test extends WP_UnitTestCase {
 	/**
 	 * Set up for the tests.
 	 *
-	 * @sine $ver$
+	 * @sine 1.0.1
 	 */
 	public function setUp() {
 
@@ -26,7 +26,7 @@ class WordPoints_Components_Test extends WP_UnitTestCase {
 	/**
 	 * Clean up after the tests.
 	 *
-	 * @scince $ver$
+	 * @scince 1.0.1
 	 */
 	public function tearDown() {
 
@@ -38,7 +38,7 @@ class WordPoints_Components_Test extends WP_UnitTestCase {
 	/**
 	 * Test that the instance() method returns and instance of the class.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	public function test_instance_returns_instance() {
 
@@ -48,7 +48,7 @@ class WordPoints_Components_Test extends WP_UnitTestCase {
 	/**
 	 * Test registration functions.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	public function test_registration() {
 
@@ -73,7 +73,7 @@ class WordPoints_Components_Test extends WP_UnitTestCase {
 	/**
 	 * Test that register() returns false if already registered.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	public function test_register_fails_if_already_registered() {
 
@@ -83,7 +83,7 @@ class WordPoints_Components_Test extends WP_UnitTestCase {
 	/**
 	 * Test activation.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	public function test_activation() {
 
@@ -106,7 +106,7 @@ class WordPoints_Components_Test extends WP_UnitTestCase {
 	/**
 	 * Test that an unregistered component can't be activated.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	public function test_activation_fails_if_not_registered() {
 

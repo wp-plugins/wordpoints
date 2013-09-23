@@ -40,7 +40,7 @@ abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 	/**
 	 * Prepare to install.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	private function before_install() {
 
@@ -51,7 +51,7 @@ abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 	/**
 	 * Run the WordPoints install script.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	public function install() {
 
@@ -65,7 +65,7 @@ abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 	/**
 	 * Install a component.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 *
 	 * @param string $component The slug of the component to install.
 	 */
@@ -81,7 +81,7 @@ abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 	/**
 	 * Install a module.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 *
 	 * @param string $module The slug of the module to install.
 	 */
@@ -97,7 +97,7 @@ abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 	/**
 	 * Clean up after install.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	private function after_install() {
 
@@ -122,7 +122,7 @@ abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 	/**
 	 * Asserts that a database table exsists.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 *
 	 * @param string $table The table name.
 	 * @param string $message An optional message.
@@ -217,7 +217,7 @@ abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 	/**
 	 * Database table is in the database constraint.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 *
 	 * @return WordPoints_PHPUnit_Constraint_IsTableExistant
 	 */
@@ -245,7 +245,7 @@ abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 /**
  * Database table not existant constraint matcher.
  *
- * @since $ver$
+ * @since 1.0.1
  */
 class WordPoints_PHPUnit_Constraint_IsTableNonExistant extends PHPUnit_Framework_Constraint {
 
@@ -280,7 +280,7 @@ class WordPoints_PHPUnit_Constraint_IsTableNonExistant extends PHPUnit_Framework
  * Database table exists constraint matcher.
  *
  * @since 1.0.0
- * @since $ver$ Now checks that the table *does* exist. See IsTableNonExistant.
+ * @since 1.0.1 Now checks that the table *does* exist. See IsTableNonExistant.
  */
 class WordPoints_PHPUnit_Constraint_IsTableExistant extends PHPUnit_Framework_Constraint {
 

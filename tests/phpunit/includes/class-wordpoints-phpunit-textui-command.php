@@ -6,7 +6,7 @@
  * Not actually used as a runner. Rather, used to access the protected
  * longOptions property, to parse the arguments passed to the script.
  *
- * @since $ver$
+ * @since 1.0.1
  */
 
 class WordPoints_PHPUnit_TextUI_Command extends PHPUnit_TextUI_Command {
@@ -14,7 +14,7 @@ class WordPoints_PHPUnit_TextUI_Command extends PHPUnit_TextUI_Command {
 	/**
 	 * Parse the arguments and give messages about excluded groups.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	function __construct( $argv ) {
 

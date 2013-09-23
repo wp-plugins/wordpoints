@@ -4,9 +4,9 @@
  * Test component activation.
  *
  * @package WordPoints\Tests
- * @since $ver$
+ * @since 1.0.1
  *
- * @group uic
+ * @group ui
  */
 
 class WordPoints_Module_UI_Test extends WordPoints_Selenium2TestCase {
@@ -14,7 +14,7 @@ class WordPoints_Module_UI_Test extends WordPoints_Selenium2TestCase {
 	/**
 	 * The user requires the manage_options capability.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 *
 	 * @type array $user_capabilities
 	 */
@@ -23,7 +23,7 @@ class WordPoints_Module_UI_Test extends WordPoints_Selenium2TestCase {
 	/**
 	 * Set up before the tests.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	public function setUp() {
 
@@ -39,7 +39,7 @@ class WordPoints_Module_UI_Test extends WordPoints_Selenium2TestCase {
 	/**
 	 * Test activation/deactivation of a component.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	public function test_activation_deactivation() {
 
@@ -74,7 +74,7 @@ class WordPoints_Module_UI_Test extends WordPoints_Selenium2TestCase {
 	/**
 	 * Clean up after the test.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	public function tearDown() {
 

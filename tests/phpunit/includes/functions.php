@@ -68,7 +68,7 @@ function wordpointstests_manually_activate_modules() {
 /**
  * Load the modules included with the tests.
  *
- * @since $ver$
+ * @since 1.0.1
  *
  * @return bool Whether the modules were loaded successfully.
  */
@@ -112,7 +112,7 @@ function wordpointstests_do_shortcode_func( $tag, array $atts = array(), $conten
 /**
  * Programatically create a new instance of a points hook.
  *
- * @since $ver$
+ * @since 1.0.1
  *
  * @param string $hook_type The type of hook to create.
  * @param array  $instance  The arguments for the instance. Optional.
@@ -130,7 +130,7 @@ function wordpointstests_add_points_hook( $hook_type, $instance = array() ) {
  *
  * Based on wp_ajax_save_widget().
  *
- * @since $ver$
+ * @since 1.0.1
  *
  * @param string $id_base    The base ID for instances of this widget.
  * @param array  $settings   The settings for this widget instance. Optional.
@@ -180,7 +180,7 @@ function wordpointstests_add_widget( $id_base, array $settings = array(), $sideb
  *
  * Selenium is required for the UI tests.
  *
- * @since $ver$
+ * @since 1.0.1
  *
  * @return bool
  */
@@ -204,7 +204,7 @@ function wordpointstests_selenium_is_running() {
  * To make this work, add the following to wp-tests-config.php:
  * define( 'WORDPOINTS_TESTS_SELENIUM', '/path/to/selenium.jar' );
  *
- * @since $ver$
+ * @since 1.0.1
  */
 function wordpointstests_start_selenium() {
 
@@ -219,7 +219,7 @@ function wordpointstests_start_selenium() {
 /**
  * Get the user that is used in the UI tests.
  *
- * @since $ver$
+ * @since 1.0.1
  *
  * @return WP_User The user object.
  */
@@ -249,7 +249,7 @@ function wordpointstests_ui_user() {
 /**
  * Create a symlink of a plugin in the WordPress tests suite and activate it.
  *
- * @since $ver$
+ * @since 1.0.1
  *
  * @return bool Whether this was successful.
  */

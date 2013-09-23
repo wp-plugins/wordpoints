@@ -49,7 +49,7 @@ require getenv( 'WP_TESTS_DIR' ) . '/includes/bootstrap.php';
 /**
  * Checks which groups we are running, and gives helpful messages.
  *
- * @since $ver$
+ * @since 1.0.1
  */
 require_once dirname( __FILE__ ) . '/class-wordpoints-phpunit-textui-command.php';
 
@@ -72,7 +72,7 @@ require_once dirname( __FILE__ ) . '/class-wordpoints-uninstall-unittestcase.php
 /**
  * Selenium 2 test case, integrated with WP_UnitTestCase.
  *
- * @since $ver$
+ * @since 1.0.1
  */
 require_once dirname( __FILE__ ) . '/class-wordpoints-selenium2testcase.php';
 

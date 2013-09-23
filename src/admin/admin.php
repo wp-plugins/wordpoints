@@ -159,7 +159,7 @@ function wordpoints_admin_show_tabs( $tabs, $show_heading = true ) {
  * This function handles activation and deactivation of components from the
  * WordPoints > Configure > Modules administration screen.
  *
- * @since $ver$
+ * @since 1.0.1
  *
  * @action load-toplevel_page_wordpoints_configure
  */
@@ -219,7 +219,7 @@ add_action( 'load-toplevel_page_wordpoints_configure', 'wordpoints_admin_activat
  * This function handles activation and deactivation of modules from the WordPoints
  * > Configure > Modules administration screen.
  *
- * @since $ver$
+ * @since 1.0.1
  *
  * @action load-toplevel_page_wordpoints_configure
  */

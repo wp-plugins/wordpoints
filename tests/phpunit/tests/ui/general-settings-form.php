@@ -4,7 +4,7 @@
  * Test the general settings form.
  *
  * @package WordPoints\Tests
- * @since $ver$
+ * @since 1.0.1
  *
  * @group ui
  */
@@ -14,7 +14,7 @@ class WordPoints_General_Settings_Form_Test extends WordPoints_Selenium2TestCase
 	/**
 	 * The user requires the manage_options capability.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 *
 	 * @type array $user_capabilities
 	 */
@@ -23,7 +23,7 @@ class WordPoints_General_Settings_Form_Test extends WordPoints_Selenium2TestCase
 	/**
 	 * Test the excluded users input.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	public function test_excluded_users_input() {
 
@@ -48,7 +48,7 @@ class WordPoints_General_Settings_Form_Test extends WordPoints_Selenium2TestCase
 	/**
 	 * Clean up after tests.
 	 *
-	 * @since $ver$
+	 * @since 1.0.1
 	 */
 	public function tearDown() {
 
