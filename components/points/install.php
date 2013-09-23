@@ -65,7 +65,7 @@ if ( ! wordpoints_db_table_exists( WORDPOINTS_POINTS_LOG_META_DB ) ) {
 	);
 }
 
-$wordpoints_data['components']['points']['version'] = '1.0.0';
+$wordpoints_data['components']['points']['version'] = WORDPOINTS_VERSION;
 
 update_option( 'wordpoints_data', $wordpoints_data );
 

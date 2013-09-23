@@ -83,6 +83,9 @@ class WordPoints_Points_Widget extends WP_Widget {
 /**
  * My Points widget.
  *
+ * Note that while the class name is WordPoints_My_Points_Widget, the widget ID base
+ * is just WordPoints_Points_Widget.
+ *
  * @since 1.0.0
  *
  * @see WordPoints_Points_Widget Parent class.
@@ -289,6 +292,10 @@ class WordPoints_My_Points_Widget extends WordPoints_Points_Widget {
 
 /**
  * WordPoints Top Users Widget.
+ *
+ * Note that the class name is WordPoints_Top_Users_Points_Widget, but the ID base
+ * for instances of this widget is WordPoints_Top_Users_Widget. This wasn't intended
+ * but that's how it is staying for now.
  *
  * @since 1.0.0
  *

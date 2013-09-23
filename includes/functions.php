@@ -422,6 +422,27 @@ function wordpoints_list_post_types( $options, $args = array() ) {
 // Miscellaneous.
 //
 
+if ( defined( 'WORDPOINTS_SYMLINK' ) ) {
+/**
+ * Fix URLs where WordPress doesn't follow symlinks.
+ *
+ * This allows you to define WORDPOINTS_SYMLINK in wp-config.php and have the plugin
+ * symlinked to the plugins directory of your install.
+ *
+ * @filter plugins_url
+ */
+function wordpoints_symlink_fix( $url, $path, $plugin ) {
+
+	if ( strstr( $plugin, 'wordpoints' ) ) {
+
+		$url = str_replace( WORDPOINTS_SYMLINK, 'wordpoints', $url );
+	}
+
+	return $url;
+}
+add_filter( 'plugins_url', 'wordpoints_symlink_fix', 10, 3 );
+}
+
 /**
  * Include once all .php files in a directory and subdirectories.
  *
@@ -481,6 +502,24 @@ function wordpoints_get_excluded_users( $context ) {
 	 * @param string $context  The context in which the function is being called.
 	 */
 	return apply_filters( 'wordpoints_excluded_users', $user_ids, $context );
+}
+
+/**
+ * Give a shortcode error.
+ *
+ * The error is only displayed to those with the 'manage_options' capability, or if
+ * the shortcode is being displayed in a post that the current user can edit.
+ *
+ * @since 1.0.1
+ *
+ * @param string $message The error message.
+ */
+function wordpoints_shortcode_error( $message ) {
+
+	if ( ! ( get_post() && current_user_can( 'edit_post', get_the_ID() ) ) && ! current_user_can( 'manage_options' ) )
+		return;
+
+	return '<p class="wordpoints-shortcode-error">' . esc_html__( 'Shortcode error:', 'wordpoints' ) . ' ' . $message . '</p>';
 }
 
 // end of file /includes/functions.php

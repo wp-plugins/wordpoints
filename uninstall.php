@@ -75,5 +75,6 @@ foreach ( $components->get() as $component => $data ) {
 delete_option( 'wordpoints_data' );
 delete_option( 'wordpoints_active_modules' );
 delete_option( 'wordpoints_active_components' );
+delete_option( 'wordpoints_excluded_users' );
 
 // end of file /uninstall.php
