@@ -46,6 +46,14 @@ For more information on that, see the [developer docs](http://wordpoints.org/dev
 
 == Frequently Asked Questions ==
 
+= Why doesn't WordPoints have (some feature)? =
+
+Maybe it will soon - just ask for it!
+
+= How can I manually change a users points? =
+
+You can manually adjust a user's points from their profile page in the admin.
+
 = Why does WordPoints have only one component? =
 
 I plan to add more components in future, but right now these are still under

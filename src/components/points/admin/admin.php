@@ -338,12 +338,15 @@ function wordpoints_points_profile_options( $user ) {
 
 		foreach ( wordpoints_get_points_types() as $slug => $type ) {
 
+			$points = wordpoints_get_points( $user->ID, $slug );
+
 			?>
 
 			<tr>
 				<th scope="row"><?php echo esc_html( $type['name'] ); ?></th>
 				<td>
-					<input type="text" name="<?php echo esc_attr( "wordpoints_points-{$slug}" ); ?>" value="<?php echo esc_attr( wordpoints_get_points( $user->ID, $slug ) ); ?>" />
+					<input type="hidden" name="<?php echo esc_attr( "wordpoints_points_old-{$slug}" ); ?>" value="<?php echo $points; ?>" />
+					<input type="text" name="<?php echo esc_attr( "wordpoints_points-{$slug}" ); ?>" value="<?php echo $points; ?>" />
 					<input type="checkbox" value="1" name="<?php echo esc_attr( "wordpoints_points_set-{$slug}" ); ?>" />
 				</td>
 			</tr>
@@ -400,14 +403,14 @@ function wordpoints_points_profile_options_update( $user_id ) {
 	if ( ! current_user_can( 'set_wordpoints_points', $user_id ) )
 		return;
 
-	if ( ! isset( $_POST['wordpoints_points_set_nonce'] ) || ! wp_verify_nonce( $_POST['wordpoints_points_set_nonce'], 'wordpoints_points_set_profile' ) )
+	if ( ! isset( $_POST['wordpoints_points_set_nonce'], $_POST['wordpoints_set_reason'] ) || ! wp_verify_nonce( $_POST['wordpoints_points_set_nonce'], 'wordpoints_points_set_profile' ) )
 		return;
 
 	foreach ( wordpoints_get_points_types() as $slug => $type ) {
 
-		if ( isset( $_POST[ "wordpoints_points_set-{$slug}" ], $_POST[ "wordpoints_points-{$slug}" ] ) ) {
+		if ( isset( $_POST[ "wordpoints_points_set-{$slug}" ], $_POST[ "wordpoints_points-{$slug}" ], $_POST[ "wordpoints_points_old-{$slug}" ] ) ) {
 
-			$points->set( $user_id, $_POST[ "wordpoints_points-{$slug}" ], $slug, 'profile_edit', array( 'user_id' => get_current_user_id(), 'reason' => $_POST['wordpoints_set_reason'] ) );
+			wordpoints_alter_points( $user_id, $_POST[ "wordpoints_points-{$slug}" ] - $_POST[ "wordpoints_points_old-{$slug}" ], $slug, 'profile_edit', array( 'user_id' => get_current_user_id(), 'reason' => $_POST['wordpoints_set_reason'] ) );
 		}
 	}
 }
