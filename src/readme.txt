@@ -1,7 +1,7 @@
 === WordPoints ===
 Contributors: jdgrimes
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=TPXS6B98HURLJ&lc=US&item_name=WordPoints&item_number=wordpressorg&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_LG%2egif%3aNonHosted
-Tags: points, awards, rewards, cubepoints, credits
+Tags: points, awards, rewards, cubepoints, credits, gamify
 Requires at least: 3.6
 Tested up to: 3.7
 Stable tag: 1.0.1
@@ -45,6 +45,14 @@ For more information on that, see the [developer docs](http://wordpoints.org/dev
 1. You can set up the points hooks to your liking by clicking on the Points Hooks submenu item
 
 == Frequently Asked Questions ==
+
+= Why doesn't WordPoints have (some feature)? =
+
+Maybe it will soon - just ask for it!
+
+= How can I manually change a users points? =
+
+You can manually adjust a user's points from their profile page in the admin.
 
 = Why does WordPoints have only one component? =
 
