@@ -5,10 +5,15 @@
  *
  * @package WordPoints\Tests
  * @since 1.0.1
+ */
+
+/**
+ * General settings form test case.
+ *
+ * @since 1.0.1
  *
  * @group ui
  */
-
 class WordPoints_General_Settings_Form_Test extends WordPoints_Selenium2TestCase {
 
 	/**

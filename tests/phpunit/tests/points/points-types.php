@@ -5,10 +5,15 @@
  *
  * @package WordPoints\Tests\Points
  * @since 1.0.0
+ */
+
+/**
+ * Points types test case.
+ *
+ * @since 1.0.0
  *
  * @group points
  */
-
 class WordPoints_Points_Type_Test extends WordPoints_Points_UnitTestCase {
 
 	//

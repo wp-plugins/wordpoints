@@ -7,6 +7,14 @@
  * @since 1.0.0
  */
 
+/**
+ * WordPoints uninstall test case.
+ *
+ * Provides methods for installing and uninstalling WordPoints, as well as custom
+ * assertions.
+ *
+ * @since 1.0.0
+ */
 abstract class WordPoints_Uninstall_UnitTestCase extends WP_UnitTestCase {
 
 	/**

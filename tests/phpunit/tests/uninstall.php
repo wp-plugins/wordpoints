@@ -5,10 +5,15 @@
  *
  * @package WordPoints\Tests
  * @since 1.0.0
+ */
+
+/**
+ * WordPoints uninstall test case.
+ *
+ * @since 1.0.0
  *
  * @group uninstall
  */
-
 class WordPoints_Uninstall_Test extends WordPoints_Uninstall_UnitTestCase {
 
 	/**

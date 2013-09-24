@@ -5,11 +5,16 @@
  *
  * @package WordPoints\Tests\Points
  * @since 1.0.0
+ */
+
+/**
+ * Points shortcodes test case.
+ *
+ * @since 1.0.0
  *
  * @group points
  * @group shortcodes
  */
-
 class WordPoints_Points_Shortcodes_Test extends WordPoints_Points_UnitTestCase {
 
 	/**
@@ -219,4 +224,4 @@ class WordPoints_Points_Shortcodes_Test extends WordPoints_Points_UnitTestCase {
 	}
 }
 
-// end of file /tests/phpunit/tests/points/shortcode.php
+// end of file /tests/phpunit/tests/points/shortcodes.php

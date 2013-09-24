@@ -1,21 +1,27 @@
 <?php
 
 /**
- * Test the log meta functions.
+ * Test the points log meta functions.
  *
  * @package WordPoints\Tests\Points
+ * @since 1.0.0
+ */
+
+/**
+ * Points log meta test case.
+ *
  * @since 1.0.0
  *
  * @group points
  */
-
 class WordPoints_Points_Logs_Meta_Test extends WordPoints_Points_UnitTestCase {
 
 	/**
+	 * Test the log meta flow.
 	 *
 	 * @since 1.0.0
 	 */
-	function test_something() {
+	function test_log_meta() {
 
 		$log_id = 1;
 
@@ -39,4 +45,4 @@ class WordPoints_Points_Logs_Meta_Test extends WordPoints_Points_UnitTestCase {
 	}
 }
 
-// end of file.
+// end of file /tests/phpunit/tests/points/log-meta.php

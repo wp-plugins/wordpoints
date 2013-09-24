@@ -1,6 +1,13 @@
 <?php
 
 /**
+ * Parse the arguments used to run the tests.
+ *
+ * @package WordPoints\Tests
+ * @since 1.0.1
+ */
+
+/**
  * A child class of the PHP test runner.
  *
  * Not actually used as a runner. Rather, used to access the protected
@@ -8,7 +15,6 @@
  *
  * @since 1.0.1
  */
-
 class WordPoints_PHPUnit_TextUI_Command extends PHPUnit_TextUI_Command {
 
 	/**

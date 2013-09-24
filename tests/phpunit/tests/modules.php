@@ -1,14 +1,19 @@
 <?php
 
 /**
- * Test the WordPoints_Components class.
+ * Test modules backend.
  *
  * @package WordPoints\Tests
+ * @since 1.0.1
+ */
+
+/**
+ * Test the WordPoints_Modules class.
+ *
  * @since 1.0.1
  *
  * @group modules
  */
-
 class WordPoints_Modules_Test extends WP_UnitTestCase {
 
 	/**

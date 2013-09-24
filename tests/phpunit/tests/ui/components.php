@@ -5,10 +5,15 @@
  *
  * @package WordPoints\Tests
  * @since 1.0.1
+ */
+
+/**
+ * Components UI test case.
+ *
+ * @since 1.0.1
  *
  * @group ui
  */
-
 class WordPoints_Component_UI_Test extends WordPoints_Selenium2TestCase {
 
 	/**

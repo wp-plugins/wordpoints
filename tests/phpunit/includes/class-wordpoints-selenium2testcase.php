@@ -3,6 +3,13 @@
 /**
  * Integrate Selenium tests with WordPoints.
  *
+ * @package WordPoints\Tests
+ * @since 1.0.1
+ */
+
+/**
+ * WordPoints Selenium 2 test case.
+ *
  * This class implements WordPoints testing with
  * PHPUnit_Extensions_Selenium2TestCase for the selenium UI testing. These tests
  * make up the selenium group, which can be run using the command `phpunit --group
@@ -11,10 +18,8 @@
  * Extensions of this test case must clean up after themselves - it's not automatic
  * as with WP_UnitTestCase.
  *
- * @package WordPoints\Tests
  * @since 1.0.1
  */
-
 class WordPoints_Selenium2TestCase extends PHPUnit_Extensions_Selenium2TestCase {
 
 	/**

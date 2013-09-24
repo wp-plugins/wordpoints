@@ -6,6 +6,15 @@
  * @package WordPoints\Tests\Points
  * @since 1.0.0
  */
+
+/**
+ * Points unit test case.
+ *
+ * This test case creates the 'Points' points type on set up so that doesn't have to
+ * be repeated in each of the tests.
+ *
+ * @since 1.0.0
+ */
 class WordPoints_Points_UnitTestCase extends WP_UnitTestCase {
 
 	/**

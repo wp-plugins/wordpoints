@@ -3,12 +3,17 @@
 /**
  * Test registration of points queries.
  *
- * @package WordPoints\Points
+ * @package WordPoints\Tests\Points
+ * @since 1.0.0
+ */
+
+/**
+ * Points log query test case.
+ *
  * @since 1.0.0
  *
  * @group points
  */
-
 class WordPoints_Points_Log_Query_Test extends WordPoints_Points_UnitTestCase {
 
 	/**
