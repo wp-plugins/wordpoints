@@ -5,6 +5,12 @@
  *
  * @package WordPoints\Administration
  * @since 1.0.0
+ */
+
+/**
+ * Display the configure administration panels.
+ *
+ * @since 1.0.0
  *
  * @uses do_action() To call 'wordpoints_admin_screen_head'.
  * @uses wordpoints_admin_show_tabs() To display the tabs.
