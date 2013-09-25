@@ -131,19 +131,6 @@ class WordPoints_Points_Logs_Query {
 	private $_cache = array();
 
 	//
-	// Private Static Vars.
-	//
-
-	/**
-	 * An array of debug messages.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @type array $messages
-	 */
-	private static $messages = array();
-
-	//
 	// Public Methods.
 	//
 
@@ -283,7 +270,7 @@ class WordPoints_Points_Logs_Query {
 
 		if ( ! in_array( $method, $methods ) ) {
 
-			wordpoints_debug_message( sprintf( self::$messages['invalid_value'], 'get $method', implode( ', ', $methods ) ), __METHOD__, __FILE__, __LINE__ );
+			wordpoints_debug_message( "invalid get method {$method}, possible values are " . implode( ', ', $methods ), __METHOD__, __FILE__, __LINE__ );
 
 			return false;
 		}
@@ -377,9 +364,6 @@ class WordPoints_Points_Logs_Query {
 
 		if ( ! $this->_query_ready ) {
 
-			// Prepare debug messages in case we run into trouble.
-			$this->_prepare_debug_messages();
-
 			$this->_prepare_select();
 			$this->_prepare_meta_join();
 			$this->_prepare_where();
@@ -409,7 +393,7 @@ class WordPoints_Points_Logs_Query {
 			elseif ( in_array( $_fields, $this->_fields ) )
 				$fields = $_fields;
 			else
-				wordpoints_debug_message( sprintf( self::$messages['invalid_value'], '$args["fields"]', implode( ', ', $this->_fields ) ), __METHOD__, __FILE__, __LINE__ );
+				wordpoints_debug_message( "invalid field {$_fields}, possible values are " . implode( ', ', $this->_fields ), __METHOD__, __FILE__, __LINE__ );
 
 		} elseif ( 'array' == $var_type ) {
 
@@ -417,7 +401,7 @@ class WordPoints_Points_Logs_Query {
 			$_fields = array_intersect( $this->_fields, $_fields );
 
 			if ( ! empty( $diff ) )
-				wordpoints_debug_message( sprintf( _x( 'invalid field(s) %s given', 'debug message', 'wordpoints' ), implode( ', ', $diff ) ), __METHOD__, __FILE__, __LINE__ );
+				wordpoints_debug_message( 'invalid field(s) "' . implode( '", "', $diff ) . '" given', __METHOD__, __FILE__, __LINE__ );
 
 			if ( ! empty( $_fields ) )
 				$fields = '`' . implode( '`, `', $_fields ) . '`';
@@ -489,7 +473,7 @@ class WordPoints_Points_Logs_Query {
 
 			if ( isset( $_points ) && ! wordpoints_int( $this->_args['points'] ) ) {
 
-				wordpoints_debug_message( sprintf( self::$messages['not_integer'], '$args["points"]', gettype( $_points ) ), __METHOD__, __FILE__, __LINE__ );
+				wordpoints_debug_message( "'points' must be an integer, " . gettype( $_points ) . " given",  __METHOD__, __FILE__, __LINE__ );
 
 			} else {
 
@@ -497,7 +481,7 @@ class WordPoints_Points_Logs_Query {
 
 				if ( ! in_array( $this->_args['points__compare'], $comparisons ) ) {
 
-					wordpoints_debug_message( sprintf( self::$messages['invalid_value'], '$args["points__compare"]', implode( ', ', $comparisions ) ), __METHOD__, __FILE__, __LINE__ );
+					wordpoints_debug_message( "invalid 'points__compare' {$this->_args['points__compare']}, possible values are " . implode( ', ', $comparisions ), __METHOD__, __FILE__, __LINE__ );
 				}
 
 				$this->_wheres[] = $wpdb->prepare( "`points` {$this->_args['points__compare']} %d", $this->_args['points'] );
@@ -589,7 +573,7 @@ class WordPoints_Points_Logs_Query {
 
 		if ( wordpoints_int( $this->_args['limit'] ) === false ) {
 
-			wordpoints_debug_message( sprintf( _x( '%s must be a positive integer, %s given', 'debug message', 'wordpoints' ), "args['limit']", ( strval( $_var ) ? $_var : gettype( $_var ) ) ), __METHOD__, __FILE__, __LINE__ );
+			wordpoints_debug_message( "'limit' must be a positive integer, " . ( strval( $_var ) ? $_var : gettype( $_var ) ) . ' given', __METHOD__, __FILE__, __LINE__ );
 
 			$this->_args['limit'] = 0;
 		}
@@ -598,7 +582,7 @@ class WordPoints_Points_Logs_Query {
 
 		if ( wordpoints_int( $this->_args['start'] ) === false ) {
 
-			wordpoints_debug_message( sprintf( _x( '%s must be a positive integer, %s given', 'debug message', 'wordpoints' ), "args['start']", ( strval( $_var ) ? $_var : gettype( $_var ) ) ), __METHOD__, __FILE__, __LINE__ );
+			wordpoints_debug_message( "'start' must be a positive integer, " . ( strval( $_var ) ? $_var : gettype( $_var ) ) . ' given', __METHOD__, __FILE__, __LINE__ );
 
 			$this->_args['start'] = 0;
 		}
@@ -624,13 +608,13 @@ class WordPoints_Points_Logs_Query {
 
 		if ( ! in_array( $order, array( 'DESC', 'ASC' ) ) ) {
 
-			wordpoints_debug_message( sprintf( _x( 'invalid %s "%s", possible values are %s', 'debug message', 'wordpoints' ), "args['order']", $order, 'DESC, ASC' ), __METHOD__, __FILE__, __LINE__ );
+			wordpoints_debug_message( "invalid 'order' \"{$order}\", possible values are DESC and ASC", __METHOD__, __FILE__, __LINE__ );
 			$order = 'DESC';
 		}
 
 		if ( ! in_array( $order_by, $this->_fields ) ) {
 
-			wordpoints_debug_message( sprintf( _x( 'invalid %s "%s", possible values are %s', 'debug message', 'wordpoints' ), "args['orderby']", $orderby, implode( ', ', $this->_fields ) ), __METHOD__, __FILE__, __LINE__ );
+			wordpoints_debug_message( "invalid 'orderby' \"{$orderby}\", possible values are " . implode( ', ', $this->_fields ), __METHOD__, __FILE__, __LINE__ );
 
 		} else {
 
@@ -692,28 +676,9 @@ class WordPoints_Points_Logs_Query {
 
 			} else {
 
-				wordpoints_debug_message( sprintf( self::$messages['not_array'], '$in', $var_type ), __METHOD__, __FILE__, __LINE__ );
+				wordpoints_debug_message( "\$in must be an array, {$var_type} given", __METHOD__, __FILE__, __LINE__ );
 			}
 		}
-	}
-
-	/**
-	 * Prepare an array of debug messages.
-	 *
-	 * We do this once per load, and only if debugging is on.
-	 *
-	 * @since 1.0.0
-	 */
-	private static function _prepare_debug_messages() {
-
-		if ( ! wordpoints_debug() || ! empty( self::$messages ) )
-			return;
-
-		self::$messages = array(
-			'not_array'     => _x( '%s must be an array, %s given', 'debug message', 'wordpoints' ),
-			'invalid_value' => _x( 'invalid %s, possible values are %s', 'debug message', 'wordpoints' ),
-			'not_integer'   => _x( '%s must be an integer, %s given', 'debug message', 'wordpoints' ),
-		);
 	}
 }
 

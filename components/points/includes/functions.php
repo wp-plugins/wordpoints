@@ -750,7 +750,7 @@ function wordpoints_alter_points( $user_id, $points, $points_type, $log_type, $m
 
 		} else {
 
-			wordpoints_debug_message( sprintf( _x( 'Log meta must be an array, %s given', 'debug message', 'wordpoints' ), gettype( $meta ) ), __FUNCTION__, __FILE__, __LINE__ );
+			wordpoints_debug_message( 'Log meta must be an array, ' . gettype( $meta ) . ' given', __FUNCTION__, __FILE__, __LINE__ );
 		}
 
 		/**
