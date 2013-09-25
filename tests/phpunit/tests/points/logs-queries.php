@@ -304,6 +304,38 @@ class WordPoints_Points_Log_Query_Test extends WordPoints_Points_UnitTestCase {
 		);
 		$this->assertEquals( 1, $query_4->count() );
 	}
+
+	/**
+	 * Test the 'date_query' args.
+	 *
+	 * This is just a very basic test to make sure that WP_Date_Query is indeed
+	 * supported.
+	 *
+	 * @since $ver$
+	 */
+	public function test_date_query_arg() {
+
+		$user_id = $this->factory->user->create();
+
+		wordpoints_alter_points( $user_id, 10, 'points', 'test' );
+		wordpoints_alter_points( $user_id, 10, 'points', 'test' );
+
+		$query = new WordPoints_Points_Logs_Query(
+			array(
+				'date_query' => array(
+					array(
+						'after' => array(
+							'second' => 59,
+						),
+					),
+				),
+			)
+		);
+
+		wordpoints_alter_points( $user_id, 10, 'points', 'test' );
+
+		$this->assertEquals( 0, $query->count() );
+	}
 }
 
 // end of file.
