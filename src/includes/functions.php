@@ -234,7 +234,7 @@ function wordpoints_prepare__in( $_in, $format = '%s' ) {
 
 	if ( ! in_array( $format, $formats ) ) {
 
-		wordpoints_debug_message( sprintf( _x( 'invalid format "%s", allowed values are %%s, %%d, and %%f', 'debug message', 'wordpoints' ), $format ), __FUNCTION__, __FILE__, __LINE__ );
+		wordpoints_debug_message( "invalid format '{$format}', allowed values are %s, %d, and %f", __FUNCTION__, __FILE__, __LINE__ );
 
 		$format = '%s';
 	}
@@ -244,7 +244,7 @@ function wordpoints_prepare__in( $_in, $format = '%s' ) {
 
 	if ( 'array' != $type ) {
 
-		wordpoints_debug_message( sprintf( _x( '%s must be an array, %s given', 'debug message', 'wordpoints' ), '$_in', $type ), __FUNCTION__, __FILE__, __LINE__ );
+		wordpoints_debug_message( "\$_in must be an array, {$type} given", __FUNCTION__, __FILE__, __LINE__ );
 
 		return false;
 	}
@@ -255,7 +255,7 @@ function wordpoints_prepare__in( $_in, $format = '%s' ) {
 
 	if ( 0 == $count ) {
 
-		wordpoints_debug_message( _x( 'empty array passed as first parameter', 'debug message', 'wordpoints' ), __FUNCTION__, __FILE__, __LINE__ );
+		wordpoints_debug_message( 'empty array passed as first parameter', __FUNCTION__, __FILE__, __LINE__ );
 
 		return false;
 	}
