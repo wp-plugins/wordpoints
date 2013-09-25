@@ -139,10 +139,8 @@ class WordPoints_Points_Logs_Query {
 	 *
 	 * All of the arguments are expected *not* to be SQL escaped.
 	 *
-	 * Date searching is currently not provided by this class. We're waiting on
-	 * WordPoints 3.7 and its WP_Date_Query class. Won't be long!
-	 *
 	 * @since 1.0.0
+	 * @since $ver$ Introduce 'date_query' argument.
 	 *
 	 * @param array $args The arguments for the query {
 	 *        @type string|array $fields              Fields to include in the results.
@@ -177,6 +175,7 @@ class WordPoints_Points_Logs_Query {
 	 *              @type array  $value__in     Limit results to entries with metadata matching these meta values.
 	 *              @type array  $value__not_in Exclude entries with metadata matching these meta values.
 	 *        }
+	 *        @type array        $date_query          Arguments for a WP_Date_Query.
 	 * }
 	 */
 	public function __construct( $args ) {
@@ -205,6 +204,7 @@ class WordPoints_Points_Logs_Query {
 			'blog__not_in'        => array(),
 			'site_id'             => $wpdb->siteid,
 			'meta_query'          => array(),
+			'date_query'          => null,
 		);
 
 		$this->_args = wp_parse_args( $args, $defaults );
@@ -300,7 +300,7 @@ class WordPoints_Points_Logs_Query {
 	 *
 	 * @return string The SQL for the query.
 	 */
-	function get_sql( $select_type = null ) {
+	public function get_sql( $select_type = null ) {
 
 		if ( isset( $select_type ) )
 			$this->_select_type = $select_type;
@@ -308,6 +308,26 @@ class WordPoints_Points_Logs_Query {
 		$this->_prepare_query();
 
 		return $this->_get_sql();
+	}
+
+	/**
+	 * Filter date query valid columns for WP_Date_Query.
+	 *
+	 * Adds `date` to the list of valid columns for `wordpoints_points_logs.date`.
+	 *
+	 * @since $ver$
+	 *
+	 * @filter date_query_valid_columns Added by self::_prepare_where().
+	 *
+	 * @param array $valid_columns The names of the valid columns for date queries.
+	 *
+	 * @return array The valid columns.
+	 */
+	public function date_query_valid_columns_filter( $valid_columns ) {
+
+		$valid_columns[] = 'date';
+
+		return $valid_columns;
 	}
 
 	//
@@ -501,11 +521,24 @@ class WordPoints_Points_Logs_Query {
 			$this->_prepare_posint__in( $this->_args['blog__not_in'], 'blog_id', 'NOT IN' );
 		}
 
+		if ( ! empty( $this->_args['date_query'] ) && is_array( $this->_args['date_query'] ) ) {
+
+			add_filter( 'date_query_valid_columns', array( $this, 'date_query_valid_columns_filter' ) );
+
+			$date_query = new WP_Date_Query( $this->_args['date_query'], 'date' );
+			$date_query = $date_query->get_sql();
+
+			if ( ! empty( $date_query ) ) {
+
+				$this->_wheres[] = ltrim( $date_query, ' AND' );
+			}
+
+			remove_filter( 'date_query_valid_columns', array( $this, 'date_query_valid_columns_filter' ) );
+		}
+
 		if ( ! empty( $this->_wheres ) ) {
 
-			$where = implode( ' AND ', $this->_wheres );
-
-			$this->_where = "WHERE {$where}";
+			$this->_where = 'WHERE ' . implode( ' AND ', $this->_wheres );
 		}
 
 	} // function _prepare_where()
