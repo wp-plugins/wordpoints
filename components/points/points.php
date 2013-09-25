@@ -76,7 +76,7 @@ function wordpoints_points_component_activate() {
 		 *
 		 * @since 1.0.0
 		 */
-		require dirname( __FILE__ ) . '/install.php';
+		require WORDPOINTS_DIR . 'components/points/install.php';
 	}
 }
 add_action( 'wordpoints_component_activate-points', 'wordpoints_points_component_activate' );
@@ -101,7 +101,7 @@ function wordpoints_points_component_uninstall() {
 		 *
 		 * @since 1.0.0
 		 */
-		require dirname( __FILE__ ) . '/uninstall.php';
+		require WORDPOINTS_DIR . 'components/points/uninstall.php';
 	}
 }
 add_action( 'wordpoints_uninstall_component-points', 'wordpoints_points_component_uninstall' );
@@ -131,63 +131,61 @@ function wordpoints_points_register_scripts() {
 add_action( 'wp_enqueue_scripts', 'wordpoints_points_register_scripts', 5 );
 add_action( 'admin_enqueue_scripts', 'wordpoints_points_register_scripts', 5 );
 
-$dir = dirname( __FILE__ );
-
 /**
  * Points component functions.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/functions.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/functions.php';
 
 /**
  * Points hooks static class.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/class-wordpoints-points-hooks.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/class-wordpoints-points-hooks.php';
 
 /**
  * Points hook abstract class.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/class-wordpoints-points-hook.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/class-wordpoints-points-hook.php';
 
 /**
  * Included points hooks.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/hooks.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/hooks.php';
 
 /**
  * Points logs query class.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/class-wordpoints-points-logs-query.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/class-wordpoints-points-logs-query.php';
 
 /**
  * Shortcodes/template tags.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/shortcodes.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/shortcodes.php';
 
 /**
  * Widgets.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/widgets.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/widgets.php';
 
 /**
  * Logs related functions.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/logs.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/logs.php';
 
 if ( is_admin() ) {
 
@@ -198,7 +196,7 @@ if ( is_admin() ) {
 	 *
 	 * @since 1.0.0
 	 */
-	include_once $dir . '/admin/admin.php';
+	include_once WORDPOINTS_DIR . 'components/points/admin/admin.php';
 }
 
 // end of file /components/points/points.php
