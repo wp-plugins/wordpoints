@@ -61,7 +61,7 @@ function wordpoints_points_admin_screen_hooks() {
 		 *
 		 * @since 1.0.0
 		 */
-		include dirname( __FILE__ ) . '/screens/hooks-no-js.php';
+		include WORDPOINTS_DIR . 'components/points/admin/screens/hooks-no-js.php';
 
 	} else {
 
@@ -70,7 +70,7 @@ function wordpoints_points_admin_screen_hooks() {
 		 *
 		 * @since 1.0.0
 		 */
-		include dirname( __FILE__ ) . '/screens/hooks.php';
+		include WORDPOINTS_DIR . 'components/points/admin/screens/hooks.php';
 	}
 }
 
@@ -86,7 +86,7 @@ function wordpoints_points_admin_screen_logs() {
 	 *
 	 * @since 1.0.0
 	 */
-	include_once dirname( __FILE__ ) . '/screens/logs.php';
+	include WORDPOINTS_DIR . 'components/points/admin/screens/logs.php';
 }
 
 /**

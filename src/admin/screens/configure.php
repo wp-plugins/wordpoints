@@ -54,7 +54,7 @@ function wordpoints_admin_screen_configure() {
 					$template = '/configure-settings.php';
 			}
 
-			include dirname( __FILE__ ) . $template;
+			include WORDPOINTS_DIR . 'admin/screens' . $template;
 
 			/**
 			 * At the bottom of the configure screens.
