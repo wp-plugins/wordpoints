@@ -160,8 +160,9 @@ final class WordPoints_Points_Hooks {
 
 		foreach ( self::$hooks as $hook_id => $hook ) {
 
-			if ( preg_match( $id_base_d, $hook_id ) )
+			if ( preg_match( $id_base_d, $hook_id ) ) {
 				return $hook;
+			}
 		}
 
 		return false;
@@ -426,7 +427,7 @@ final class WordPoints_Points_Hooks {
 			<?php endif; ?>
 
 						<?php if ( $slug ) : ?>
-						<span class="wordpoints-points-slug"><em><?php _e( 'Slug', 'wordpoints' ); ?>: <?php echo esc_html( $slug ); ?></em></span><br />
+						<p><span class="wordpoints-points-slug"><em><?php _e( 'Slug', 'wordpoints' ); ?>: <?php echo esc_html( $slug ); ?></em></span></p>
 						<?php endif; ?>
 
 						<?php
@@ -442,14 +443,32 @@ final class WordPoints_Points_Hooks {
 						 */
 						do_action( 'wordpoints_points_type_form_top', $slug );
 
+						if ( 'hook-content' === $wrap ) {
+
+							// Mark the prefix and suffix optional on the add new form.
+							$prefix = _x( 'Prefix (optional):', 'points type', 'wordpoints' );
+							$suffix = _x( 'Suffix (optional):', 'points type', 'wordpoints' );
+
+						} else {
+
+							$prefix = _x( 'Prefix:', 'points type', 'wordpoints' );
+							$suffix = _x( 'Suffix:', 'points type', 'wordpoints' );
+						}
+
 						?>
 
-						<label for="points-name"><?php _ex( 'Name', 'points type', 'wordpoints' ); ?></label>
-						<input class="widefat" type="text" name="points-name" class="points-name" value="<?php echo esc_attr( $points_type['name'] ); ?>" />
-						<label for="points-prefix"><?php _ex( 'Prefix', 'points type', 'wordpoints' ); ?></label>
-						<input class="widefat" type="text" name="points-prefix" class="points-prefix" value="<?php echo esc_attr( $points_type['prefix'] ); ?>" />
-						<label for="points-suffix"><?php _ex( 'Suffix', 'points type', 'wordpoints' ); ?></label>
-						<input class="widefat" type="text" name="points-suffix" class="points-suffix" value="<?php echo esc_attr( $points_type['suffix'] ); ?>" />
+						<p>
+							<label for="points-name"><?php _ex( 'Name:', 'points type', 'wordpoints' ); ?></label>
+							<input class="widefat" type="text" name="points-name" class="points-name" value="<?php echo esc_attr( $points_type['name'] ); ?>" />
+						</p>
+						<p>
+							<label for="points-prefix"><?php echo $prefix; ?></label>
+							<input class="widefat" type="text" name="points-prefix" class="points-prefix" value="<?php echo esc_attr( $points_type['prefix'] ); ?>" />
+						</p>
+						<p>
+							<label for="points-suffix"><?php echo $suffix; ?></label>
+							<input class="widefat" type="text" name="points-suffix" class="points-suffix" value="<?php echo esc_attr( $points_type['suffix'] ); ?>" />
+						</p>
 
 						<?php
 
@@ -475,7 +494,7 @@ final class WordPoints_Points_Hooks {
 					<div class="hook-control-actions">
 						<div class="alignleft">
 							<?php if ( ! $add_new ) submit_button( _x( 'Delete', 'points type', 'wordpoints' ), 'delete', 'delete-points-type', false ); ?>
-							<a class="hook-control-close" href="#close"><?php _e( 'Close' ); ?></a>
+							<a class="hook-control-close" href="#close"><?php _e( 'Close', 'wordpoints' ); ?></a>
 						</div>
 						<div class="alignright">
 							<?php submit_button( _x( 'Save', 'points type', 'wordpoints' ), 'button-primary hook-control-save right', 'save-points-type', false, array( 'id' => "points-{$slug}-save" ) ); ?>

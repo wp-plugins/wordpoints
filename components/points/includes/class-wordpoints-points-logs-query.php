@@ -130,18 +130,14 @@ class WordPoints_Points_Logs_Query {
 	 */
 	private $_cache = array();
 
-	//
-	// Private Static Vars.
-	//
-
 	/**
-	 * An array of debug messages.
+	 * Holds the meta query object when a meta query is being performed.
 	 *
-	 * @since 1.0.0
+	 * @since 1.1.0
 	 *
-	 * @type array $messages
+	 * @type WP_Meta_Query $meta_query
 	 */
-	private static $messages = array();
+	private $meta_query;
 
 	//
 	// Public Methods.
@@ -152,12 +148,16 @@ class WordPoints_Points_Logs_Query {
 	 *
 	 * All of the arguments are expected *not* to be SQL escaped.
 	 *
-	 * Date searching is currently not provided by this class. We're waiting on
-	 * WordPoints 3.7 and its WP_Date_Query class. Won't be long!
-	 *
 	 * @since 1.0.0
+	 * @since 1.1.0 Introduce 'date_query' argument and support for WP_Date_Query.
+	 * @since 1.1.0 Support for WP_Meta_Query. Old meta arguments were deprecated.
 	 *
-	 * @param array $args The arguments for the query {
+	 * @see WP_Date_Query for the proper arguments for $args['date_query'].
+	 * @see WP_Meta_Query for the proper arguments for 'meta_query', 'meta_key', 'meta_value', 'meta_compare', and 'meta_type'.
+	 *
+	 * @param array $args {
+	 *        The arguments for the query.
+	 *
 	 *        @type string|array $fields              Fields to include in the results.
 	 *        @type int          $limit               The maximum number of results to return. Default is null (no limit).
 	 *        @type int          $start               The start for the LIMIT clause. Default: 0.
@@ -177,18 +177,23 @@ class WordPoints_Points_Logs_Query {
 	 *        @type int          $blog_id             Limit results to those from this blog within the network (mulitsite). Default is $wpdb->blogid (current blog).
 	 *        @type int[]        $blog__in            Limit results to these blogs.
 	 *        @type int[]        $blog__not_in        Exclude these blogs.
-	 *        @type int          $site_id             Limit results to this network.
-	 *              Default is $wpdb->siteid (current network). There isn't currently
-	 *              a use for this one, but its possible in future that WordPress
-	 *              will allow multi-network installs.
-	 *        @type array $meta_query Arguments for INNER JOIN on meta table {
-	 *              @type int    $id            Query only the log for this meta entry.
-	 *              @type int[]  $id__in        Limit results to logs matching these meta IDs.
-	 *              @type int[]  $id__not_in    Exclude results for these meta entries.
-	 *              @type string $key           Return logs which have meta for this key.
-	 *              @type mixed  $value         Return logs which have metadata matching this value.
-	 *              @type array  $value__in     Limit results to entries with metadata matching these meta values.
-	 *              @type array  $value__not_in Exclude entries with metadata matching these meta values.
+	 *        @type int          $site_id             Limit results to this network. Default is $wpdb->siteid (current network). There isn't currently
+	 *                                                a use for this one, but its possible in future that WordPress will allow multi-network installs.
+	 *        @type array        $date_query          Arguments for a WP_Date_Query.
+	 *        @type string       $meta_key            See WP_Meta_Query.
+	 *        @type mixed        $meta_value          See WP_Meta_Query.
+	 *        @type string       $meta_compare        See WP_Meta_Query.
+	 *        @type string       $meta_type           See WP_Meta_Query.
+	 *        @type array        $meta_query {
+	 *             	Arguments for INNER JOIN on meta table WP_Meta_Query
+	 *
+	 *              @type int    $id            Deprecated. Query only the log for this meta entry.
+	 *              @type int[]  $id__in        Deprecated. Limit results to logs matching these meta IDs.
+	 *              @type int[]  $id__not_in    Deprecated. Exclude results for these meta entries.
+	 *              @type string $key           Deprecated. Use meta_key instead. Return logs which have meta for this key.
+	 *              @type mixed  $value         Deprecated. Use meta_value instead. Return logs which have metadata matching this value.
+	 *              @type array  $value__in     Deprecated. Use meta_value instead. Limit results to entries with metadata matching these meta values.
+	 *              @type array  $value__not_in Deprecated. Use meta_value instead. Exclude entries with metadata matching these meta values.
 	 *        }
 	 * }
 	 */
@@ -217,22 +222,47 @@ class WordPoints_Points_Logs_Query {
 			'blog__in'            => array(),
 			'blog__not_in'        => array(),
 			'site_id'             => $wpdb->siteid,
-			'meta_query'          => array(),
+			'date_query'          => null,
 		);
 
 		$this->_args = wp_parse_args( $args, $defaults );
 
-		$meta_defaults = array(
-			'id'            => 0,
-			'id__in'        => array(),
-			'id__not_in'    => array(),
-			'key'           => '',
-			'value'         => '',
-			'value__in'     => array(),
-			'value__not_in' => array(),
-		);
+		if ( ! empty( $this->_args['meta_query'] ) ) {
 
-		$this->_args['meta_query'] = wp_parse_args( $this->_args['meta_query'], $meta_defaults );
+			// - Handle deprecated meta_query arguments.
+
+			foreach ( array( 'id', 'id__in', 'id__not_in' ) as $key ) {
+
+				if ( isset( $this->_args['meta_query'][ $key ] ) ) {
+
+					unset( $this->_args['meta_query'][ $key ] );
+					_deprecated_argument( __METHOD__, '1.1.0', sprintf( __( '%s is no longer supported.', 'wordpoints' ), "\$args['meta_query'][{$key}]" ) );
+				}
+			}
+
+			if ( isset( $this->_args['meta_query']['key'] ) ) {
+
+				$this->_args['meta_key'] = $this->_args['meta_query']['key'];
+				unset( $this->_args['meta_query']['key'] );
+				_deprecated_argument( __METHOD__, '1.1.0', sprintf( __( '%s has been replaced by %s.', 'wordpoints' ), '$args["meta_query"]["key"]', '$args["meta_key"]' ) );
+			}
+
+			foreach ( array( 'value', 'value__in', 'value__not_in' ) as $key ) {
+
+				if ( isset( $this->_args['meta_query'][ $key ] ) ) {
+
+					$this->_args['meta_value'] = $this->_args['meta_query'][ $key ];
+					unset( $this->_args['meta_query'][ $key ] );
+					_deprecated_argument( __METHOD__, '1.1.0', sprintf( __( '%s has been replaced by %s.', 'wordpoints' ), "\$args['meta_query'][{$key}]", '$args["meta_value"]' ) );
+
+					if ( 'value__not_in' === $key ) {
+						$this->_args['meta_compare'] = 'NOT IN';
+					}
+
+					break;
+				}
+			}
+		}
 	}
 
 	/**
@@ -283,7 +313,7 @@ class WordPoints_Points_Logs_Query {
 
 		if ( ! in_array( $method, $methods ) ) {
 
-			wordpoints_debug_message( sprintf( self::$messages['invalid_value'], 'get $method', implode( ', ', $methods ) ), __METHOD__, __FILE__, __LINE__ );
+			wordpoints_debug_message( "invalid get method {$method}, possible values are " . implode( ', ', $methods ), __METHOD__, __FILE__, __LINE__ );
 
 			return false;
 		}
@@ -313,7 +343,7 @@ class WordPoints_Points_Logs_Query {
 	 *
 	 * @return string The SQL for the query.
 	 */
-	function get_sql( $select_type = null ) {
+	public function get_sql( $select_type = null ) {
 
 		if ( isset( $select_type ) )
 			$this->_select_type = $select_type;
@@ -321,6 +351,45 @@ class WordPoints_Points_Logs_Query {
 		$this->_prepare_query();
 
 		return $this->_get_sql();
+	}
+
+	/**
+	 * Filter date query valid columns for WP_Date_Query.
+	 *
+	 * Adds `date` to the list of valid columns for `wordpoints_points_logs.date`.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @filter date_query_valid_columns Added by self::_prepare_where().
+	 *
+	 * @param array $valid_columns The names of the valid columns for date queries.
+	 *
+	 * @return array The valid columns.
+	 */
+	public function date_query_valid_columns_filter( $valid_columns ) {
+
+		$valid_columns[] = 'date';
+
+		return $valid_columns;
+	}
+
+	/**
+	 * Filter the meta table id column name for the meta query.
+	 *
+	 * @filter sanitize_key Added and subsequently removed by self::_prepare_where.
+	 *
+	 * @param string $key     The sanitized value for the key.
+	 * @parma string $raw_key The raw value for the key.
+	 *
+	 * @return string The correct meta table ID column, if the key is wordpoints_points_log_.
+	 */
+	public function meta_query_meta_table_id_filter( $key ) {
+
+		if ( 'wordpoints_points_log__id' === $key ) {
+			$key = 'log_id';
+		}
+
+		return $key;
 	}
 
 	//
@@ -336,16 +405,16 @@ class WordPoints_Points_Logs_Query {
 	 */
 	private function _get_sql() {
 
+		global $wpdb;
+
 		$select = ( 'SELECT COUNT' == $this->_select_type ) ? $this->_select_count : $this->_select;
 
-		return "
-			{$select}
-			FROM `" . WORDPOINTS_POINTS_LOGS_DB . "`
-			{$this->_meta_join}
-			{$this->_where}
-			{$this->_order}
-			{$this->_limit}
-			";
+		return $select . "\n"
+			. "FROM `{$wpdb->wordpoints_points_logs}`" . "\n"
+			. $this->_meta_join
+			. $this->_where
+			. $this->_order
+			. $this->_limit;
 	}
 
 	/**
@@ -377,11 +446,7 @@ class WordPoints_Points_Logs_Query {
 
 		if ( ! $this->_query_ready ) {
 
-			// Prepare debug messages in case we run into trouble.
-			$this->_prepare_debug_messages();
-
 			$this->_prepare_select();
-			$this->_prepare_meta_join();
 			$this->_prepare_where();
 			$this->_prepare_orderby();
 			$this->_prepare_limit();
@@ -409,7 +474,7 @@ class WordPoints_Points_Logs_Query {
 			elseif ( in_array( $_fields, $this->_fields ) )
 				$fields = $_fields;
 			else
-				wordpoints_debug_message( sprintf( self::$messages['invalid_value'], '$args["fields"]', implode( ', ', $this->_fields ) ), __METHOD__, __FILE__, __LINE__ );
+				wordpoints_debug_message( "invalid field {$_fields}, possible values are " . implode( ', ', $this->_fields ), __METHOD__, __FILE__, __LINE__ );
 
 		} elseif ( 'array' == $var_type ) {
 
@@ -417,7 +482,7 @@ class WordPoints_Points_Logs_Query {
 			$_fields = array_intersect( $this->_fields, $_fields );
 
 			if ( ! empty( $diff ) )
-				wordpoints_debug_message( sprintf( _x( 'invalid field(s) %s given', 'debug message', 'wordpoints' ), implode( ', ', $diff ) ), __METHOD__, __FILE__, __LINE__ );
+				wordpoints_debug_message( 'invalid field(s) "' . implode( '", "', $diff ) . '" given', __METHOD__, __FILE__, __LINE__ );
 
 			if ( ! empty( $_fields ) )
 				$fields = '`' . implode( '`, `', $_fields ) . '`';
@@ -489,7 +554,7 @@ class WordPoints_Points_Logs_Query {
 
 			if ( isset( $_points ) && ! wordpoints_int( $this->_args['points'] ) ) {
 
-				wordpoints_debug_message( sprintf( self::$messages['not_integer'], '$args["points"]', gettype( $_points ) ), __METHOD__, __FILE__, __LINE__ );
+				wordpoints_debug_message( "'points' must be an integer, " . gettype( $_points ) . " given",  __METHOD__, __FILE__, __LINE__ );
 
 			} else {
 
@@ -497,7 +562,7 @@ class WordPoints_Points_Logs_Query {
 
 				if ( ! in_array( $this->_args['points__compare'], $comparisons ) ) {
 
-					wordpoints_debug_message( sprintf( self::$messages['invalid_value'], '$args["points__compare"]', implode( ', ', $comparisions ) ), __METHOD__, __FILE__, __LINE__ );
+					wordpoints_debug_message( "invalid 'points__compare' {$this->_args['points__compare']}, possible values are " . implode( ', ', $comparisions ), __METHOD__, __FILE__, __LINE__ );
 				}
 
 				$this->_wheres[] = $wpdb->prepare( "`points` {$this->_args['points__compare']} %d", $this->_args['points'] );
@@ -517,61 +582,54 @@ class WordPoints_Points_Logs_Query {
 			$this->_prepare_posint__in( $this->_args['blog__not_in'], 'blog_id', 'NOT IN' );
 		}
 
+		if ( ! empty( $this->_args['date_query'] ) && is_array( $this->_args['date_query'] ) ) {
+
+			add_filter( 'date_query_valid_columns', array( $this, 'date_query_valid_columns_filter' ) );
+
+			$date_query = new WP_Date_Query( $this->_args['date_query'], 'date' );
+			$date_query = $date_query->get_sql();
+
+			if ( ! empty( $date_query ) ) {
+
+				$this->_wheres[] = ltrim( $date_query, ' AND' );
+			}
+
+			remove_filter( 'date_query_valid_columns', array( $this, 'date_query_valid_columns_filter' ) );
+		}
+
+		$meta_args = array_intersect_key(
+			$this->_args
+			, array(
+				'meta_key'     => '',
+				'meta_value'   => '',
+				'meta_compare' => '',
+				'meta_type'    => '',
+				'meta_query'   => '',
+			)
+		);
+
+		if ( ! empty( $meta_args ) ) {
+
+			$this->meta_query = new WP_Meta_Query();
+ 			$this->meta_query->parse_query_vars( $meta_args );
+
+			add_filter( 'sanitize_key', array( $this, 'meta_query_meta_table_id_filter' ) );
+			$meta_query = $this->meta_query->get_sql( 'wordpoints_points_log_', $wpdb->wordpoints_points_logs, 'id', $this );
+			remove_filter( 'sanitize_key', array( $this, 'meta_query_meta_table_id_filter' ) );
+
+			if ( ! empty( $meta_query['where'] ) ) {
+				$this->_wheres[] = ltrim( $meta_query['where'], ' AND' );
+			}
+
+			$this->_meta_join = $meta_query['join'] . "\n";
+		}
+
 		if ( ! empty( $this->_wheres ) ) {
 
-			$where = implode( ' AND ', $this->_wheres );
-
-			$this->_where = "WHERE {$where}";
+			$this->_where = 'WHERE ' . implode( ' AND ', $this->_wheres ) . "\n";
 		}
 
 	} // function _prepare_where()
-
-	/**
-	 * Prepare the JOIN clause for the meta query.
-	 *
-	 * @since 1.0.0
-	 */
-	private function _prepare_meta_join() {
-
-		global $wpdb;
-
-		$meta_query = $this->_args['meta_query'];
-
-		$join  = array();
-		$this->_wheres = array();
-
-		if ( wordpoints_posint( $meta_query['id'] ) ) {
-
-			$this->_wheres[] = "meta.id = {$meta_query['id']}";
-
-		} else {
-
-			$this->_prepare_posint__in( $meta_query['id__in'], 'meta.id' );
-			$this->_prepare_posint__in( $meta_query['id__not_in'], 'meta.id', 'NOT IN' );
-		}
-
-		if ( ! empty( $meta_query['key'] ) ) {
-
-			$this->_wheres[] = $wpdb->prepare( 'meta.meta_key = %s', $meta_query['key'] );
-		}
-
-		if ( ! empty( $meta_query['value'] ) ) {
-
-			$this->_wheres[] = $wpdb->prepare( 'meta.meta_value = %s', $meta_query['value'] );
-
-		} else {
-
-			$this->_prepare_posint__in( $meta_query['value__in'], 'meta.meta_value' );
-			$this->_prepare_posint__in( $meta_query['value__not_in'], 'meta.meta_value', 'NOT IN' );
-		}
-
-		if ( ! empty( $this->_wheres ) ) {
-
-			$this->_meta_join = 'INNER JOIN `' . WORDPOINTS_POINTS_LOG_META_DB . '` AS meta
-				ON ' . WORDPOINTS_POINTS_LOGS_DB . '.id = meta.log_id
-					AND ' . implode( ' AND ', $this->_wheres );
-		}
-	}
 
 	/**
 	 * Prepare the LIMIT clause for the query.
@@ -589,7 +647,7 @@ class WordPoints_Points_Logs_Query {
 
 		if ( wordpoints_int( $this->_args['limit'] ) === false ) {
 
-			wordpoints_debug_message( sprintf( _x( '%s must be a positive integer, %s given', 'debug message', 'wordpoints' ), "args['limit']", ( strval( $_var ) ? $_var : gettype( $_var ) ) ), __METHOD__, __FILE__, __LINE__ );
+			wordpoints_debug_message( "'limit' must be a positive integer, " . ( strval( $_var ) ? $_var : gettype( $_var ) ) . ' given', __METHOD__, __FILE__, __LINE__ );
 
 			$this->_args['limit'] = 0;
 		}
@@ -598,7 +656,7 @@ class WordPoints_Points_Logs_Query {
 
 		if ( wordpoints_int( $this->_args['start'] ) === false ) {
 
-			wordpoints_debug_message( sprintf( _x( '%s must be a positive integer, %s given', 'debug message', 'wordpoints' ), "args['start']", ( strval( $_var ) ? $_var : gettype( $_var ) ) ), __METHOD__, __FILE__, __LINE__ );
+			wordpoints_debug_message( "'start' must be a positive integer, " . ( strval( $_var ) ? $_var : gettype( $_var ) ) . ' given', __METHOD__, __FILE__, __LINE__ );
 
 			$this->_args['start'] = 0;
 		}
@@ -616,26 +674,40 @@ class WordPoints_Points_Logs_Query {
 	 */
 	private function _prepare_orderby() {
 
+		global $wpdb;
+
 		$order = $this->_args['order'];
 		$order_by = $this->_args['orderby'];
 
-		if ( 'none' == $order_by )
+		if ( 'none' == $order_by ) {
 			return;
+		}
 
 		if ( ! in_array( $order, array( 'DESC', 'ASC' ) ) ) {
 
-			wordpoints_debug_message( sprintf( _x( 'invalid %s "%s", possible values are %s', 'debug message', 'wordpoints' ), "args['order']", $order, 'DESC, ASC' ), __METHOD__, __FILE__, __LINE__ );
+			wordpoints_debug_message( "invalid 'order' \"{$order}\", possible values are DESC and ASC", __METHOD__, __FILE__, __LINE__ );
 			$order = 'DESC';
 		}
 
-		if ( ! in_array( $order_by, $this->_fields ) ) {
+		if ( 'meta_value' === $order_by ) {
 
-			wordpoints_debug_message( sprintf( _x( 'invalid %s "%s", possible values are %s', 'debug message', 'wordpoints' ), "args['orderby']", $orderby, implode( ', ', $this->_fields ) ), __METHOD__, __FILE__, __LINE__ );
+			if ( isset( $this->_args['meta_type'] ) ) {
 
-		} else {
+				$meta_type = $this->meta_query->get_cast_for_type( $this->_args['meta_type'] );
+				$order_by = "CAST({$wpdb->wordpoints_points_log_meta}.meta_value AS {$meta_type}";
 
-			$this->_order = "ORDER BY `{$order_by}` {$order}";
+			} else {
+
+				$order_by = "{$wpdb->wordpoints_points_log_meta}.meta_value";
+			}
+
+		} elseif ( ! in_array( $order_by, $this->_fields ) ) {
+
+			wordpoints_debug_message( "invalid 'orderby' \"{$orderby}\", possible values are " . implode( ', ', $this->_fields ), __METHOD__, __FILE__, __LINE__ );
+			return;
 		}
+
+		$this->_order = "ORDER BY {$order_by} {$order}\n";
 	}
 
 	/**
@@ -692,28 +764,9 @@ class WordPoints_Points_Logs_Query {
 
 			} else {
 
-				wordpoints_debug_message( sprintf( self::$messages['not_array'], '$in', $var_type ), __METHOD__, __FILE__, __LINE__ );
+				wordpoints_debug_message( "\$in must be an array, {$var_type} given", __METHOD__, __FILE__, __LINE__ );
 			}
 		}
-	}
-
-	/**
-	 * Prepare an array of debug messages.
-	 *
-	 * We do this once per load, and only if debugging is on.
-	 *
-	 * @since 1.0.0
-	 */
-	private static function _prepare_debug_messages() {
-
-		if ( ! wordpoints_debug() || ! empty( self::$messages ) )
-			return;
-
-		self::$messages = array(
-			'not_array'     => _x( '%s must be an array, %s given', 'debug message', 'wordpoints' ),
-			'invalid_value' => _x( 'invalid %s, possible values are %s', 'debug message', 'wordpoints' ),
-			'not_integer'   => _x( '%s must be an integer, %s given', 'debug message', 'wordpoints' ),
-		);
 	}
 }
 

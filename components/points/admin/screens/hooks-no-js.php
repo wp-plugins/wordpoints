@@ -18,8 +18,10 @@ if ( isset( $_GET['addnew'] ) ) {
 	$points_type = wordpoints_get_default_points_type();
 
 	// Default to the first points type.
-	if ( ! $points_type )
-		$points_type = reset( $points_types );
+	if ( ! $points_type ) {
+		reset( $points_types );
+		$points_type = key( $points_types );
+	}
 
 	if ( ! $points_type ) {
 
@@ -66,7 +68,6 @@ $width = ' style="width:' . $hook->get_option( 'width' ) . 'px"';
 ?>
 
 <div class="wrap">
-	<?php screen_icon(); ?>
 	<h2><?php echo esc_html( __( 'Points Hooks', 'wordpoints' ) ); ?></h2>
 	<div class="edithook"<?php echo $width; ?>>
 		<h3><?php printf( _x( 'Hook %s', 'hook name', 'wordpoints' ), $name ); ?></h3>

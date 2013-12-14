@@ -5,6 +5,12 @@
  *
  * @package WordPoints\Administration
  * @since 1.0.0
+ */
+
+/**
+ * Display the configure administration panels.
+ *
+ * @since 1.0.0
  *
  * @uses do_action() To call 'wordpoints_admin_screen_head'.
  * @uses wordpoints_admin_show_tabs() To display the tabs.
@@ -30,7 +36,6 @@ function wordpoints_admin_screen_configure() {
 				array(
 					'general'    => __( 'General Settings', 'wordpoints' ),
 					'components' => __( 'Components', 'wordpoints' ),
-					'modules'    => __( 'Modules', 'wordpoints' ),
 				)
 			);
 
@@ -40,15 +45,11 @@ function wordpoints_admin_screen_configure() {
 					$template = '/configure-components.php';
 				break;
 
-				case 'modules':
-					$template = '/configure-modules.php';
-				break;
-
 				default:
 					$template = '/configure-settings.php';
 			}
 
-			include dirname( __FILE__ ) . $template;
+			include WORDPOINTS_DIR . 'admin/screens' . $template;
 
 			/**
 			 * At the bottom of the configure screens.

@@ -1,7 +1,14 @@
 <?php
 
 /**
- * Points Hooks class.
+ * The points hook class.
+ *
+ * @package WordPoints\Points\Hooks
+ * @since 1.0.0
+ */
+
+/**
+ * Points hook class.
  *
  * This is an abstract class that must be extended to add a points hook. It has two
  * abstract methods which must be overriden. They update the hook's settings and
@@ -14,7 +21,6 @@
  * The main difference of course, is that points hooks aren't displayed in the side-
  * bar of your site.
  *
- * @package WordPoints\Points\Hooks
  * @since 1.0.0
  */
 abstract class WordPoints_Points_Hook {
@@ -46,7 +52,7 @@ abstract class WordPoints_Points_Hook {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @type strin $option_name
+	 * @type string $option_name
 	 */
 	private $option_name;
 

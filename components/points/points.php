@@ -9,16 +9,21 @@
 
 global $wpdb;
 
+$wpdb->wordpoints_points_logs = "{$wpdb->base_prefix}wordpoints_points_logs";
+$wpdb->wordpoints_points_log_meta = "{$wpdb->base_prefix}wordpoints_points_log_meta";
+
 /**
  * The points logs database table name.
  *
  * This table is network-wide on multisite installs.
  *
  * @since 1.0.0
+ * @deprecated 1.1.0
+ * @deprecated Use $wpdb->wordpoints_points_logs instead.
  *
  * @type string
  */
-define( 'WORDPOINTS_POINTS_LOGS_DB', "{$wpdb->base_prefix}wordpoints_points_logs" );
+define( 'WORDPOINTS_POINTS_LOGS_DB', $wpdb->wordpoints_points_logs );
 
 /**
  * The points logs meta database table name.
@@ -26,10 +31,12 @@ define( 'WORDPOINTS_POINTS_LOGS_DB', "{$wpdb->base_prefix}wordpoints_points_logs
  * This table is network-wide on multisite installs.
  *
  * @since 1.0.0
+ * @deprecated 1.1.0
+ * @deprecated Use $wpdb->wordpoints_points_log_meta instead.
  *
  * @type string
  */
-define( 'WORDPOINTS_POINTS_LOG_META_DB', "{$wpdb->base_prefix}wordpoints_points_log_meta" );
+define( 'WORDPOINTS_POINTS_LOG_META_DB', $wpdb->wordpoints_points_log_meta );
 
 /**
  * Register the points component.
@@ -47,7 +54,7 @@ function wordpoints_points_component_register() {
 			'slug'          => 'points',
 			'name'          => _x( 'Points', 'component name', 'wordpoints' ),
 			'version'       => WORDPOINTS_VERSION,
-			'author'        => 'WordPoints',
+			'author'        => _x( 'WordPoints', 'component author', 'wordpoints' ),
 			'author_uri'    => 'http://wordpoints.org/',
 			'component_uri' => 'http://wordpoints.org/',
 			'description'   => __( 'Enables a points system for your site.', 'wordpoints' ),
@@ -76,7 +83,7 @@ function wordpoints_points_component_activate() {
 		 *
 		 * @since 1.0.0
 		 */
-		require dirname( __FILE__ ) . '/install.php';
+		require WORDPOINTS_DIR . 'components/points/install.php';
 	}
 }
 add_action( 'wordpoints_component_activate-points', 'wordpoints_points_component_activate' );
@@ -101,13 +108,15 @@ function wordpoints_points_component_uninstall() {
 		 *
 		 * @since 1.0.0
 		 */
-		require dirname( __FILE__ ) . '/uninstall.php';
+		require WORDPOINTS_DIR . 'components/points/uninstall.php';
 	}
 }
 add_action( 'wordpoints_uninstall_component-points', 'wordpoints_points_component_uninstall' );
 
 // If the component isn't active, stop here.
-if ( ! wordpoints_component_is_active( 'points' ) ) return;
+if ( ! wordpoints_component_is_active( 'points' ) ) {
+	return;
+}
 
 /**
  * Register scripts and styles for the component.
@@ -131,63 +140,61 @@ function wordpoints_points_register_scripts() {
 add_action( 'wp_enqueue_scripts', 'wordpoints_points_register_scripts', 5 );
 add_action( 'admin_enqueue_scripts', 'wordpoints_points_register_scripts', 5 );
 
-$dir = dirname( __FILE__ );
-
 /**
  * Points component functions.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/functions.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/functions.php';
 
 /**
  * Points hooks static class.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/class-wordpoints-points-hooks.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/class-wordpoints-points-hooks.php';
 
 /**
  * Points hook abstract class.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/class-wordpoints-points-hook.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/class-wordpoints-points-hook.php';
 
 /**
  * Included points hooks.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/hooks.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/hooks.php';
 
 /**
  * Points logs query class.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/class-wordpoints-points-logs-query.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/class-wordpoints-points-logs-query.php';
 
 /**
  * Shortcodes/template tags.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/shortcodes.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/shortcodes.php';
 
 /**
  * Widgets.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/widgets.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/widgets.php';
 
 /**
  * Logs related functions.
  *
  * @since 1.0.0
  */
-include_once $dir . '/includes/logs.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/logs.php';
 
 if ( is_admin() ) {
 
@@ -198,7 +205,7 @@ if ( is_admin() ) {
 	 *
 	 * @since 1.0.0
 	 */
-	include_once $dir . '/admin/admin.php';
+	include_once WORDPOINTS_DIR . 'components/points/admin/admin.php';
 }
 
 // end of file /components/points/points.php

@@ -85,7 +85,7 @@ do_action( 'wordpoints_admin_components_top' );
 	<thead>
 		<tr>
 			<th scope="col" width="150"><?php _ex( 'Component', 'components table heading', 'wordpoints' ); ?></th>
-			<th scope="col"><?php _e( 'Description', 'components table heading', 'wordpoints' ); ?></th>
+			<th scope="col"><?php _ex( 'Description', 'components table heading', 'wordpoints' ); ?></th>
 			<th scope="col" width="80"><?php _ex( 'Version', 'components table heading', 'wordpoints' ); ?></th>
 			<th scope="col" width="70"><?php _ex( 'Action', 'components table heading', 'wordpoints' ); ?></th>
 		</tr>

@@ -1,10 +1,10 @@
 === WordPoints ===
 Contributors: jdgrimes
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=TPXS6B98HURLJ&lc=US&item_name=WordPoints&item_number=wordpressorg&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_LG%2egif%3aNonHosted
-Tags: points, awards, rewards, cubepoints, credits
-Requires at least: 3.6
-Tested up to: 3.7
-Stable tag: 1.0.0
+Tags: points, awards, rewards, cubepoints, credits, gamify
+Requires at least: 3.7
+Tested up to: 3.8
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,17 +42,22 @@ For more information on that, see the [developer docs](http://wordpoints.org/dev
 1. Download and unzip the plugin file
 1. Upload the resulting `/wordpoints/` folder to the `/wp-content/plugins/` directory
 1. Activate the plugin through the 'Plugins' menu in WordPress
-1. Click on the WordPoints administration menu item
-1. Click on the Components tab
-1. Activate the Points component by clicking on the Activate button on the right
 1. You can set up the points hooks to your liking by clicking on the Points Hooks submenu item
 
 == Frequently Asked Questions ==
 
+= Why doesn't WordPoints have (some feature)? =
+
+Maybe it will soon - just ask for it!
+
+= How can I manually change a users points? =
+
+You can manually adjust a user's points from their profile page in the admin.
+
 = Why does WordPoints have only one component? =
 
 I plan to add more components in future, but right now these are still under
-development. Find out more here.
+development. Find out more [here](http://wordpoints.org/roadmap/).
 
 = Does WordPoints support Multisite? =
 
@@ -73,10 +78,31 @@ points are awarded.
 
 == Changelog ==
 
+= 1.1.0 =
+* New: You can now add points hooks to a points type by clicking on the hook and
+choosing the points type to add it to.
+* New: The plugin is fully translatable, and pot file is now included in `/languages`.
+* New: For developers, this version introduces an [improved modules API](http://wordpoints.org/developer-guide/modules/).
+* New: Also for developers, the logs query class now implements `WP_Meta_Query` and
+`WP_Date_Query`.
+* Fixed: Use the correct post type name in the points logs instead of the generic "Post".
+
+= 1.0.1 =
+* Fixed: The points component is now activated upon installation.
+* Fixed: Module/component activation user experience improved slightly.
+
 = 1.0.0 =
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+* This update includes improvements to the points hooks UI, and also many improvements
+to the plugin's core code, paving the way for more new features in the near future.
+
+= 1.0.1 =
+* This is a minor release with a few small fixes/improvements mainly aimed at initial
+installation - but it's recommended that you upgrade.
 
 = 1.0.0 =
 * This is the initial release

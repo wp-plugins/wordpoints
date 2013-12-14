@@ -50,13 +50,13 @@ if ( isset( $_POST['wordpoints_settings_nonce'] ) && wp_verify_nonce( $_POST['wo
 
 	?>
 
-	<h3>Excluded Users</h3>
+	<h3><?php _e( 'Excluded Users', 'wordpoints' ); ?></h3>
 	<p><?php _e( 'Enter the IDs of users to exclude from leader boards, logs, etc. This may be useful if you use certain accounts for testing.', 'wordpoints' ); ?></p>
 	<table class="form-table">
 		<tbody>
 			<tr>
 				<th>
-					<label for="excluded_users">Excluded Users</label>
+					<label for="excluded_users"><?php _e( 'Excluded Users', 'wordpoints' ); ?></label>
 				</th>
 				<td>
 					<input type="text" name="excluded_users" id="excluded_users" value="<?php echo implode( ', ', wordpoints_get_array_option( 'wordpoints_excluded_users' ) ); ?>" />

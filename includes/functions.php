@@ -176,17 +176,24 @@ function wordpoints_debug_message( $message, $function, $file, $line ) {
  * array.
  *
  * @since 1.0.0
+ * @since 1.1.0 The $conext parameter was added for site options.
  *
  * @param string $option The name of the option to get.
+ * @param string $context The context for the option. Use 'site' to get site options.
  *
  * @return array The option value if it is an array, or an empty array if not.
  */
-function wordpoints_get_array_option( $option ) {
+function wordpoints_get_array_option( $option, $context = 'default' ) {
 
-	$value = get_option( $option, array() );
+	if ( 'site' == $context ) {
+		$value = get_site_option( $option, array() );
+	} else {
+		$value = get_option( $option, array() );
+	}
 
-	if ( ! is_array( $value ) )
+	if ( ! is_array( $value ) ) {
 		$value = array();
+	}
 
 	return $value;
 }
@@ -234,7 +241,7 @@ function wordpoints_prepare__in( $_in, $format = '%s' ) {
 
 	if ( ! in_array( $format, $formats ) ) {
 
-		wordpoints_debug_message( sprintf( _x( 'invalid format "%s", allowed values are %%s, %%d, and %%f', 'debug message', 'wordpoints' ), $format ), __FUNCTION__, __FILE__, __LINE__ );
+		wordpoints_debug_message( "invalid format '{$format}', allowed values are %s, %d, and %f", __FUNCTION__, __FILE__, __LINE__ );
 
 		$format = '%s';
 	}
@@ -244,7 +251,7 @@ function wordpoints_prepare__in( $_in, $format = '%s' ) {
 
 	if ( 'array' != $type ) {
 
-		wordpoints_debug_message( sprintf( _x( '%s must be an array, %s given', 'debug message', 'wordpoints' ), '$_in', $type ), __FUNCTION__, __FILE__, __LINE__ );
+		wordpoints_debug_message( "\$_in must be an array, {$type} given", __FUNCTION__, __FILE__, __LINE__ );
 
 		return false;
 	}
@@ -255,7 +262,7 @@ function wordpoints_prepare__in( $_in, $format = '%s' ) {
 
 	if ( 0 == $count ) {
 
-		wordpoints_debug_message( _x( 'empty array passed as first parameter', 'debug message', 'wordpoints' ), __FUNCTION__, __FILE__, __LINE__ );
+		wordpoints_debug_message( 'empty array passed as first parameter', __FUNCTION__, __FILE__, __LINE__ );
 
 		return false;
 	}
@@ -521,5 +528,55 @@ function wordpoints_shortcode_error( $message ) {
 
 	return '<p class="wordpoints-shortcode-error">' . esc_html__( 'Shortcode error:', 'wordpoints' ) . ' ' . $message . '</p>';
 }
+
+/**
+ * Add module related capabilities.
+ *
+ * Filters a user's capabilities, e.g., when current_user_can() is called. Adds the
+ * pseudo-capabilities 'install_wordpoints_modules', 'manage_ntework_wordpoints_modules',
+ * which can be checked for as with any other capability:
+ *
+ * current_user_can( 'install_wordpoints_modules' );
+ *
+ * Default is that these will be true if the user has the corresponding capability
+ * for plugins. Override this by adding your own filter with a lower priority (e.g.,
+ * 15), and manipulating the $all_capabilities array.
+ *
+ * @since 1.1.0
+ *
+ * @filter user_has_cap
+ *
+ * @see http://codex.wordpress.org/Plugin_API/Filter_Reference/user_has_cap
+ *
+ * @param array $all_capabilities All of the capabilities of a user.
+ * @param array $capabilities     Capabilities to check a user for.
+ *
+ * @return array All of the users capabilities.
+ */
+function wordpoints_modules_user_cap_filter( $all_capabilities, $capabilities ) {
+
+	if ( in_array( 'install_wordpoints_modules', $capabilities ) && isset( $all_capabilities['install_plugins'] ) ) {
+
+		$all_capabilities['install_wordpoints_modules'] = $all_capabilities['install_plugins'];
+	}
+
+	if ( in_array( 'manage_ntework_wordpoints_modules', $capabilities ) && isset( $all_capabilities['manage_network_plugins'] ) ) {
+
+		$all_capabilities['manage_ntework_wordpoints_modules'] = $all_capabilities['manage_network_plugins'];
+	}
+
+	if ( in_array( 'activate_wordpoints_modules', $capabilities ) && isset( $all_capabilities['activate_plugins'] ) ) {
+
+		$all_capabilities['activate_wordpoints_modules'] = $all_capabilities['activate_plugins'];
+	}
+
+	if ( in_array( 'delete_wordpoints_modules', $capabilities ) && isset( $all_capabilities['delete_plugins'] ) ) {
+
+		$all_capabilities['delete_wordpoints_modules'] = $all_capabilities['delete_plugins'];
+	}
+
+	return $all_capabilities;
+}
+add_filter( 'user_has_cap', 'wordpoints_modules_user_cap_filter', 10, 2 );
 
 // end of file /includes/functions.php
