@@ -19,25 +19,21 @@
  */
 function wordpoints_points_admin_menu() {
 
-	$hooks = __( 'Points Hooks', 'wordpoints' );
-
 	// Hooks page.
 	add_submenu_page(
 		'wordpoints_configure'
-		,'WordPoints - ' . $hooks
-		,$hooks
+		,__( 'WordPoints - Points Hooks', 'wordpoints' )
+		,__( 'Points Hooks', 'wordpoints' )
 		,'manage_options'
 		,'wordpoints_points_hooks'
 		,'wordpoints_points_admin_screen_hooks'
 	);
 
-	$logs = __( 'Points Logs', 'wordpoints' );
-
 	// Logs page.
 	add_submenu_page(
 		'wordpoints_configure'
-		,'WordPoints - ' . $logs
-		,$logs
+		,__( 'WordPoints - Points Logs', 'wordpoints' )
+		,__( 'Points Logs', 'wordpoints' )
 		,'manage_options'
 		,'wordpoints_points_logs'
 		,'wordpoints_points_admin_screen_logs'
@@ -98,6 +94,8 @@ function wordpoints_points_admin_screen_logs() {
  */
 function wordpoints_admin_points_hooks_help() {
 
+	global $wp_version;
+
 	$screen = get_current_screen();
 
 	$screen->add_help_tab(
@@ -106,8 +104,8 @@ function wordpoints_admin_points_hooks_help() {
 			'title'   => __( 'Overview', 'wordpoints' ),
 			'content' =>
 				'<p>' . __( 'Points Hooks let you award users points by "hooking into" different actions. They can be hooked to any points type that you have created. To create a points type, fill out the Add New Points Type form, and click Save. You can edit the settings for your points type at any time by clicking on the Settings title bar within that points type section.', 'wordpoints' ) . '</p>
-				<p>' . __( 'To link a hook to a points type, drag and drop the hook title bars into the desired points type. By default, only the first points type area is expanded. To populate additional points types, click on their title bars to expand them.', 'wordpoints' ) . '</p>
-				<p>' . __( 'The Available Hooks section contains all the hooks you can choose from. Once you drag a hook into a points type, it will open to allow you to configure its settings. When you are happy with the hook settings, click the Save button and the hook will begin awarding points. If you click Delete, it will remove the hook.', 'wordpoints' ) . '</p>'
+				<p>' . __( "To link a hook to a points type, click on the hook's title bar and select a points type, or drag and drop the hook title bars into the desired points type. By default, only the first points type area is expanded. To populate additional points types, click on their title bars to expand them.", 'wordpoints' ) . '</p>
+				<p>' . __( 'The Available Hooks section contains all the hooks you can choose from. Once you add a hook into a points type, it will open to allow you to configure its settings. When you are happy with the hook settings, click the Save button and the hook will begin awarding points. If you click Delete, it will remove the hook.', 'wordpoints' ) . '</p>'
 		)
 	);
 
@@ -158,11 +156,27 @@ function wordpoints_admin_points_hooks_help() {
 			wp_enqueue_script( 'jquery-touch-punch' );
 	}
 
+	$deps = null;
+
+	if ( version_compare( $wp_version, '3.8', '>=' ) ) {
+
+		$deps = array( 'dashicons' );
+
+	} else {
+
+		wp_enqueue_style(
+			'wordpoints-admin-points-hooks-legacy'
+			, plugins_url( 'assets/css/hooks-legacy.css', __FILE__ )
+			, array( 'wordpoints-admin-points-hooks' )
+			, WORDPOINTS_VERSION
+		);
+	}
+
 	wp_enqueue_style(
 		'wordpoints-admin-points-hooks'
-		,plugins_url( 'assets/css/hooks.css', __FILE__ )
-		,null
-		,WORDPOINTS_VERSION
+		, plugins_url( 'assets/css/hooks.css', __FILE__ )
+		, $deps
+		, WORDPOINTS_VERSION
 	);
 }
 add_action( 'load-wordpoints_page_wordpoints_points_hooks', 'wordpoints_admin_points_hooks_help' );
@@ -327,7 +341,7 @@ function wordpoints_points_profile_options( $user ) {
 
 		</table>
 
-		<h3>WordPoints</h3>
+		<h3><?php _e( 'WordPoints', 'wordpoints' ); ?></h3>
 		<p><?php _e( "If you would like to change the value for a type of points, enter the desired value in the text field, and check the checkbox beside it. If you don't check the checkbox, the change will not be saved. To provide a reason for the change, fill out the text field below.", 'wordpoints' ); ?></p>
 		<lable><?php _e( 'Reason', 'wordpoints' ); ?> <input type="text" name="wordpoints_set_reason" />
 		<table class="form-table">
@@ -380,7 +394,7 @@ function wordpoints_points_profile_options( $user ) {
 
 		foreach ( wordpoints_get_points_types() as $slug => $type ) {
 
-			echo esc_html( $type['name'] ) . ': ' . wordpoints_format_points( wordpoints_get_points( $user->ID, $slug ), $slug , 'profile_page' ) . '<br />';
+			echo esc_html( $type['name'] ) . ': ' . wordpoints_format_points( wordpoints_get_points( $user->ID, $slug ), $slug, 'profile_page' ) . '<br />';
 		}
 	}
 }
@@ -556,7 +570,7 @@ function wordpoints_ajax_save_points_hook() {
 		if ( ! wordpoints_update_points_type( $_POST['points-slug'], wp_unslash( $settings ) ) ) {
 
 			// If this fails, show the user a message along with the form.
-			echo '<p>' . __( 'An error has occured. Please try again.', 'wordpoints' ) . '</p>';
+			echo '<p>' . __( 'An error has occurred. Please try again.', 'wordpoints' ) . '</p>';
 
 			WordPoints_Points_Hooks::points_type_form( $slug, 'none' );
 		}

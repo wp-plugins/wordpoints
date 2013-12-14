@@ -20,15 +20,27 @@
  */
 function wordpointstests_manually_load_plugin() {
 
+	add_filter( 'wordpoints_modules_dir', 'wordpointstests_modules_dir' );
 	add_filter( 'wordpoints_component_active', '__return_true', 100 );
-	add_filter( 'wordpoints_module_active', '__return_true', 100 );
-
 	add_action( 'wordpoints_components_loaded', 'wordpointstests_manually_activate_components', 0 );
-	add_action( 'wordpoints_modules_loaded', 'wordpointstests_manually_activate_modules', 0 );
 
-	require dirname( __FILE__ ) . '/../../../src/wordpoints.php';
+	require WORDPOINTS_TESTS_DIR . '/../../src/wordpoints.php';
 
 	wordpoints_activate();
+}
+
+/**
+ * Get the modules directory for the test modules.
+ *
+ * @since 1.1.0
+ *
+ * @filter wordpoints_modules_dir Added by wordpointstests_manually_load_plugin()
+ *
+ * @return string The path to the test modules directory.
+ */
+function wordpointstests_modules_dir() {
+
+	return WORDPOINTS_TESTS_DIR . '/data/modules/';
 }
 
 /**
@@ -49,44 +61,6 @@ function wordpointstests_manually_activate_components() {
 }
 
 /**
- * Manually activate all modules.
- *
- * @since 1.0.0
- *
- * @action wordpoints_modules_loaded 0 Added by wordpointstests_manually_load_plugin().
- */
-function wordpointstests_manually_activate_modules() {
-
-	$modules = WordPoints_Modules::instance();
-
-	foreach ( $modules->get() as $module => $data ) {
-
-		$modules->activate( $module );
-	}
-}
-
-/**
- * Load the modules included with the tests.
- *
- * @since 1.0.1
- *
- * @return bool Whether the modules were loaded successfully.
- */
-function wordpointstests_load_test_modules() {
-
-	static $loaded = false;
-
-	if ( ! $loaded ) {
-
-		wordpoints_dir_include( dirname( dirname( __FILE__ ) ) . '/data/modules/' );
-
-		$loaded = true;
-	}
-
-	do_action( 'wordpoints_modules_register' );
-}
-
-/**
  * Call a shortcode function by tag name.
  *
  * We can now avoid evil calls to do_shortcode( '[shortcode]' ).
@@ -95,9 +69,9 @@ function wordpointstests_load_test_modules() {
  *
  * @param string $tag     The shortcode whose function to call.
  * @param array  $atts    The attributes to pass to the shortcode function. Optional.
- * @param array  $content The shortcodes content. Default is null (none).
+ * @param array  $content The shortcode's content. Default is null (none).
  *
- * @return void|bool Returns false on failure. No return on success.
+ * @return string|bool False on failure, the result of the shortcode on success.
  */
 function wordpointstests_do_shortcode_func( $tag, array $atts = array(), $content = null ) {
 
@@ -122,7 +96,10 @@ function wordpointstests_add_points_hook( $hook_type, $instance = array() ) {
 	update_option( 'wordpoints_points_types_hooks', array( 'points' => array( $hook_type . '-1' ) ) );
 
 	$hook = WordPoints_Points_Hooks::get_handler_by_id_base( $hook_type );
-	$hook->update_callback( $instance, 1 );
+
+	if ( $hook instanceof WordPoints_Points_Hook ) {
+		$hook->update_callback( $instance, 1 );
+	}
 }
 
 /**

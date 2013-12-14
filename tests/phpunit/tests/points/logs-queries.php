@@ -276,16 +276,18 @@ class WordPoints_Points_Log_Query_Test extends WordPoints_Points_UnitTestCase {
 	 * Test 'key' and 'value*' meta query args.
 	 *
 	 * @since 1.0.0
+	 *
+	 * @expectedDeprecated WordPoints_Points_Logs_Query::__construct
 	 */
 	public function test_key_and_value_meta_query_args() {
 
 		$user_id = $this->factory->user->create();
 
 		wordpoints_alter_points( $user_id, 10, 'points', 'test', array( 'test1' => 1 ) );
-		wordpoints_alter_points( $user_id, 10, 'points', 'test', array( 'test2' => 2, 'test3' => 1 ) );
+		wordpoints_alter_points( $user_id, 20, 'points', 'test', array( 'test2' => 2, 'test3' => 1 ) );
 
 		$query_1 = new WordPoints_Points_Logs_Query(
-			array( 'meta_query' => array( 'key' => 'test1' ) )
+			array( 'meta_query' => array( 'key' => 'test1', 'value' => array() ) )
 		);
 		$this->assertEquals( 1, $query_1->count() );
 
@@ -303,6 +305,22 @@ class WordPoints_Points_Log_Query_Test extends WordPoints_Points_UnitTestCase {
 			array( 'meta_query' => array( 'value__not_in' => array( 1 ) ) )
 		);
 		$this->assertEquals( 1, $query_4->count() );
+
+		$query_5 = new WordPoints_Points_Logs_Query(
+			array(
+				'orderby'    => 'meta_value',
+				'meta_query' => array(
+					'relation' => 'OR',
+					array( 'key' => 'test1' ),
+					array( 'key' => 'test2' ),
+				),
+			)
+		);
+
+		$results = $query_5->get();
+
+		$this->assertEquals( 2, count( $results ) );
+		$this->assertEquals( 20, reset( $results )->points );
 	}
 
 	/**
@@ -311,7 +329,7 @@ class WordPoints_Points_Log_Query_Test extends WordPoints_Points_UnitTestCase {
 	 * This is just a very basic test to make sure that WP_Date_Query is indeed
 	 * supported.
 	 *
-	 * @since $ver$
+	 * @since 1.1.0
 	 */
 	public function test_date_query_arg() {
 

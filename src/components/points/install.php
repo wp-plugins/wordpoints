@@ -11,7 +11,11 @@
  */
 
 // Exit if accessed directly.
-if ( ! isset( $wordpoints_data ) ) exit;
+if ( ! isset( $wordpoints_data ) ) {
+	exit;
+}
+
+global $wpdb;
 
 /**
  * Include the upgrade script so that we can use dbDelta() to create the DBs.
@@ -20,13 +24,13 @@ if ( ! isset( $wordpoints_data ) ) exit;
  */
 require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
-if ( ! wordpoints_db_table_exists( WORDPOINTS_POINTS_LOGS_DB ) ) {
+if ( ! wordpoints_db_table_exists( $wpdb->wordpoints_points_logs ) ) {
 
 	// - Create the table for the points transaction logs.
 
 	dbDelta(
 		'
-			CREATE TABLE ' . WORDPOINTS_POINTS_LOGS_DB . '
+			CREATE TABLE ' . $wpdb->wordpoints_points_logs . '
 			(
 				id BIGINT(20) NOT NULL AUTO_INCREMENT,
 				user_id BIGINT(20) NOT NULL,
@@ -46,13 +50,13 @@ if ( ! wordpoints_db_table_exists( WORDPOINTS_POINTS_LOGS_DB ) ) {
 	);
 }
 
-if ( ! wordpoints_db_table_exists( WORDPOINTS_POINTS_LOG_META_DB ) ) {
+if ( ! wordpoints_db_table_exists( $wpdb->wordpoints_points_log_meta ) ) {
 
 	// - Create the table to hold the metadata for points transations.
 
 	dbDelta(
 		'
-			CREATE TABLE ' . WORDPOINTS_POINTS_LOG_META_DB . ' (
+			CREATE TABLE ' . $wpdb->wordpoints_points_log_meta . ' (
 				meta_id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 				log_id BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
 				meta_key VARCHAR(255) DEFAULT NULL,

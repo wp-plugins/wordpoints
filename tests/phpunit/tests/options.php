@@ -24,6 +24,9 @@ class WordPoints_Get_Array_Option_Test extends WP_UnitTestCase {
 		add_option( 'wordpoints_not_array', 'blah' );
 		$array_option = wordpoints_get_array_option( 'wordpoints_not_array' );
 		$this->assertEquals( array(), $array_option );
+
+		$array_option = wordpoints_get_array_option( 'wordpoints_not_array', 'site' );
+		$this->assertEquals( array(), $array_option );
 	}
 }
 

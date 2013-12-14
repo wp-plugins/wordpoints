@@ -8,12 +8,14 @@
  */
 
 // Exit if accessed directly.
-if ( ! defined( 'WORDPOINTS_POINTS_LOGS_DB' ) ) exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 global $wpdb;
 
-$wpdb->query( 'DROP TABLE IF EXISTS `' . WORDPOINTS_POINTS_LOGS_DB . '`' );
-$wpdb->query( 'DROP TABLE IF EXISTS `' . WORDPOINTS_POINTS_LOG_META_DB . '`' );
+$wpdb->query( 'DROP TABLE IF EXISTS `' . $wpdb->wordpoints_points_logs . '`' );
+$wpdb->query( 'DROP TABLE IF EXISTS `' . $wpdb->wordpoints_points_log_meta . '`' );
 
 foreach ( wordpoints_get_points_types() as $slug => $settings ) {
 

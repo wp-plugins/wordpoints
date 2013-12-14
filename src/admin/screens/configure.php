@@ -36,7 +36,6 @@ function wordpoints_admin_screen_configure() {
 				array(
 					'general'    => __( 'General Settings', 'wordpoints' ),
 					'components' => __( 'Components', 'wordpoints' ),
-					'modules'    => __( 'Modules', 'wordpoints' ),
 				)
 			);
 
@@ -44,10 +43,6 @@ function wordpoints_admin_screen_configure() {
 
 				case 'components':
 					$template = '/configure-components.php';
-				break;
-
-				case 'modules':
-					$template = '/configure-modules.php';
 				break;
 
 				default:

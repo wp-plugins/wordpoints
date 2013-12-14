@@ -4,10 +4,12 @@
  * Plugin Name: WordPoints
  * Plugin URI: http://wordpoints.org/
  * Description: The ultimate points, ranks and achievements plugin for WordPress.
- * Version: 1.0.1
+ * Version: 1.1.0
  * Author: J.D. Grimes
  * Author URI: http://codesymphony.co/
  * License: GPLv2
+ * Text Domain: wordpoints
+ * Domain Path: /languages
  *
  * ---------------------------------------------------------------------------------|
  * Copyright 2013  J.D. Grimes  (email : jdg@codesymphony.co)
@@ -38,7 +40,7 @@
  *
  * @package WordPoints
  * @author J.D. Grimes <jdg@codesymphony.co>
- * @version 1.0.1
+ * @version 1.1.0
  * @license http://opensource.org/licenses/gpl-license.php GPL, version 2 or later.
  * @copyright 2013 J.D. Grimes
  */
@@ -52,7 +54,7 @@
  *
  * @const WORDPOINTS_VERSION
  */
-define( 'WORDPOINTS_VERSION', '1.0.1' );
+define( 'WORDPOINTS_VERSION', '1.1.0' );
 
 /**
  * You are here.
@@ -121,7 +123,14 @@ include_once WORDPOINTS_DIR . 'includes/class-wordpoints-components.php';
  *
  * @since 1.0.0
  */
-include_once WORDPOINTS_DIR . 'includes/class-wordpoints-modules.php';
+include_once WORDPOINTS_DIR . 'includes/modules.php';
+
+/**
+ * Deprecated functions.
+ *
+ * @since 1.1.0
+ */
+include_once WORDPOINTS_DIR . 'includes/deprecated.php';
 
 if ( is_admin() ) {
 
@@ -136,5 +145,18 @@ if ( is_admin() ) {
 	 */
 	include_once WORDPOINTS_DIR . 'admin/admin.php';
 }
+
+/**
+ * Load the plugin's textdomain.
+ *
+ * @since 1.1.0
+ *
+ * @action plugins_loaded
+ */
+function wordpoints_load_textdoomain() {
+
+	load_plugin_textdomain( 'wordpoints', false, WORDPOINTS_DIR . '/languages/' );
+}
+add_action( 'plugins_loaded', 'wordpoints_load_textdoomain' );
 
 // end of file /wordpoints.php

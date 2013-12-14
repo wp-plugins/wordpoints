@@ -13,6 +13,15 @@ if ( ! getenv( 'WP_TESTS_DIR' ) ) {
 }
 
 /**
+ * The WordPoints tests directory.
+ *
+ * @since 1.1.0
+ *
+ * @const WORDPOINTS_TESTS_DIR
+ */
+define( 'WORDPOINTS_TESTS_DIR', dirname( dirname( __FILE__ ) ) );
+
+/**
  * The WordPress tests functions.
  *
  * Clearly, WP_TESTS_DIR should be the path to the WordPress PHPUnit tests checkout.
@@ -32,7 +41,7 @@ require_once getenv( 'WP_TESTS_DIR' ) . 'includes/functions.php';
  *
  * @since 1.0.0
  */
-require_once dirname( __FILE__ ) . '/functions.php';
+require_once WORDPOINTS_TESTS_DIR . '/includes/functions.php';
 
 tests_add_filter( 'muplugins_loaded', 'wordpointstests_manually_load_plugin' );
 
@@ -51,7 +60,7 @@ require getenv( 'WP_TESTS_DIR' ) . '/includes/bootstrap.php';
  *
  * @since 1.0.1
  */
-require_once dirname( __FILE__ ) . '/class-wordpoints-phpunit-textui-command.php';
+require_once WORDPOINTS_TESTS_DIR . '/includes/class-wordpoints-phpunit-textui-command.php';
 
 new WordPoints_PHPUnit_TextUI_Command( $_SERVER['argv'] );
 
@@ -60,20 +69,20 @@ new WordPoints_PHPUnit_TextUI_Command( $_SERVER['argv'] );
  *
  * @since 1.0.0
  */
-require_once dirname( __FILE__ ) . '/class-wordpoints-points-unittestcase.php';
+require_once WORDPOINTS_TESTS_DIR . '/includes/class-wordpoints-points-unittestcase.php';
 
 /**
  * The uninstall test class and helpers.
  *
  * @since 1.0.0
  */
-require_once dirname( __FILE__ ) . '/class-wordpoints-uninstall-unittestcase.php';
+require_once WORDPOINTS_TESTS_DIR . '/includes/class-wordpoints-uninstall-unittestcase.php';
 
 /**
  * Selenium 2 test case, integrated with WP_UnitTestCase.
  *
  * @since 1.0.1
  */
-require_once dirname( __FILE__ ) . '/class-wordpoints-selenium2testcase.php';
+require_once WORDPOINTS_TESTS_DIR . '/includes/class-wordpoints-selenium2testcase.php';
 
 // end of file /tests/phpunit/includes/bootstrap.php

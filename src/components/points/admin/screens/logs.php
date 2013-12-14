@@ -10,7 +10,7 @@
 ?>
 
 <div class="wrap">
-	<h2>WordPoints - <?php esc_html_e( 'Points Logs', 'wordpoints' ); ?></h2>
+	<h2><?php esc_html_e( 'WordPoints - Points Logs', 'wordpoints' ); ?></h2>
 	<p class="wordpoints-admin-panel-desc"><?php _e( 'View recent points transactions.', 'wordpoints' ); ?></p>
 
 	<?php

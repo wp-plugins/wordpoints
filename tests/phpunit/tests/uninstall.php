@@ -23,6 +23,8 @@ class WordPoints_Uninstall_Test extends WordPoints_Uninstall_UnitTestCase {
 	 */
 	public function test_uninstall() {
 
+		global $wpdb;
+
 		/*
 		 * We're going to do some actions here so that we are really testing whether
 		 * everything is properly deleted on uninstall. Uninstalling a fresh install
@@ -59,8 +61,8 @@ class WordPoints_Uninstall_Test extends WordPoints_Uninstall_UnitTestCase {
 
 		$this->uninstall();
 
-		$this->assertTableNotExists( WORDPOINTS_POINTS_LOGS_DB );
-		$this->assertTableNotExists( WORDPOINTS_POINTS_LOG_META_DB );
+		$this->assertTableNotExists( $wpdb->wordpoints_points_logs );
+		$this->assertTableNotExists( $wpdb->wordpoints_points_log_meta );
 
 		$this->assertNoOptionsWithPrefix( 'wordpoints' );
 		$this->assertNoUserMetaWithPrefix( 'wordpoints' );
@@ -80,8 +82,8 @@ class WordPoints_Uninstall_Test extends WordPoints_Uninstall_UnitTestCase {
 		$this->assertArrayHasKey( 'version', $wordpoints_data );
 		$this->assertEquals( WORDPOINTS_VERSION, $wordpoints_data['version'] );
 
-		$this->assertTableExists( WORDPOINTS_POINTS_LOGS_DB );
-		$this->assertTableExists( WORDPOINTS_POINTS_LOG_META_DB );
+		$this->assertTableExists( $wpdb->wordpoints_points_logs );
+		$this->assertTableExists( $wpdb->wordpoints_points_log_meta );
 
 		/**
 		 * Run install tests.

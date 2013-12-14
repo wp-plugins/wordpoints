@@ -340,10 +340,10 @@ function wordpoints_delete_points_type( $slug ) {
 		$wpdb->prepare(
 			'
 				DELETE
-				FROM ' . WORDPOINTS_POINTS_LOG_META_DB . '
+				FROM ' . $wpdb->wordpoints_points_log_meta . '
 				WHERE `log_id` IN (
 					SELECT `log_id`
-					FROM ' . WORDPOINTS_POINTS_LOGS_DB . '
+					FROM ' . $wpdb->wordpoints_points_logs . '
 					WHERE `points_type` = %s
 				)
 			',
@@ -352,7 +352,7 @@ function wordpoints_delete_points_type( $slug ) {
 	);
 
 	// Delete logs for this points type.
-	$wpdb->delete( WORDPOINTS_POINTS_LOGS_DB, array( 'points_type' => $slug ) );
+	$wpdb->delete( $wpdb->wordpoints_points_logs, array( 'points_type' => $slug ) );
 
 	// Delete all user points of this type.
 	delete_metadata( 'user', 0, "wordpoints_points-{$slug}", '', true );
@@ -723,7 +723,7 @@ function wordpoints_alter_points( $user_id, $points, $points_type, $log_type, $m
 		return true;
 
 	$result = $wpdb->insert(
-		WORDPOINTS_POINTS_LOGS_DB,
+		$wpdb->wordpoints_points_logs,
 		array(
 			'user_id'     => $user_id,
 			'points'      => $points,
@@ -836,7 +836,7 @@ function wordpoints_add_points_log_meta( $log_id, $meta_key, $meta_value ) {
 	global $wpdb;
 
 	$result = $wpdb->insert(
-		WORDPOINTS_POINTS_LOG_META_DB,
+		$wpdb->wordpoints_points_log_meta,
 		array(
 			'log_id'     => $log_id,
 			'meta_key'   => $meta_key,
@@ -875,7 +875,7 @@ function wordpoints_get_points_log_meta( $log_id, $meta_key = '', $single = fals
 			$wpdb->prepare(
 				'
 					SELECT `meta_key`, `meta_value`
-					FROM ' . WORDPOINTS_POINTS_LOG_META_DB . '
+					FROM ' . $wpdb->wordpoints_points_log_meta . '
 					WHERE `log_id` = %d
 				',
 				$log_id
@@ -913,7 +913,7 @@ function wordpoints_get_points_log_meta( $log_id, $meta_key = '', $single = fals
 			$wpdb->prepare(
 				"
 					SELECT `meta_value`
-					FROM " . WORDPOINTS_POINTS_LOG_META_DB . "
+					FROM `{$wpdb->wordpoints_points_log_meta}`
 					WHERE `log_id` = %d
 						AND `meta_key` = %s
 					{$limit}
@@ -956,7 +956,7 @@ function wordpoints_update_points_log_meta( $log_id, $meta_key, $meta_value, $pr
 		$where['meta_value'] = $previous;
 
 	$result = $wpdb->update(
-		WORDPOINTS_POINTS_LOG_META_DB
+		$wpdb->wordpoints_points_log_meta
 		,array( 'meta_value' => $meta_value )
 		,$where
 		,'%s'
@@ -998,7 +998,7 @@ function wordpoints_delete_points_log_meta( $log_id, $meta_key = '', $meta_value
 		$wpdb->prepare(
 			"
 				DELETE
-				FROM " . WORDPOINTS_POINTS_LOG_META_DB . "
+				FROM `{$wpdb->wordpoints_points_log_meta}`
 				WHERE `log_id` = %d
 					{$and_where}
 			",
@@ -1100,10 +1100,10 @@ function wordpoints_points_get_top_users( $num_users, $points_type ) {
  * Add 'set_wordpoints_points' psuedo capability.
  *
  * Filters a user's capabilities, e.g., when current_user_can() is called. Adds
- * the pseudo-capability 'alter_wordpoints_points', which can be checked for as
+ * the pseudo-capability 'set_wordpoints_points', which can be checked for as
  * with any other capability:
  *
- * current_user_can( 'alter_wordpoints_points' );
+ * current_user_can( 'set_wordpoints_points' );
  *
  * Default is that this will be true if the user can 'manage_options'. Override
  * this by adding your own filter with a lower priority (e.g., 15), and
