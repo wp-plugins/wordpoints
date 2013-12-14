@@ -52,7 +52,7 @@ abstract class WordPoints_Points_Hook {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @type strin $option_name
+	 * @type string $option_name
 	 */
 	private $option_name;
 

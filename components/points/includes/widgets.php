@@ -99,12 +99,12 @@ class WordPoints_My_Points_Widget extends WordPoints_Points_Widget {
 	 */
 	public function __construct() {
 
-		parent::__construct( 'WordPoints_Points_Widget', 'WordPoints', array( 'description' => __( 'Display the points of the current logged in user.', 'wordpoints' ) ) );
+		parent::__construct( 'WordPoints_Points_Widget', __( 'WordPoints', 'wordpoints' ), array( 'description' => __( 'Display the points of the current logged in user.', 'wordpoints' ) ) );
 
 		$this->defaults = array(
 			'title'       => _x( 'My Points', 'widget title', 'wordpoints' ),
 			'points_type' => wordpoints_get_default_points_type(),
-			'text'        => 'Points: %points%',
+			'text'        => sprintf( __( 'Points: %s', 'wordpoints' ), '%points%' ),
 			'alt_text'    => __( 'You must be logged in to view your points.', 'wordpoints' ),
 			'number_logs' => 5,
 		);
@@ -313,7 +313,7 @@ class WordPoints_Top_Users_Points_Widget extends WordPoints_Points_Widget {
 		parent::__construct( 'WordPoints_Top_Users_Widget', _x( 'WordPoints Top Users', 'widget name', 'wordpoints' ), array( 'description' => __( 'Showcase the users with the most points.', 'wordpoints' ) ) );
 
 		$this->defaults = array(
-			'title'       => __( 'Top Users', 'widget title', 'wordpoints' ),
+			'title'       => _x( 'Top Users', 'widget title', 'wordpoints' ),
 			'points_type' => wordpoints_get_default_points_type(),
 			'num_users'   => 3,
 		);
@@ -453,7 +453,7 @@ class WordPoints_Top_Users_Points_Widget extends WordPoints_Points_Widget {
 			<input type="text" class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" value="<?php echo esc_attr( $instance['title'] ); ?>" />
 		</p>
 		<p>
-			<label for="<?php echo $dropdown_args['id']; ?>"><?php _e( 'Points type', 'form label', 'wordpoints' ); ?></label>
+			<label for="<?php echo $dropdown_args['id']; ?>"><?php _ex( 'Points type', 'form label', 'wordpoints' ); ?></label>
 			<?php wordpoints_points_types_dropdown( $dropdown_args ); ?>
 		</p>
 		<p>

@@ -60,7 +60,6 @@ $errors = array(
 ?>
 
 <div class="wrap">
-	<?php screen_icon(); ?>
 	<h2><?php echo esc_html( _x( 'Points Hooks', 'page title', 'wordpoints' ) ); ?></h2>
 
 	<?php
@@ -181,4 +180,13 @@ $errors = array(
 	?>
 
 	<br class="clear" />
+
+	<div class="hooks-chooser">
+		<h3><?php _e( 'Choose a points type:', 'wordpoints' ); ?></h3>
+		<ul class="hooks-chooser-points-types"></ul>
+		<div class="hooks-chooser-actions">
+			<button class="button-secondary"><?php _e( 'Cancel', 'wordpoints' ); ?></button>
+			<button class="button-primary"><?php _e( 'Add Hook', 'wordpoints' ); ?></button>
+		</div>
+	</div>
 </div>

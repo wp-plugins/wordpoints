@@ -28,28 +28,114 @@ include_once WORDPOINTS_DIR . 'admin/screens/configure.php';
  */
 function wordpoints_admin_menu() {
 
+	$wordpoints = __( 'WordPoints', 'wordpoints' );
+
 	// Main page.
 	add_menu_page(
-		'WordPoints'
-		,'WordPoints'
+		$wordpoints
+		,$wordpoints
 		,'manage_options'
 		,'wordpoints_configure'
 		,'wordpoints_admin_screen_configure'
 	);
-
-	$configure =  __( 'Configure', 'wordpoints' );
 
 	// Settings page.
 	add_submenu_page(
 		'wordpoints_configure'
-		,'WordPoints - ' . $configure
-		,$configure
+		,__( 'WordPoints - Configure', 'wordpoints' )
+		,__( 'Configure', 'wordpoints' )
 		,'manage_options'
 		,'wordpoints_configure'
 		,'wordpoints_admin_screen_configure'
 	);
+
+	// Modules page.
+	add_submenu_page(
+		'wordpoints_configure'
+		,__( 'WordPoints - Modules', 'wordpoints' )
+		,__( 'Modules', 'wordpoints' )
+		,'activate_wordpoints_modules'
+		,'wordpoints_modules'
+		,'wordpoints_display_admin_screen'
+	);
+
+	// Module install page.
+	add_submenu_page(
+		'wordpoints_modules'
+		,__( 'WordPoints - Install Modules', 'wordpoints' )
+		,__( 'Install Modules', 'wordpoints' )
+		,'install_wordpoints_modules'
+		,'wordpoints_install_modules'
+		,'wordpoints_admin_screen_install_modules'
+	);
 }
 add_action( 'admin_menu', 'wordpoints_admin_menu' );
+
+/**
+ * Display one of the administration screens.
+ *
+ * @since 1.1.0
+ */
+function wordpoints_display_admin_screen() {
+
+	$screen = str_replace( 'wordpoints_page_wordpoints_', '', current_filter() );
+
+	require WORDPOINTS_DIR . "admin/screens/{$screen}.php";
+}
+
+/**
+ * Set up for the modules screen.
+ *
+ * @since 1.1.0
+ *
+ * @action
+ */
+function wordpoints_admin_screen_modules_load() {
+
+	/**
+	 * Set up for the modules page.
+	 *
+	 * @since 1.1.0
+	 */
+	require WORDPOINTS_DIR . 'admin/screens/modules-load.php';
+}
+add_action( 'load-wordpoints_page_wordpoints_modules', 'wordpoints_admin_screen_modules_load' );
+
+/**
+ * Display the install modules admin screen.
+ *
+ * @since 1.1.0
+ */
+function wordpoints_admin_screen_install_modules() {
+
+	/**
+	 * The WordPoints > Install Modules admin panel.
+	 *
+	 * @since 1.1.0
+	 */
+	require WORDPOINTS_DIR . 'admin/screens/module-install.php';
+}
+
+/**
+ * Activate/deactivate components.
+ *
+ * This function handles activation and deactivation of components from the
+ * WordPoints > Configure > Components administration screen.
+ *
+ * @since 1.0.1
+ *
+ * @action load-toplevel_page_wordpoints_configure
+ */
+function wordpoints_admin_activate_components() {
+
+	/**
+	 * Set up for the WordPoints > Components adminstration screen.
+	 *
+	 * @since 1.1.0
+	 */
+	require WORDPOINTS_DIR . 'admin/screens/configure-components-load.php';
+}
+add_action( 'load-toplevel_page_wordpoints_configure', 'wordpoints_admin_activate_components' );
 
 /**
  * Display an error message.
@@ -136,7 +222,7 @@ function wordpoints_admin_show_tabs( $tabs, $show_heading = true ) {
 
 	if ( $show_heading ) {
 
-		echo '<h2>WordPoints - ', esc_html( $tabs[ $current ] ), '</h2>';
+		echo '<h2>', esc_html( sprintf( __( 'WordPoints - %s', 'wordpoints' ), $tabs[ $current ] ) ), '</h2>';
 	}
 
     echo '<h2 class="nav-tab-wrapper">';
@@ -154,123 +240,100 @@ function wordpoints_admin_show_tabs( $tabs, $show_heading = true ) {
 }
 
 /**
- * Activate/deactivate components.
+ * Display the upload module from zip form.
  *
- * This function handles activation and deactivation of components from the
- * WordPoints > Configure > Modules administration screen.
- *
- * @since 1.0.1
- *
- * @action load-toplevel_page_wordpoints_configure
+ * @since 1.1.0
  */
-function wordpoints_admin_activate_components() {
+function wordpoints_install_modules_upload() {
 
-	if ( wordpoints_admin_get_current_tab() != 'components' || ! isset( $_POST['wordpoints_component'], $_POST['wordpoints_component_action'], $_POST['_wpnonce'] ) )
-		return;
+	?>
 
-	$components = WordPoints_Components::instance();
+	<h4><?php _e( 'Install a module in .zip format', 'wordpoints' ); ?></h4>
+	<p class="install-help"><?php _e( 'If you have a module in a .zip format, you may install it by uploading it here.', 'wordpoints' ); ?></p>
+	<form method="post" enctype="multipart/form-data" class="wp-upload-form" action="<?php echo self_admin_url( 'update.php?action=upload-wordpoints-module' ); ?>">
+		<?php wp_nonce_field( 'wordpoints-module-upload'); ?>
+		<label class="screen-reader-text" for="modulezip"><?php _e( 'Module zip file', 'wordpoints' ); ?></label>
+		<input type="file" id="modulezip" name="modulezip" />
+		<?php submit_button( __( 'Install Now', 'wordpoints' ), 'button', 'install-module-submit', false ); ?>
+	</form>
 
-	switch ( $_POST['wordpoints_component_action'] ) {
-
-		case 'activate':
-			if ( 1 == wp_verify_nonce( $_POST['_wpnonce'], "wordpoints_activate_component-{$_POST['wordpoints_component']}" ) && $components->activate( $_POST['wordpoints_component'] ) ) {
-
-				$message = array( 'message' => 1 );
-
-			} else {
-
-				$message = array( 'error' => 1 );
-			}
-		break;
-
-		case 'deactivate':
-			if ( 1 == wp_verify_nonce( $_POST['_wpnonce'], "wordpoints_deactivate_component-{$_POST['wordpoints_component']}" ) && $components->deactivate( $_POST['wordpoints_component'] ) ) {
-
-				$message = array( 'message' => 2 );
-
-			} else {
-
-				$message = array( 'error' => 2 );
-			}
-		break;
-
-		default: return;
-	}
-
-	wp_redirect(
-		add_query_arg(
-			$message + array(
-				'page'                 => 'wordpoints_configure',
-				'tab'                  => 'components',
-				'wordpoints_component' => $_POST['wordpoints_component'],
-				'_wpnonce'             => wp_create_nonce( "wordpoints_component_" . key( $message ) . "-{$_POST['wordpoints_component']}" )
-			)
-			, admin_url( 'admin.php' )
-		)
-	);
-
-	exit;
+	<?php
 }
-add_action( 'load-toplevel_page_wordpoints_configure', 'wordpoints_admin_activate_components' );
+add_action( 'wordpoints_install_modules-upload', 'wordpoints_install_modules_upload', 10 );
 
 /**
- * Activate/deactivate modules.
+ * Perfom module upload from .zip file.
  *
- * This function handles activation and deactivation of modules from the WordPoints
- * > Configure > Modules administration screen.
+ * @since 1.1.0
  *
- * @since 1.0.1
- *
- * @action load-toplevel_page_wordpoints_configure
+ * @action update-custom_upload-wordpoints-module
  */
-function wordpoints_admin_activate_modules() {
+function wordpoints_upload_module_zip() {
 
-	if ( wordpoints_admin_get_current_tab() != 'modules' || ! isset( $_POST['wordpoints_module'], $_POST['wordpoints_module_action'], $_POST['_wpnonce'] ) )
-		return;
-
-	$modules = WordPoints_Modules::instance();
-
-	switch ( $_POST['wordpoints_module_action'] ) {
-
-		case 'activate':
-			if ( 1 == wp_verify_nonce( $_POST['_wpnonce'], "wordpoints_activate_module-{$_POST['wordpoints_module']}" ) && $modules->activate( $_POST['wordpoints_module'] ) ) {
-
-				$message = array( 'message' => 1 );
-
-			} else {
-
-				$message = array( 'error' => 1 );
-			}
-		break;
-
-		case 'deactivate':
-			if ( 1 == wp_verify_nonce( $_POST['_wpnonce'], "wordpoints_deactivate_module-{$_POST['wordpoints_module']}" ) && $modules->deactivate( $_POST['wordpoints_module'] ) ) {
-
-				$message = array( 'message' => 2 );
-
-			} else {
-
-				$message = array( 'error' => 2 );
-			}
-		break;
-
-		default: return;
+	if ( ! current_user_can( 'install_wordpoints_modules' ) ) {
+		wp_die( __( 'You do not have sufficient permissions to install WordPoints modules on this site.', 'wordpoints' ) );
 	}
 
-	wp_redirect(
-		add_query_arg(
-			$message + array(
-				'page'              => 'wordpoints_configure',
-				'tab'               => 'modules',
-				'wordpoints_module' => $_POST['wordpoints_module'],
-				'_wpnonce'          => wp_create_nonce( "wordpoints_module_" . key( $message ) . "-{$_POST['wordpoints_module']}" )
+	check_admin_referer( 'wordpoints-module-upload' );
+
+	$file_upload = new File_Upload_Upgrader( 'modulezip', 'package' );
+
+	$title = __( 'Upload WordPoints Module', 'wordpoints' );
+	$parent_file = 'admin.php';
+	$submenu_file = 'admin.php';
+
+	require_once ABSPATH . 'wp-admin/admin-header.php';
+
+	require_once WORDPOINTS_DIR . 'admin/includes/class-wordpoints-module-installer.php';
+	require_once WORDPOINTS_DIR . 'admin/includes/class-wordpoints-module-installer-skin.php';
+
+	$upgrader = new WordPoints_Module_Installer(
+		new WordPoints_Module_Installer_Skin(
+			array(
+				'title' => sprintf( __( 'Installing Module from uploaded file: %s', 'wordpoints' ), esc_html( basename( $file_upload->filename ) ) ),
+				'nonce' => 'wordpoints-module-upload',
+				'url'   => add_query_arg( array( 'package' => $file_upload->id ), 'update.php?action=upload-wordpoints-module' ),
+				'type'  => 'upload',
 			)
-			, admin_url( 'admin.php' )
 		)
 	);
 
-	exit;
+	$result = $upgrader->install( $file_upload->package );
+
+	if ( $result || is_wp_error($result) ) {
+		$file_upload->cleanup();
+	}
+
+	include ABSPATH . 'wp-admin/admin-footer.php';
 }
-add_action( 'load-toplevel_page_wordpoints_configure', 'wordpoints_admin_activate_modules' );
+add_action( 'update-custom_upload-wordpoints-module', 'wordpoints_upload_module_zip' );
+
+/**
+ * Add a sidebar to the general settings page.
+ *
+ * @since 1.1.0
+ *
+ * @action wordpoints_admin_settings_bottom 5 Before other items are added.
+ */
+function wordpoints_admin_settings_screen_sidebar() {
+
+	?>
+
+	<div style="height: 120px;border: none;padding: 1px 12px;background-color: #fff;border-left: 4px solid rgb(122, 208, 58);box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.1);">
+		<div style="width:48%;float:left;">
+			<h4><?php _e( 'Like this plugin?', 'wordpoints' ); ?></h4>
+			<p><?php printf( __( 'If you think WordPoints is great, let everyone know by giving it a <a href="%s">5 star rating</a>.', 'wordpoints' ), 'http://wordpress.org/support/view/plugin-reviews/wordpoints?rate=5#postform' ); ?></p>
+			<p><?php _e( 'If you don&#8217;t think this plugin deserves 5 stars, please let us know how we can improve it.', 'wordpoints' ); ?></p>
+		</div>
+		<div style="width:48%;float:left;">
+			<h4><?php _e( 'Need help?', 'wordpoints' ); ?></h4>
+			<p><?php printf( __( 'Post your feature request or support question in the <a href="%s">support forums</a>', 'wordpoints' ), 'http://wordpress.org/support/plugin/wordpoints' ); ?></p>
+			<p><em><?php _e( 'Thank you for using WordPoints!', 'wordpoints' ); ?></em></p>
+		</div>
+	</div>
+
+	<?php
+}
+add_action( 'wordpoints_admin_configure_foot', 'wordpoints_admin_settings_screen_sidebar', 5 );
 
 // end of file /admin/admin.php
