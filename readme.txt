@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=TPXS6
 Tags: points, awards, rewards, cubepoints, credits, gamify
 Requires at least: 3.7
 Tested up to: 3.8
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -78,6 +78,11 @@ points are awarded.
 
 == Changelog ==
 
+= 1.1.2 =
+* Fixed: The post points hook was awarding points for auto-drafts and post revisions.
+* Fixed: The periodic points hook wasn’t working in some cases.
+* Fixed: There was a fatal error in the uninstall script, causing a blank screen when uninstalling the plugin.
+
 = 1.1.1 =
 * New: The Brazilian Portugese language file was added to the plugin, thanks to Gabriel Galvao.
 * Fixed: The language files are being loaded properly now.
@@ -99,6 +104,9 @@ choosing the points type to add it to.
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.1.2 =
+* This update is a maintenance release with some fixes for bugs in the periodic and post points hooks and the uninstall routine.
 
 = 1.1.1 =
 * This update is a maintenance release with some localization and installation

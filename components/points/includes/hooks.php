@@ -200,8 +200,12 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 
 			if (
 				(
-					$instance['post_type'] == 'ALL'
-					|| $instance['post_type'] == $post->post_type
+					$instance['post_type'] == $post->post_type
+					|| (
+						$instance['post_type'] == 'ALL'
+						&& post_type_exists( $post->post_type )
+						&& get_post_type_object( $post->post_type )->public
+					)
 				)
 				&& ! $this->awarded_points_already( $post->ID, $points_type )
 			) {
@@ -216,6 +220,7 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 	 *
 	 * @since 1.0.0
 	 * @since 1.1.0 The post_type is now passed as metadata when points are awarded.
+	 * @since 1.1.2 Points are only removed if the post type is public.
 	 *
 	 * @action before_delete_post Added by the constructor.
 	 *
@@ -232,9 +237,15 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 			if (
 				! empty( $instance['post_type'] )
 				&& (
-					$instance['post_type'] == 'ALL'
-					|| $instance['post_type'] == $post->post_type
+					$instance['post_type'] == $post->post_type
+					|| (
+						$instance['post_type'] == 'ALL'
+						&& post_type_exists( $post->post_type )
+						&& get_post_type_object( $post->post_type )->public
+					)
 				)
+				&& $post->post_status !== 'auto-draft'
+				&& $post->post_title !== __( 'Auto Draft', 'default' )
 			) {
 
 				wordpoints_alter_points(
@@ -728,7 +739,7 @@ class WordPoints_Periodic_Points_Hook extends WordPoints_Points_Hook {
 
 		parent::init( _x( 'Periodic Points', 'points hook name', 'wordpoints' ), array( 'description' => __( 'Award a user points when they visit your site at least once in a given time period.', 'wordpoints' ) ) );
 
-		add_action( 'set_current_user', array( $this, 'hook' ) );
+		add_action( 'init', array( $this, 'hook' ) );
 
 		add_filter( 'wordpoints_points_log-periodic', array( $this, 'logs' ), 10, 6 );
 	}
