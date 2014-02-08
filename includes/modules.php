@@ -20,7 +20,7 @@
  */
 function is_wordpoints_module_active( $module ) {
 
- 	return (
+	return (
 		in_array( $module, wordpoints_get_array_option( 'wordpoints_active_modules' ) )
 		|| is_wordpoints_module_active_for_network( $module )
 	);
@@ -65,13 +65,13 @@ function is_wordpoints_module_active_for_network( $module ) {
  */
 function is_network_only_wordpoints_module( $module ) {
 
-		$module_data = wordpoints_get_module_data( wordpoints_modules_dir() . '/' . $module );
+	$module_data = wordpoints_get_module_data( wordpoints_modules_dir() . '/' . $module );
 
-		if ( $module_data ) {
-			return $module_data['network'];
-		}
+	if ( $module_data ) {
+		return $module_data['network'];
+	}
 
-		return false;
+	return false;
 }
 
 /**
@@ -218,10 +218,11 @@ function wordpoints_get_module_data( $module_file, $markup = true, $translate = 
 
 			if ( $textdomain ) {
 
-				if ( $module_data['domain_path'] )
+				if ( $module_data['domain_path'] ) {
 					wordpoints_load_module_textdomain( $textdomain, false, dirname( $module_file ) . $module_data['domain_path'] );
-				else
+				} else {
 					wordpoints_load_module_textdomain( $textdomain, false, dirname( $module_file ) );
+				}
 
 				foreach ( array( 'name', 'module_uri', 'description', 'author', 'author_uri', 'version' ) as $field ) {
 
@@ -241,14 +242,14 @@ function wordpoints_get_module_data( $module_file, $markup = true, $translate = 
 		$allowed_tags['a'] = array( 'href' => true, 'title' => true );
 
 		// Name and author ar marked up inside <a> tags. Don't allow these.
-		$module_data['name']        = wp_kses( $module_data['name'],        $allowed_tags_in_links );
-		$module_data['author']      = wp_kses( $module_data['author'],      $allowed_tags_in_links );
+		$module_data['name']   = wp_kses( $module_data['name'],   $allowed_tags_in_links );
+		$module_data['author'] = wp_kses( $module_data['author'], $allowed_tags_in_links );
 
 		$module_data['description'] = wp_kses( $module_data['description'], $allowed_tags );
 		$module_data['version']     = wp_kses( $module_data['version'],     $allowed_tags );
 
-		$module_data['module_uri']  = esc_url( $module_data['module_uri'] );
-		$module_data['author_uri']  = esc_url( $module_data['author_uri'] );
+		$module_data['module_uri'] = esc_url( $module_data['module_uri'] );
+		$module_data['author_uri'] = esc_url( $module_data['author_uri'] );
 
 		$module_data['title']       = $module_data['name'];
 		$module_data['author_name'] = $module_data['author'];
@@ -256,16 +257,25 @@ function wordpoints_get_module_data( $module_file, $markup = true, $translate = 
 		// Apply markup.
 		if ( $markup ) {
 
-			if ( $module_data['module_uri'] && $module_data['name'] )
-				$module_data['title'] = '<a href="' . $module_data['module_uri'] . '" title="' . esc_attr__( 'Visit module homepage', 'wordpoints' ) . '">' . $module_data['name'] . '</a>';
+			if ( $module_data['module_uri'] && $module_data['name'] ) {
+				$module_data['title'] = '<a href="' . $module_data['module_uri']
+					. '" title="' . esc_attr__( 'Visit module homepage', 'wordpoints' )
+					. '">' . $module_data['name'] . '</a>';
+			}
 
-			if ( $module_data['author_uri'] && $module_data['author'] )
-				$module_data['author'] = '<a href="' . $module_data['author_uri'] . '" title="' . esc_attr__( 'Visit author homepage', 'wordpoints' ) . '">' . $module_data['author'] . '</a>';
+			if ( $module_data['author_uri'] && $module_data['author'] ) {
+				$module_data['author'] = '<a href="' . $module_data['author_uri']
+					. '" title="' . esc_attr__( 'Visit author homepage', 'wordpoints' )
+					. '">' . $module_data['author'] . '</a>';
+			}
 
 			$module_data['description'] = wptexturize( $module_data['description'] );
 
-			if ( $module_data['author'] )
-				$module_data['description'] .= ' <cite>' . sprintf( __( 'By %s.', 'wordpoints' ), $module_data['author'] ) . '</cite>';
+			if ( $module_data['author'] ) {
+				$module_data['description'] .= ' <cite>'
+					. sprintf( __( 'By %s.', 'wordpoints' ), $module_data['author'] )
+					. '</cite>';
+			}
 		}
 
 	} else {
@@ -313,8 +323,9 @@ function wordpoints_load_module_textdomain( $domain, $module_rel_path = false ) 
 	// Load the textdomain according to the module first.
 	$mofile = $domain . '-' . $locale . '.mo';
 
-	if ( $loaded = load_textdomain( $domain, $path . '/'. $mofile ) )
+	if ( $loaded = load_textdomain( $domain, $path . '/'. $mofile ) ) {
 		return $loaded;
+	}
 
 	// Otherwise, load from the languages directory.
 	$mofile = WP_LANG_DIR . '/wordpoints-modules/' . $mofile;
@@ -346,9 +357,9 @@ function wordpoints_get_modules( $module_folder = '' ) {
 		return $cache_plugins[ $module_folder ];
 	}
 
-	$modules = array();
+	$modules      = array();
 	$module_files = array();
-	$module_root = wordpoints_modules_dir();
+	$module_root  = wordpoints_modules_dir();
 
 	if ( ! empty($module_folder) ) {
 		$module_root .= $module_folder;
@@ -373,11 +384,13 @@ function wordpoints_get_modules( $module_folder = '' ) {
 
 					while ( ($subfile = readdir( $modules_subdir )) !== false ) {
 
-						if ( substr( $subfile, 0, 1 ) == '.' )
+						if ( substr( $subfile, 0, 1 ) == '.' ) {
 							continue;
+						}
 
-						if ( substr( $subfile, -4 ) == '.php' )
+						if ( substr( $subfile, -4 ) == '.php' ) {
 							$module_files[] = "$file/$subfile";
+						}
 					}
 
 					closedir( $modules_subdir );
@@ -527,10 +540,10 @@ function wordpoints_activate_module( $module, $redirect = '', $network_wide = fa
 
 	$module = wordpoints_module_basename( $module );
 
-	if ( is_multisite() && ( $network_wide || is_network_only_wordpoints_module($module) ) ) {
+	if ( is_multisite() && ( $network_wide || is_network_only_wordpoints_module( $module ) ) ) {
 
 		$network_wide = true;
-		$current = get_site_option( 'wordpoints_sitewide_active_modules', array() );
+		$current = array_keys( wordpoints_get_array_option( 'wordpoints_sitewide_active_modules', 'site' ) );
 
 	} else {
 
@@ -539,12 +552,12 @@ function wordpoints_activate_module( $module, $redirect = '', $network_wide = fa
 
 	$valid = wordpoints_validate_module( $module );
 
-	if ( is_wp_error($valid) ) {
+	if ( is_wp_error( $valid ) ) {
 		return $valid;
 	}
 
 	// If the module is already active, return.
-	if ( in_array($module, $current) ) {
+	if ( in_array( $module, $current ) ) {
 		return;
 	}
 
@@ -643,7 +656,7 @@ function wordpoints_activate_module( $module, $redirect = '', $network_wide = fa
 function wordpoints_deactivate_modules( $modules, $silent = false, $network_wide = null ) {
 
 	if ( is_multisite() && is_plugin_active_for_network( plugin_basename( WORDPOINTS_DIR . 'wordpoints.php' ) ) ) {
-		$network_current = get_site_option( 'wordpoints_sitewide_active_modules', array() );
+		$network_current = wordpoints_get_array_option( 'wordpoints_sitewide_active_modules', 'site' );
 	}
 
 	$current = wordpoints_get_array_option( 'wordpoints_active_modules' );
@@ -758,7 +771,7 @@ function wordpoints_delete_modules( $modules, $redirect = '' ) {
 
 	$checked = array();
 
-	foreach( $modules as $module ) {
+	foreach ( $modules as $module ) {
 		$checked[] = 'checked[]=' . $module;
 	}
 
@@ -817,7 +830,7 @@ function wordpoints_delete_modules( $modules, $redirect = '' ) {
 	$modules_dir = trailingslashit( $modules_dir );
 	$errors = array();
 
-	foreach( $modules as $module_file ) {
+	foreach ( $modules as $module_file ) {
 
 		// Run uninstall hook.
 		if ( is_uninstallable_wordpoints_module( $module_file ) ) {
@@ -925,8 +938,8 @@ function wordpoints_load_modules() {
 
 		$modules_dir = wordpoints_modules_dir();
 
-		if ( ! is_multisite() || ! is_plugin_active_for_network( plugin_basename( WORDPOINTS_DIR . 'wordpoints.php' ) ) ) {
-			$active_modules = $active_modules + wordpoints_get_array_option( 'wordpoints_active_sitewide_modules', 'site' );
+		if ( is_multisite() && is_plugin_active_for_network( plugin_basename( WORDPOINTS_DIR . 'wordpoints.php' ) ) ) {
+			$active_modules = array_merge( $active_modules, array_keys( wordpoints_get_array_option( 'wordpoints_sitewide_active_modules', 'site' ) ) );
 		}
 
 		foreach ( $active_modules as $module ) {

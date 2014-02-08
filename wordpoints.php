@@ -3,8 +3,8 @@
 /**
  * Plugin Name: WordPoints
  * Plugin URI: http://wordpoints.org/
- * Description: The ultimate points, ranks and achievements plugin for WordPress.
- * Version: 1.1.0
+ * Description: Create one or more points systems for your site, and reward user activity.
+ * Version: 1.2.0
  * Author: J.D. Grimes
  * Author URI: http://codesymphony.co/
  * License: GPLv2
@@ -12,7 +12,7 @@
  * Domain Path: /languages
  *
  * ---------------------------------------------------------------------------------|
- * Copyright 2013  J.D. Grimes  (email : jdg@codesymphony.co)
+ * Copyright 2013-2014  J.D. Grimes  (email : jdg@codesymphony.co)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 or later, as
@@ -40,30 +40,10 @@
  *
  * @package WordPoints
  * @author J.D. Grimes <jdg@codesymphony.co>
- * @version 1.1.0
+ * @version 1.2.0
  * @license http://opensource.org/licenses/gpl-license.php GPL, version 2 or later.
- * @copyright 2013 J.D. Grimes
+ * @copyright 2013-2014 J.D. Grimes
  */
-
-/**
- * The plugin version.
- *
- * Conforms to {@link http://semver.org/ Semantic Versioning}.
- *
- * @since 1.0.0
- *
- * @const WORDPOINTS_VERSION
- */
-define( 'WORDPOINTS_VERSION', '1.1.0' );
-
-/**
- * You are here.
- *
- * @since 1.0.0
- *
- * @const WORDPOINTS_DIR
- */
-define( 'WORDPOINTS_DIR', plugin_dir_path( __FILE__ ) );
 
 /**
  * Include the activate file on activation.
@@ -75,7 +55,7 @@ define( 'WORDPOINTS_DIR', plugin_dir_path( __FILE__ ) );
 function wordpoints_activate() {
 
 	// Get the plugin version and other data from the database.
-	$wordpoints_data = get_option( 'wordpoints_data' );
+	$wordpoints_data = wordpoints_get_network_option( 'wordpoints_data' );
 
 	if ( ! $wordpoints_data ) {
 
@@ -90,6 +70,13 @@ function wordpoints_activate() {
 	}
 }
 register_activation_hook( __FILE__, 'wordpoints_activate' );
+
+/**
+ * Plugin defined constants.
+ *
+ * @since 1.2.0
+ */
+include_once dirname( __FILE__ ) . '/includes/constants.php';
 
 /**
  * Core functions.
@@ -153,10 +140,10 @@ if ( is_admin() ) {
  *
  * @action plugins_loaded
  */
-function wordpoints_load_textdoomain() {
+function wordpoints_load_textdomain() {
 
-	load_plugin_textdomain( 'wordpoints', false, WORDPOINTS_DIR . '/languages/' );
+	load_plugin_textdomain( 'wordpoints', false, plugin_basename( WORDPOINTS_DIR ) . '/languages/' );
 }
-add_action( 'plugins_loaded', 'wordpoints_load_textdoomain' );
+add_action( 'plugins_loaded', 'wordpoints_load_textdomain' );
 
 // end of file /wordpoints.php

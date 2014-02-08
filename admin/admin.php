@@ -20,48 +20,109 @@
 include_once WORDPOINTS_DIR . 'admin/screens/configure.php';
 
 /**
+ * Get the slug of the main administration menu item for the plugin.
+ *
+ * The main item changes in multisite when the plugin is network activated. In the
+ * network admin it is the usual 'wordpoints_configure', while everywhere else it is
+ * 'wordpoints_modules' instead.
+ *
+ * @since 1.2.0
+ *
+ * @return string The slug for the plugin's main top level admin menu item.
+ */
+function wordpoints_get_main_admin_menu() {
+
+	$action = current_filter();
+	$is_network_active = is_wordpoints_network_active();
+
+	/*
+	 * If the plugin is network active and we are displaying the network menu, or if
+	 * it isn't and we're displaying the site admin menu, the settings page is the
+	 * main one.
+	 */
+	if (
+		( $is_network_active && 'network_admin_menu' === $action )
+		|| ( ! $is_network_active && 'admin_menu' === $action )
+	) {
+
+		$slug = 'wordpoints_configure';
+
+	} elseif ( 'network_admin_menu' !== $action ) {
+
+		$slug = 'wordpoints_modules';
+	}
+
+	return $slug;
+}
+
+/**
  * Add admin screens to the administration menu.
  *
  * @since 1.0.0
  *
  * @action admin_menu
+ * @action network_admin_menu
  */
 function wordpoints_admin_menu() {
 
+	$main_menu  = wordpoints_get_main_admin_menu();
 	$wordpoints = __( 'WordPoints', 'wordpoints' );
 
-	// Main page.
-	add_menu_page(
-		$wordpoints
-		,$wordpoints
-		,'manage_options'
-		,'wordpoints_configure'
-		,'wordpoints_admin_screen_configure'
-	);
+	/*
+	 * The settings page is always the main menu, except when the plugin is network
+	 * active on multisite. Then it is only the main menu when in the network admin.
+	 */
+	if ( 'wordpoints_configure' === $main_menu ) {
 
-	// Settings page.
-	add_submenu_page(
-		'wordpoints_configure'
-		,__( 'WordPoints - Configure', 'wordpoints' )
-		,__( 'Configure', 'wordpoints' )
-		,'manage_options'
-		,'wordpoints_configure'
-		,'wordpoints_admin_screen_configure'
-	);
+		// Main page.
+		add_menu_page(
+			$wordpoints
+			,$wordpoints
+			,'manage_options'
+			,'wordpoints_configure'
+			,'wordpoints_admin_screen_configure'
+		);
+
+		// Settings page.
+		add_submenu_page(
+			'wordpoints_configure'
+			,__( 'WordPoints - Configure', 'wordpoints' )
+			,__( 'Configure', 'wordpoints' )
+			,'manage_options'
+			,'wordpoints_configure'
+			,'wordpoints_admin_screen_configure'
+		);
+
+	} else {
+
+		/*
+		 * When network-active and displaying the admin menu, we don't display the
+		 * settings page, instead we display the modules page as the main page.
+		 */
+
+		// Main page.
+		add_menu_page(
+			$wordpoints
+			,$wordpoints
+			,'activate_wordpoints_modules'
+			,'wordpoints_modules'
+			,'wordpoints_admin_screen_modules'
+		);
+	}
 
 	// Modules page.
 	add_submenu_page(
-		'wordpoints_configure'
+		$main_menu
 		,__( 'WordPoints - Modules', 'wordpoints' )
 		,__( 'Modules', 'wordpoints' )
 		,'activate_wordpoints_modules'
 		,'wordpoints_modules'
-		,'wordpoints_display_admin_screen'
+		,'wordpoints_admin_screen_modules'
 	);
 
 	// Module install page.
 	add_submenu_page(
-		'wordpoints_modules'
+		'_wordpoints_modules' // Fake menu.
 		,__( 'WordPoints - Install Modules', 'wordpoints' )
 		,__( 'Install Modules', 'wordpoints' )
 		,'install_wordpoints_modules'
@@ -70,6 +131,7 @@ function wordpoints_admin_menu() {
 	);
 }
 add_action( 'admin_menu', 'wordpoints_admin_menu' );
+add_action( 'network_admin_menu', 'wordpoints_admin_menu' );
 
 /**
  * Display one of the administration screens.
@@ -84,11 +146,27 @@ function wordpoints_display_admin_screen() {
 }
 
 /**
+ * Display the modules admin screen.
+ *
+ * @since 1.2.0
+ */
+function wordpoints_admin_screen_modules() {
+
+	/**
+	 * The modules administration screen.
+	 *
+	 * @since 1.1.0
+	 */
+	require WORDPOINTS_DIR . 'admin/screens/modules.php';
+}
+
+/**
  * Set up for the modules screen.
  *
  * @since 1.1.0
  *
- * @action
+ * @action load-wordpoints_page_wordpoints_modules
+ * @action load-toplevel_page_wordpoints_modules
  */
 function wordpoints_admin_screen_modules_load() {
 
@@ -100,6 +178,7 @@ function wordpoints_admin_screen_modules_load() {
 	require WORDPOINTS_DIR . 'admin/screens/modules-load.php';
 }
 add_action( 'load-wordpoints_page_wordpoints_modules', 'wordpoints_admin_screen_modules_load' );
+add_action( 'load-toplevel_page_wordpoints_modules', 'wordpoints_admin_screen_modules_load' );
 
 /**
  * Display the install modules admin screen.
@@ -168,7 +247,7 @@ function wordpoints_show_admin_message( $message, $type = 'updated' ) {
 
 	?>
 
-	<div id="message" class="<?php echo $type; ?>">
+	<div id="message" class="<?php echo sanitize_html_class( $type, 'updated' ); ?>">
 		<p>
 			<?php echo $message; ?>
 		</p>
@@ -225,18 +304,18 @@ function wordpoints_admin_show_tabs( $tabs, $show_heading = true ) {
 		echo '<h2>', esc_html( sprintf( __( 'WordPoints - %s', 'wordpoints' ), $tabs[ $current ] ) ), '</h2>';
 	}
 
-    echo '<h2 class="nav-tab-wrapper">';
+	echo '<h2 class="nav-tab-wrapper">';
 
 	$page = rawurlencode( $_GET['page'] );
 
-    foreach ( $tabs as $tab => $name ) {
+	foreach ( $tabs as $tab => $name ) {
 
-        $class = ( $tab == $current ) ? ' nav-tab-active' : '';
+		$class = ( $tab == $current ) ? ' nav-tab-active' : '';
 
-        echo '<a class="nav-tab', $class, '" href="?page=', $page, '&amp;tab=', rawurlencode( $tab ), '">', esc_html( $name ), '</a>';
-    }
+		echo '<a class="nav-tab', $class, '" href="?page=', $page, '&amp;tab=', rawurlencode( $tab ), '">', esc_html( $name ), '</a>';
+	}
 
-    echo '</h2>';
+	echo '</h2>';
 }
 
 /**
@@ -250,8 +329,8 @@ function wordpoints_install_modules_upload() {
 
 	<h4><?php _e( 'Install a module in .zip format', 'wordpoints' ); ?></h4>
 	<p class="install-help"><?php _e( 'If you have a module in a .zip format, you may install it by uploading it here.', 'wordpoints' ); ?></p>
-	<form method="post" enctype="multipart/form-data" class="wp-upload-form" action="<?php echo self_admin_url( 'update.php?action=upload-wordpoints-module' ); ?>">
-		<?php wp_nonce_field( 'wordpoints-module-upload'); ?>
+	<form method="post" enctype="multipart/form-data" class="wp-upload-form" action="<?php echo esc_url( self_admin_url( 'update.php?action=upload-wordpoints-module' ) ); ?>">
+		<?php wp_nonce_field( 'wordpoints-module-upload' ); ?>
 		<label class="screen-reader-text" for="modulezip"><?php _e( 'Module zip file', 'wordpoints' ); ?></label>
 		<input type="file" id="modulezip" name="modulezip" />
 		<?php submit_button( __( 'Install Now', 'wordpoints' ), 'button', 'install-module-submit', false ); ?>
@@ -279,7 +358,7 @@ function wordpoints_upload_module_zip() {
 	$file_upload = new File_Upload_Upgrader( 'modulezip', 'package' );
 
 	$title = __( 'Upload WordPoints Module', 'wordpoints' );
-	$parent_file = 'admin.php';
+	$parent_file  = 'admin.php';
 	$submenu_file = 'admin.php';
 
 	require_once ABSPATH . 'wp-admin/admin-header.php';
@@ -300,7 +379,7 @@ function wordpoints_upload_module_zip() {
 
 	$result = $upgrader->install( $file_upload->package );
 
-	if ( $result || is_wp_error($result) ) {
+	if ( $result || is_wp_error( $result ) ) {
 		$file_upload->cleanup();
 	}
 
@@ -319,7 +398,7 @@ function wordpoints_admin_settings_screen_sidebar() {
 
 	?>
 
-	<div style="height: 120px;border: none;padding: 1px 12px;background-color: #fff;border-left: 4px solid rgb(122, 208, 58);box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.1);">
+	<div style="height: 120px;border: none;padding: 1px 12px;background-color: #fff;border-left: 4px solid rgb(122, 208, 58);box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.1);margin-top: 50px;">
 		<div style="width:48%;float:left;">
 			<h4><?php _e( 'Like this plugin?', 'wordpoints' ); ?></h4>
 			<p><?php printf( __( 'If you think WordPoints is great, let everyone know by giving it a <a href="%s">5 star rating</a>.', 'wordpoints' ), 'http://wordpress.org/support/view/plugin-reviews/wordpoints?rate=5#postform' ); ?></p>

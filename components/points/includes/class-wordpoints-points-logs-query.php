@@ -151,6 +151,7 @@ class WordPoints_Points_Logs_Query {
 	 * @since 1.0.0
 	 * @since 1.1.0 Introduce 'date_query' argument and support for WP_Date_Query.
 	 * @since 1.1.0 Support for WP_Meta_Query. Old meta arguments were deprecated.
+	 * @since 1.2.0 Introduce 'id__in' and 'id__not_in' for log IDs.
 	 *
 	 * @see WP_Date_Query for the proper arguments for $args['date_query'].
 	 * @see WP_Meta_Query for the proper arguments for 'meta_query', 'meta_key', 'meta_value', 'meta_compare', and 'meta_type'.
@@ -163,6 +164,8 @@ class WordPoints_Points_Logs_Query {
 	 *        @type int          $start               The start for the LIMIT clause. Default: 0.
 	 *        @type string       $orderby             The field to use to order the results. Default: 'date'.
 	 *        @type string       $order               The order for the query: ASC or DESC (default).
+	 *        @type int          $id__in              Limit results to these log IDs.
+	 *        @type int          $id__not_in          Exclude all logs with these IDs.
 	 *        @type int          $user_id             Limit results to logs for this user.
 	 *        @type int[]        $user__in            Limit results to logs for these users.
 	 *        @type int[]        $user__not_in        Exclude all logs for these users from the results.
@@ -197,7 +200,7 @@ class WordPoints_Points_Logs_Query {
 	 *        }
 	 * }
 	 */
-	public function __construct( $args ) {
+	public function __construct( $args = array() ) {
 
 		global $wpdb;
 
@@ -207,6 +210,8 @@ class WordPoints_Points_Logs_Query {
 			'start'               => 0,
 			'orderby'             => 'date',
 			'order'               => 'DESC',
+			'id__in'              => array(),
+			'id__not_in'          => array(),
 			'user_id'             => 0,
 			'user__in'            => array(),
 			'user__not_in'        => array(),
@@ -283,8 +288,9 @@ class WordPoints_Points_Logs_Query {
 	public function count( $use_cache = true ) {
 
 		// Return the cached value if available.
-		if ( $use_cache && isset( $this->_cache['count'] ) )
+		if ( $use_cache && isset( $this->_cache['count'] ) ) {
 			return $this->_cache['count'];
+		}
 
 		$this->_select_type = 'SELECT COUNT';
 		$this->_prepare_query();
@@ -318,8 +324,9 @@ class WordPoints_Points_Logs_Query {
 			return false;
 		}
 
-		if ( $use_cache && isset( $this->_cache[ "get_{$method}" ] ) )
+		if ( $use_cache && isset( $this->_cache[ "get_{$method}" ] ) ) {
 			return $this->_cache[ "get_{$method}" ];
+		}
 
 		$this->_select_type = 'SELECT';
 		$this->_prepare_query();
@@ -345,8 +352,9 @@ class WordPoints_Points_Logs_Query {
 	 */
 	public function get_sql( $select_type = null ) {
 
-		if ( isset( $select_type ) )
+		if ( isset( $select_type ) ) {
 			$this->_select_type = $select_type;
+		}
 
 		$this->_prepare_query();
 
@@ -469,27 +477,31 @@ class WordPoints_Points_Logs_Query {
 
 		if ( 'string' == $var_type ) {
 
-			if ( 'all' == $_fields )
+			if ( 'all' == $_fields ) {
 				$fields = '`' . implode( '` ,`', $this->_fields ) . '`';
-			elseif ( in_array( $_fields, $this->_fields ) )
+			} elseif ( in_array( $_fields, $this->_fields ) ) {
 				$fields = $_fields;
-			else
+			} else {
 				wordpoints_debug_message( "invalid field {$_fields}, possible values are " . implode( ', ', $this->_fields ), __METHOD__, __FILE__, __LINE__ );
+			}
 
 		} elseif ( 'array' == $var_type ) {
 
-			$diff = array_diff( $_fields, $this->_fields );
+			$diff    = array_diff( $_fields, $this->_fields );
 			$_fields = array_intersect( $this->_fields, $_fields );
 
-			if ( ! empty( $diff ) )
+			if ( ! empty( $diff ) ) {
 				wordpoints_debug_message( 'invalid field(s) "' . implode( '", "', $diff ) . '" given', __METHOD__, __FILE__, __LINE__ );
+			}
 
-			if ( ! empty( $_fields ) )
+			if ( ! empty( $_fields ) ) {
 				$fields = '`' . implode( '`, `', $_fields ) . '`';
+			}
 		}
 
-		if ( empty( $fields ) )
+		if ( empty( $fields ) ) {
 			$fields = '`' . implode( '` ,`', $this->_fields ) . '`';
+		}
 
 		$this->_select = "SELECT {$fields}";
 	}
@@ -504,6 +516,10 @@ class WordPoints_Points_Logs_Query {
 		global $wpdb;
 
 		$this->_wheres = array();
+
+		// Log IDs.
+		$this->_prepare_posint__in( $this->_args['id__in'], 'id' );
+		$this->_prepare_posint__in( $this->_args['id__not_in'], 'id', 'NOT IN' );
 
 		// User
 		if ( wordpoints_posint( $this->_args['user_id'] ) ) {
@@ -554,7 +570,7 @@ class WordPoints_Points_Logs_Query {
 
 			if ( isset( $_points ) && ! wordpoints_int( $this->_args['points'] ) ) {
 
-				wordpoints_debug_message( "'points' must be an integer, " . gettype( $_points ) . " given",  __METHOD__, __FILE__, __LINE__ );
+				wordpoints_debug_message( "'points' must be an integer, " . gettype( $_points ) . ' given',  __METHOD__, __FILE__, __LINE__ );
 
 			} else {
 
@@ -572,14 +588,19 @@ class WordPoints_Points_Logs_Query {
 		// Multisite isn't really supported. This is just theoretical... :)
 		if ( is_multisite() ) {
 
-			if ( wordpoints_posint( $this->_args['site_id'] ) )
+			if ( wordpoints_posint( $this->_args['site_id'] ) ) {
 				$this->_wheres[] = $wpdb->prepare( '`site_id` = %d', $this->_args['site_id'] );
+			}
 
-			if ( wordpoints_posint( $this->_args['blog_id'] ) )
+			if ( ! empty( $this->_args['blog__in'] ) || ! empty( $this->_args['blog__not_in'] ) ) {
+
+				$this->_prepare_posint__in( $this->_args['blog__in'], 'blog_id' );
+				$this->_prepare_posint__in( $this->_args['blog__not_in'], 'blog_id', 'NOT IN' );
+
+			} elseif ( wordpoints_posint( $this->_args['blog_id'] ) ) {
+
 				$this->_wheres[] = $wpdb->prepare( '`blog_id` = %d', $this->_args['blog_id'] );
-
-			$this->_prepare_posint__in( $this->_args['blog__in'], 'blog_id' );
-			$this->_prepare_posint__in( $this->_args['blog__not_in'], 'blog_id', 'NOT IN' );
+			}
 		}
 
 		if ( ! empty( $this->_args['date_query'] ) && is_array( $this->_args['date_query'] ) ) {
@@ -611,7 +632,7 @@ class WordPoints_Points_Logs_Query {
 		if ( ! empty( $meta_args ) ) {
 
 			$this->meta_query = new WP_Meta_Query();
- 			$this->meta_query->parse_query_vars( $meta_args );
+			$this->meta_query->parse_query_vars( $meta_args );
 
 			add_filter( 'sanitize_key', array( $this, 'meta_query_meta_table_id_filter' ) );
 			$meta_query = $this->meta_query->get_sql( 'wordpoints_points_log_', $wpdb->wordpoints_points_logs, 'id', $this );
@@ -640,8 +661,9 @@ class WordPoints_Points_Logs_Query {
 	 */
 	private function _prepare_limit() {
 
-		if ( ! isset( $this->_args['limit'] ) )
+		if ( ! isset( $this->_args['limit'] ) ) {
 			return;
+		}
 
 		$_var = $this->_args['limit'];
 
@@ -661,8 +683,9 @@ class WordPoints_Points_Logs_Query {
 			$this->_args['start'] = 0;
 		}
 
-		if ( $this->_args['limit'] > 0 && $this->_args['start'] >= 0 )
+		if ( $this->_args['limit'] > 0 && $this->_args['start'] >= 0 ) {
 			$this->_limit = "LIMIT {$this->_args['start']}, {$this->_args['limit']}";
+		}
 	}
 
 	/**
@@ -676,7 +699,7 @@ class WordPoints_Points_Logs_Query {
 
 		global $wpdb;
 
-		$order = $this->_args['order'];
+		$order    = $this->_args['order'];
 		$order_by = $this->_args['orderby'];
 
 		if ( 'none' == $order_by ) {
@@ -694,7 +717,7 @@ class WordPoints_Points_Logs_Query {
 			if ( isset( $this->_args['meta_type'] ) ) {
 
 				$meta_type = $this->meta_query->get_cast_for_type( $this->_args['meta_type'] );
-				$order_by = "CAST({$wpdb->wordpoints_points_log_meta}.meta_value AS {$meta_type}";
+				$order_by  = "CAST({$wpdb->wordpoints_points_log_meta}.meta_value AS {$meta_type}";
 
 			} else {
 
@@ -728,8 +751,9 @@ class WordPoints_Points_Logs_Query {
 
 			$in = wordpoints_prepare__in( $_in, $format );
 
-			if ( $in )
+			if ( $in ) {
 				$this->_wheres[] = "{$column} {$type} ({$in})";
+			}
 		}
 	}
 
@@ -758,8 +782,9 @@ class WordPoints_Points_Logs_Query {
 
 					$in = wordpoints_prepare__in( $in, '%d' );
 
-					if ( $in )
+					if ( $in ) {
 						$this->_wheres[] = "{$column} {$type} ({$in})";
+					}
 				}
 
 			} else {

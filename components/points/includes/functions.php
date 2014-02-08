@@ -11,261 +11,51 @@
  */
 
 /**
- * Points types class.
- *
- * The member methods of this class manage points types. Using them, points types can
- * be added or data for existing points types retrieved. However, you should not
- * call the methods of this class directly; use the wrapper function below.
- *
- * @since 1.0.0
- */
-class WordPoints_Points_Types {
-
-	//
-	// Private Vars.
-	//
-
-	/**
-	 * An associative array of points types data.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @type array $types
-	 */
-	private static $types;
-
-	//
-	// Public Methods.
-	//
-
-	/**
-	 * Get all points types.
-	 *
-	 * Returns a multidimensional array of all the points types, indexed by slug.
-	 * Each value is an associative array, with the keys 'name', 'prefix', and
-	 * 'suffix'. Other data may be added by plugins and modules.
-	 *
-	 * Example:
-	 * <code>
-	 * array(
-	 *      'points' => array(
-	 *               'name'   => 'Points',
-	 *               'prefix' => '$',
-	 *               'suffix' => '',
-	 *      ),
-	 *      'another-points' => array(
-	 *               'name'   => 'Another Points',
-	 *               'prefix' => '',
-	 *               'suffix' => 'points',
-	 *      ),
-	 * )
-	 * </code>
-	 *
-	 * @since 1.0.0
-	 *
-	 * @see WordPoints_Points_Types::_set_types() Sets the $types member var.
-	 *
-	 * @return array An array of all points types.
-	 */
-	public static function get() {
-
-		return self::$types;
-	}
-
-	/**
-	 * Get the settings for a single points type.
-	 *
-	 * @see WordPoints_Points_Types::get_types()
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $slug The slug of a points type.
-	 *
-	 * @return array|bool An array of settings for this points type. False on
-	 *         failure.
-	 */
-	public static function get_type( $slug ) {
-
-		if ( ! self::is_type( $slug ) )
-			return false;
-
-		return self::$types[ $slug ];
-	}
-
-	/**
-	 * Get a setting for a type of points.
-	 *
-	 * Examples of points type settings are 'prefix', 'suffix', etc. Custom settings
-	 * may be added as well.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $slug    The points type to retrieve a setting for.
-	 * @param string $setting The setting to retrieve.
-	 *
-	 * @return string|void The value of the setting if it exists, otherwise null.
-	 */
-	public static function get_type_setting( $slug, $setting ) {
-
-		if ( isset( self::$types[ $slug ][ $setting ] ) ) {
-
-			return self::$types[ $slug ][ $setting ];
-		}
-	}
-
-	/**
-	 * Create a new type of points.
-	 *
-	 * This adds a new entry to the array of points types saved in the database.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @uses sanitize_key() To generate the slug.
-	 * @uses apply_filters()  Calls 'wordpoints_points_settings' with the array of
-	 *       settings for the new points type, and the $new parameter set to true.
-	 *
-	 * @param array $settings The data for this points type.
-	 *
-	 * @return string|bool The slug on success. False on failure.
-	 */
-	public static function add_type( $settings ) {
-
-		if ( ! is_array( $settings ) || ! isset( $settings['name'] ) )
-			return false;
-
-		$slug = sanitize_key( $settings['name'] );
-
-		if ( empty( $slug ) || self::is_type( $slug ) )
-			return false;
-
-		/**
-		 * Points type settings.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param array  $settings The settings for a points type.
-		 * @param string $slug     The slug for this points type.
-		 * @param bool   $is_new   Whether this points type is new, or being updated.
-		 */
-		self::$types[ $slug ] = apply_filters( 'wordpoints_points_settings', $settings, $slug, true );
-
-		if ( ! update_option( 'wordpoints_points_types', self::$types ) )
-			return false;
-
-		self::_reset();
-
-		return $slug;
-	}
-
-	/**
-	 * Update the settings for a type of points.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @uses apply_filters() Calls 'wordpoints_points_settings' with the array of
-	 *       settings for the points type, and the $new parameter set to false.
-	 *
-	 * @param string $slug     The slug for the points type to update.
-	 * @param array  $settings The new settings for this points type.
-	 *
-	 * @return bool False on failure, or if this points type does not exist.
-	 */
-	public static function update_type( $slug, $settings ) {
-
-		if ( ! self::is_type( $slug ) || ! is_array( $settings ) || ! isset( $settings['name'] ) )
-			return false;
-
-		/**
-		 * @see WordPoints_Points_Types::new_type()
-		 */
-		self::$types[ $slug ] = apply_filters( 'wordpoints_points_settings', $settings, $slug, false );
-
-		$result = update_option( 'wordpoints_points_types', self::$types );
-
-		self::_reset();
-
-		return $result;
-	}
-
-	/**
-	 * Check if a type of points exists.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $slug The type of points.
-	 *
-	 * @return bool
-	 */
-	public static function is_type( $slug ) {
-
-		return isset( self::$types[ $slug ] );
-	}
-
-	/**
-	 * Delete a points type.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $slug The slug of the points type to delete.
-	 *
-	 * @return bool Whether the points type was deleted.
-	 */
-	public static function delete_type( $slug ) {
-
-		if ( ! self::is_type( $slug ) )
-			return false;
-
-		unset( self::$types[ $slug ] );
-
-		$result = update_option( 'wordpoints_points_types', self::$types );
-
-		self::_reset();
-
-		return $result;
-	}
-
-	/**
-	 * Set up the $types private var.
-	 *
-	 * You should **never** have to call this method... but *if*, for some
-	 * strange reason you need to manipulate the option directly, you *should* call
-	 * this function. And we need to do that in the unit tests, so that's why this
-	 * method isn't declared private. Nontheless, you *shouldn't* be manipulating the
-	 * option directly. Do so at your own risk.
-	 *
-	 * @since 1.0.0
-	 */
-	public static function _reset() {
-
-		self::$types = wordpoints_get_array_option( 'wordpoints_points_types' );
-	}
-}
-
-// Set up the points types.
-WordPoints_Points_Types::_reset();
-
-/**
  * Check if a points type exists by slug.
  *
  * @since 1.0.0
  *
- * @uses WordPoints_Points_Types::is_type()
+ * @param string $slug Test if this is the slug of a points type.
+ *
+ * @return bool Whether a points type with the given slug exists.
  */
 function wordpoints_is_points_type( $slug ) {
 
-	return WordPoints_Points_Types::is_type( $slug );
+	$points_types = wordpoints_get_points_types();
+
+	return isset( $points_types[ $slug ] );
 }
 
 /**
  * Get all points types.
  *
+ * Returns a multidimensional array of all the points types, indexed by slug.
+ * Each value is an associative array, with the keys 'name', 'prefix', and
+ * 'suffix'. Other data may be added by plugins and modules.
+ *
+ * Example:
+ * <code>
+ * array(
+ *      'points' => array(
+ *               'name'   => 'Points',
+ *               'prefix' => '$',
+ *               'suffix' => '',
+ *      ),
+ *      'another-points' => array(
+ *               'name'   => 'Another Points',
+ *               'prefix' => '',
+ *               'suffix' => 'points',
+ *      ),
+ * )
+ * </code>
+ *
  * @since 1.0.0
  *
- * @uses WordPoints_Points_Types::get()
+ * @return array An array of all points types.
  */
 function wordpoints_get_points_types() {
 
-	return WordPoints_Points_Types::get();
+	return wordpoints_get_array_option( 'wordpoints_points_types', 'network' );
 }
 
 /**
@@ -273,47 +63,111 @@ function wordpoints_get_points_types() {
  *
  * @since 1.0.0
  *
- * @uses WordPoints_Points_Types::get_type()
+ * @param string $slug The slug of a points type.
+ *
+ * @return array|bool An array of settings for this points type. False on failure.
  */
 function wordpoints_get_points_type( $slug ) {
 
-	return WordPoints_Points_Types::get_type( $slug );
+	$points_types = wordpoints_get_points_types();
+
+	if ( ! isset( $points_types[ $slug ] ) ) {
+		return false;
+	}
+
+	return $points_types[ $slug ];
 }
 
 /**
- * Get one of the settings for a points type.
+ * Get a setting for a type of points.
+ *
+ * Examples of points type settings are 'prefix', 'suffix', etc. Custom settings
+ * may be added as well.
  *
  * @since 1.0.0
  *
- * @uses WordPoints_Points_Types::get_type_setting()
+ * @param string $slug    The points type to retrieve a setting for.
+ * @param string $setting The setting to retrieve.
+ *
+ * @return string|void The value of the setting if it exists, otherwise null.
  */
 function wordpoints_get_points_type_setting( $slug, $setting ) {
 
-	return WordPoints_Points_Types::get_type_setting( $slug, $setting );
+	$points_type = wordpoints_get_points_type( $slug );
+
+	if ( isset( $points_type[ $setting ] ) ) {
+		return $points_type[ $setting ];
+	}
 }
 
 /**
- * Create a new points type.
+ * Create a new type of points.
+ *
+ * This adds a new entry to the array of points types saved in the database.
  *
  * @since 1.0.0
  *
- * @uses WordPoints_Points_Types::add_type()
+ * @uses sanitize_key() To generate the slug.
+ *
+ * @param array $settings The data for this points type.
+ *
+ * @return string|bool The slug on success. False on failure.
  */
 function wordpoints_add_points_type( $settings ) {
 
-	return WordPoints_Points_Types::add_type( $settings );
+	if ( ! is_array( $settings ) || ! isset( $settings['name'] ) ) {
+		return false;
+	}
+
+	$slug = sanitize_key( $settings['name'] );
+	$points_types = wordpoints_get_points_types();
+
+	if ( empty( $slug ) || isset( $points_types[ $slug ] ) ) {
+		return false;
+	}
+
+	/**
+	 * Points type settings.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $settings The settings for a points type.
+	 * @param string $slug     The slug for this points type.
+	 * @param bool   $is_new   Whether this points type is new, or being updated.
+	 */
+	$points_types[ $slug ] = apply_filters( 'wordpoints_points_settings', $settings, $slug, true );
+
+	if ( ! wordpoints_update_network_option( 'wordpoints_points_types', $points_types ) ) {
+		return false;
+	}
+
+	return $slug;
 }
 
 /**
- * Update the settings for a points type.
+ * Update the settings for a type of points.
  *
  * @since 1.0.0
  *
- * @uses WordPoints_Points_Types::update_type()
+ * @param string $slug     The slug for the points type to update.
+ * @param array  $settings The new settings for this points type.
+ *
+ * @return bool False on failure, or if this points type does not exist.
  */
-function wordpoints_update_points_type( $slug, $new_settings ) {
+function wordpoints_update_points_type( $slug, $settings ) {
 
-	return WordPoints_Points_Types::update_type( $slug, $new_settings );
+	$points_types = wordpoints_get_points_types();
+
+	if ( ! is_array( $settings ) || ! isset( $points_types[ $slug ], $settings['name'] ) ) {
+		return false;
+	}
+
+	/**
+	 * @see wordpoints_add_points_type()
+	 */
+	$points_types[ $slug ] = apply_filters( 'wordpoints_points_settings', $settings, $slug, false );
+
+	return wordpoints_update_network_option( 'wordpoints_points_types', $points_types );
 }
 
 /**
@@ -330,8 +184,21 @@ function wordpoints_update_points_type( $slug, $new_settings ) {
  */
 function wordpoints_delete_points_type( $slug ) {
 
-	if ( ! WordPoints_Points_Types::delete_type( $slug ) )
+	$points_types = wordpoints_get_points_types();
+
+	if ( ! isset( $points_types[ $slug ] ) ) {
 		return false;
+	}
+
+	$meta_key = wordpoints_get_points_user_meta_key( $slug );
+
+	unset( $points_types[ $slug ] );
+
+	$result = wordpoints_update_network_option( 'wordpoints_points_types', $points_types );
+
+	if ( ! $result ) {
+		return $result;
+	}
 
 	global $wpdb;
 
@@ -355,7 +222,7 @@ function wordpoints_delete_points_type( $slug ) {
 	$wpdb->delete( $wpdb->wordpoints_points_logs, array( 'points_type' => $slug ) );
 
 	// Delete all user points of this type.
-	delete_metadata( 'user', 0, "wordpoints_points-{$slug}", '', true );
+	delete_metadata( 'user', 0, $meta_key, '', true );
 
 	// Delete hooks associated with this points type.
 	$points_types_hooks = WordPoints_Points_Hooks::get_points_types_hooks();
@@ -365,6 +232,47 @@ function wordpoints_delete_points_type( $slug ) {
 	WordPoints_Points_Hooks::save_points_types_hooks( $points_types_hooks );
 
 	return true;
+}
+
+/**
+ * Get the meta key for a points type's user meta.
+ *
+ * The number of points a user has is stored in the user meta. This function was
+ * introduced to allow the meta_key for that value to be retrieved easily internally.
+ * The meta key is "wordpoints_points-{$type}" for single sites, and when network
+ * active on multisite. When not network-active on multisite, the key is prefixed
+ * with the blog's table prefix, to avoid collisions from different blogs.
+ *
+ * Note that because it uses is_wordpoints_network_active(), it can only be trusted
+ * when the plugin is actually active. It won't work when uninstalling, for example.
+ *
+ * Also be careful, because if the points type doesn't exist, false will be
+ * returned.
+ *
+ * @since 1.2.0
+ *
+ * @param string $points_type The slug of the points type to get the meta key for.
+ *
+ * @return string|bool The user meta meta_key for a points type, or false.
+ */
+function wordpoints_get_points_user_meta_key( $points_type ) {
+
+	if ( ! wordpoints_is_points_type( $points_type ) ) {
+		return false;
+	}
+
+	if ( ! is_multisite() || is_wordpoints_network_active() ) {
+
+		$meta_key = "wordpoints_points-{$points_type}";
+
+	} else {
+
+		global $wpdb;
+
+		$meta_key = $wpdb->get_blog_prefix() . "wordpoints_points-{$points_type}";
+	}
+
+	return $meta_key;
 }
 
 /**
@@ -381,10 +289,11 @@ function wordpoints_delete_points_type( $slug ) {
  */
 function wordpoints_get_points( $user_id, $type ) {
 
-	if ( ! wordpoints_posint( $user_id ) || ! wordpoints_is_points_type( $type ) )
+	if ( ! wordpoints_posint( $user_id ) || ! wordpoints_is_points_type( $type ) ) {
 		return false;
+	}
 
-	$points = get_user_meta( $user_id, "wordpoints_points-{$type}", true );
+	$points = get_user_meta( $user_id, wordpoints_get_points_user_meta_key( $type ), true );
 
 	return (int) wordpoints_int( $points );
 }
@@ -429,8 +338,9 @@ function wordpoints_get_points( $user_id, $type ) {
  */
 function wordpoints_get_points_minimum( $type ) {
 
-	if ( ! wordpoints_is_points_type( $type ) )
+	if ( ! wordpoints_is_points_type( $type ) ) {
 		return false;
+	}
 
 	/**
 	 * The minimum number of points.
@@ -466,8 +376,9 @@ function wordpoints_format_points( $points, $type, $context ) {
 	$_points = $points;
 	wordpoints_int( $_points );
 
-	if ( false === $_points || ! wordpoints_is_points_type( $type ) )
+	if ( false === $_points || ! wordpoints_is_points_type( $type ) ) {
 		return $points;
+	}
 
 	/**
 	 * Format points for display.
@@ -500,8 +411,9 @@ function wordpoints_get_formatted_points( $user_id, $type, $context ) {
 
 	$points = wordpoints_get_points( $user_id, $type );
 
-	if ( false === $points )
+	if ( false === $points ) {
 		return false;
+	}
 
 	return wordpoints_format_points( $points, $type, $context );
 }
@@ -526,8 +438,9 @@ function wordpoints_display_points( $user_id, $type, $context ) {
 
 	$points = wordpoints_get_points( $user_id, $type );
 
-	if ( false === $points )
+	if ( false === $points ) {
 		return;
+	}
 
 	echo wordpoints_format_points( $points, $type, $context );
 }
@@ -556,13 +469,15 @@ function wordpoints_get_points_above_minimum( $user_id, $type ) {
 
 	$minimum = wordpoints_get_points_minimum( $type );
 
-	if ( false === $minimum )
+	if ( false === $minimum ) {
 		return false;
+	}
 
 	$points = wordpoints_get_points( $user_id, $type );
 
-	if ( false === $points )
+	if ( false === $points ) {
 		return false;
+	}
 
 	return max( 0, $points - $minimum );
 }
@@ -587,13 +502,15 @@ function wordpoints_get_points_above_minimum( $user_id, $type ) {
  */
 function wordpoints_set_points( $user_id, $points, $points_type, $log_type, $meta = array() ) {
 
-	if ( false === wordpoints_int( $points ) )
+	if ( false === wordpoints_int( $points ) ) {
 		return false;
+	}
 
 	$current = wordpoints_get_points( $user_id, $points_type );
 
-	if ( false === $current )
+	if ( false === $current ) {
 		return false;
+	}
 
 	return wordpoints_alter_points( $user_id, $points - $current, $points_type, $log_type, $meta );
 }
@@ -636,8 +553,14 @@ function wordpoints_set_points( $user_id, $points, $points_type, $log_type, $met
  */
 function wordpoints_alter_points( $user_id, $points, $points_type, $log_type, $meta = array() ) {
 
-	if ( ! wordpoints_posint( $user_id ) || ! wordpoints_int( $points ) || ! wordpoints_is_points_type( $points_type ) || empty( $log_type ) )
+	if (
+		! wordpoints_posint( $user_id )
+		|| ! wordpoints_int( $points )
+		|| ! wordpoints_is_points_type( $points_type )
+		|| empty( $log_type )
+	) {
 		return false;
+	}
 
 	global $wpdb;
 
@@ -654,8 +577,9 @@ function wordpoints_alter_points( $user_id, $points, $points_type, $log_type, $m
 	 */
 	$points = apply_filters( 'wordpoints_alter_points', $points, $points_type, $user_id, $log_type, $meta );
 
-	if ( wordpoints_int( $points ) == 0 )
+	if ( wordpoints_int( $points ) == 0 ) {
 		return true;
+	}
 
 	// Get the current points so we can check this won't go below the minimum.
 	$current_points = wordpoints_get_points( $user_id, $points_type );
@@ -667,9 +591,11 @@ function wordpoints_alter_points( $user_id, $points, $points_type, $log_type, $m
 		$points = $minimum - $current_points;
 	}
 
-	if ( '' === get_user_meta( $user_id, "wordpoints_points-{$points_type}", true ) ) {
+	$meta_key = wordpoints_get_points_user_meta_key( $points_type );
 
-		$result = add_user_meta( $user_id, "wordpoints_points-{$points_type}", $points, true );
+	if ( '' === get_user_meta( $user_id, $meta_key, true ) ) {
+
+		$result = add_user_meta( $user_id, $meta_key, $points, true );
 
 	} else {
 
@@ -683,7 +609,7 @@ function wordpoints_alter_points( $user_id, $points, $points_type, $log_type, $m
 				",
 				$points,
 				$minimum,
-				"wordpoints_points-{$points_type}",
+				$meta_key,
 				$user_id
 			)
 		);
@@ -691,8 +617,9 @@ function wordpoints_alter_points( $user_id, $points, $points_type, $log_type, $m
 		wp_cache_delete( $user_id, 'user_meta' );
 	}
 
-	if ( ! $result )
+	if ( ! $result ) {
 		return false;
+	}
 
 	/**
 	 * User points altered.
@@ -719,8 +646,10 @@ function wordpoints_alter_points( $user_id, $points, $points_type, $log_type, $m
 	 */
 	$log_transaction = apply_filters( 'wordpoints_points_log', true, $user_id, $points, $points_type, $log_type, $meta );
 
-	if ( ! $log_transaction ) // We're not supposed to log this one.
+	if ( ! $log_transaction ) {
+		// We're not supposed to log this one.
 		return true;
+	}
 
 	$result = $wpdb->insert(
 		$wpdb->wordpoints_points_logs,
@@ -830,8 +759,9 @@ function wordpoints_subtract_points( $user_id, $points, $points_type, $log_type,
  */
 function wordpoints_add_points_log_meta( $log_id, $meta_key, $meta_value ) {
 
-	if ( ! wordpoints_posint( $log_id ) || empty( $meta_key ) )
+	if ( ! wordpoints_posint( $log_id ) || empty( $meta_key ) ) {
 		return false;
+	}
 
 	global $wpdb;
 
@@ -864,8 +794,9 @@ function wordpoints_add_points_log_meta( $log_id, $meta_key, $meta_value ) {
  */
 function wordpoints_get_points_log_meta( $log_id, $meta_key = '', $single = false ) {
 
-	if ( ! wordpoints_posint( $log_id ) )
+	if ( ! wordpoints_posint( $log_id ) ) {
 		return;
+	}
 
 	global $wpdb;
 
@@ -883,8 +814,9 @@ function wordpoints_get_points_log_meta( $log_id, $meta_key = '', $single = fals
 			ARRAY_A
 		);
 
-		if ( ! is_array( $results ) )
+		if ( ! is_array( $results ) ) {
 			return array();
+		}
 
 		$_results = array();
 
@@ -923,8 +855,9 @@ function wordpoints_get_points_log_meta( $log_id, $meta_key = '', $single = fals
 			)
 		);
 
-		if ( $single )
+		if ( $single ) {
 			$result = ( empty( $result ) ) ? '' : reset( $result );
+		}
 
 		return $result;
 	}
@@ -945,15 +878,17 @@ function wordpoints_get_points_log_meta( $log_id, $meta_key = '', $single = fals
  */
 function wordpoints_update_points_log_meta( $log_id, $meta_key, $meta_value, $previous = null ) {
 
-	if ( ! wordpoints_posint( $log_id ) || empty( $meta_key ) )
+	if ( ! wordpoints_posint( $log_id ) || empty( $meta_key ) ) {
 		return false;
+	}
 
 	global $wpdb;
 
 	$where = array( 'log_id' => $log_id, 'meta_key' => $meta_key );
 
-	if ( isset( $previous ) )
+	if ( isset( $previous ) ) {
 		$where['meta_value'] = $previous;
+	}
 
 	$result = $wpdb->update(
 		$wpdb->wordpoints_points_log_meta
@@ -979,8 +914,9 @@ function wordpoints_update_points_log_meta( $log_id, $meta_key, $meta_value, $pr
  */
 function wordpoints_delete_points_log_meta( $log_id, $meta_key = '', $meta_value = null ) {
 
-	if ( ! wordpoints_posint( $log_id ) )
+	if ( ! wordpoints_posint( $log_id ) ) {
 		return false;
+	}
 
 	global $wpdb;
 
@@ -990,8 +926,9 @@ function wordpoints_delete_points_log_meta( $log_id, $meta_key = '', $meta_value
 
 		$and_where = $wpdb->prepare( ' AND `meta_key` = %s', $meta_key );
 
-		if ( isset( $meta_value ) )
+		if ( isset( $meta_value ) ) {
 			$and_where .= $wpdb->prepare( ' AND `meta_value` = %s' );
+		}
 	}
 
 	$result = $wpdb->query(
@@ -1018,10 +955,11 @@ function wordpoints_delete_points_log_meta( $log_id, $meta_key = '', $meta_value
  */
 function wordpoints_get_default_points_type() {
 
-	$points_type = get_option( 'wordpoints_default_points_type' );
+	$points_type = wordpoints_get_network_option( 'wordpoints_default_points_type' );
 
-	if ( ! wordpoints_is_points_type( $points_type ) )
+	if ( ! wordpoints_is_points_type( $points_type ) ) {
 		return false;
+	}
 
 	return $points_type;
 }
@@ -1055,10 +993,72 @@ function wordpoints_render_points_log_text( $user_id, $points, $points_type, $lo
 	 */
 	$text = apply_filters( "wordpoints_points_log-{$log_type}", $text, $user_id, $points, $points_type, $log_type, $meta );
 
-	if ( empty( $text ) )
+	if ( empty( $text ) ) {
 		$text = _x( '(no description)', 'points log', 'wordpoints' );
+	}
 
 	return $text;
+}
+
+/**
+ * Regenerate points logs messages.
+ *
+ * @since 1.2.0
+ *
+ * @param array $log_ids The IDs of the logs to regenerate the log messages for.
+ *
+ * @return void
+ */
+function wordpoints_regenerate_points_logs( $log_ids ) {
+
+	if ( empty( $log_ids ) || ! is_array( $log_ids ) ) {
+		return;
+	}
+
+	global $wpdb;
+
+	$logs = new WordPoints_Points_Logs_Query( array( 'id__in' => $log_ids ) );
+	$logs = $logs->get();
+
+	if ( ! is_array( $logs ) ) {
+		return;
+	}
+
+	foreach ( $logs as $log ) {
+
+		$meta = $wpdb->get_results(
+			$wpdb->prepare(
+				"
+					SELECT meta_key, meta_value
+					FROM {$wpdb->wordpoints_points_log_meta}
+					WHERE log_id = %d
+				"
+				, $log->id
+			)
+			, OBJECT_K
+		);
+
+		$meta = wp_list_pluck( $meta, 'meta_value' );
+
+		$new_log_text = wordpoints_render_points_log_text(
+			$log->user_id
+			, $log->points
+			, $log->points_type
+			, $log->log_type
+			, $meta
+		);
+
+		if ( $new_log_text != $log->text ) {
+
+			$wpdb->update(
+				$wpdb->wordpoints_points_logs
+				, array( 'text' => $new_log_text )
+				, array( 'id' => $log->id )
+				, array( '%s' )
+				, array( '%d' )
+			);
+		}
+	}
 }
 
 /**
@@ -1076,8 +1076,9 @@ function wordpoints_render_points_log_text( $user_id, $points, $points_type, $lo
  */
 function wordpoints_points_get_top_users( $num_users, $points_type ) {
 
-	if ( ! wordpoints_posint( $num_users ) || ! wordpoints_is_points_type( $points_type ) )
+	if ( ! wordpoints_posint( $num_users ) || ! wordpoints_is_points_type( $points_type ) ) {
 		return;
+	}
 
 	global $wpdb;
 
@@ -1090,7 +1091,7 @@ function wordpoints_points_get_top_users( $num_users, $points_type ) {
 				ORDER BY CONVERT(`meta_value`, SIGNED INTEGER) DESC
 				LIMIT 0,%d
 			",
-			"wordpoints_points-{$points_type}",
+			wordpoints_get_points_user_meta_key( $points_type ),
 			$num_users
 		)
 	);
@@ -1110,6 +1111,7 @@ function wordpoints_points_get_top_users( $num_users, $points_type ) {
  * manipulating the $all_capabilities array.
  *
  * @since 1.0.0
+ * @since 1.2.0 Adds the capability 'manage_wordpoints_points_types'.
  *
  * @filter user_has_cap
  *
@@ -1121,10 +1123,35 @@ function wordpoints_points_get_top_users( $num_users, $points_type ) {
  */
 function wordpoints_points_user_cap_filter( $all_capabilities, $capabilities, $args ) {
 
-	if ( in_array( 'set_wordpoints_points', $capabilities ) ) {
+	if (
+		in_array( 'set_wordpoints_points', $capabilities )
+		&& ! isset( $all_capabilities['set_wordpoints_points'] )
+		&& isset( $all_capabilities['manage_options'] )
+	) {
+		$all_capabilities['set_wordpoints_points'] = $all_capabilities['manage_options'];
+	}
 
-		if ( isset( $all_capabilities['manage_options'] ) )
-			$all_capabilities['set_wordpoints_points'] = $all_capabilities['manage_options'];
+	if (
+		in_array( 'manage_wordpoints_points_types', $capabilities )
+		&& ! isset( $all_capabilities['manage_wordpoints_points_types'] )
+	) {
+
+		if ( isset( $all_capabilities['manage_network_options'] ) ) {
+
+			$all_capabilities['manage_wordpoints_points_types'] = $all_capabilities['manage_network_options'];
+
+		} elseif ( ! is_wordpoints_network_active() && isset( $all_capabilities['manage_options'] ) ) {
+
+			$all_capabilities['manage_wordpoints_points_types'] = $all_capabilities['manage_options'];
+		}
+	}
+
+	if (
+		in_array( 'manage_network_wordpoints_points_hooks', $capabilities )
+		&& ! isset( $all_capabilities['manage_network_wordpoints_points_hooks'] )
+		&& isset( $all_capabilities['manage_network_options'] )
+	) {
+		$all_capabilities['manage_network_wordpoints_points_hooks'] = $all_capabilities['manage_network_options'];
 	}
 
 	return $all_capabilities;
@@ -1185,12 +1212,106 @@ function wordpoints_points_types_dropdown( array $args ) {
 		$points_types[ $slug ] = $settings['name'];
 	}
 
-	if ( isset( $args['options'] ) && is_array( $args['options'] ) )
+	if ( isset( $args['options'] ) && is_array( $args['options'] ) ) {
 		$points_types = $args['options'] + $points_types;
+	}
 
 	$dropdown = new WordPoints_Dropdown_Builder( $points_types, $args );
 
 	$dropdown->display();
 }
+
+/**
+ * Delete points logs and meta when a user is deleted.
+ *
+ * @since 1.2.0
+ *
+ * @action deleted_user
+ *
+ * @param int $user_id The ID of the user just deleted.
+ */
+function wordpoints_delete_points_logs_for_user( $user_id ) {
+
+	global $wpdb;
+
+	$blog_only = '';
+
+	// If the user is only being deleted from a single blog on multisite.
+	if ( is_multisite() && get_userdata( $user_id ) ) {
+		$blog_only = 'AND blog_id = %d';
+	}
+
+	// Delete log meta.
+	$wpdb->query(
+		$wpdb->prepare(
+			"
+				DELETE
+				FROM {$wpdb->wordpoints_points_log_meta}
+				WHERE log_id IN(
+					SELECT id
+					FROM {$wpdb->wordpoints_points_logs}
+					WHERE user_id = %d
+						AND site_id = %d
+						{$blog_only}
+				)
+			"
+			,$user_id
+			,$wpdb->siteid
+			,$wpdb->blogid
+		)
+	);
+
+	$where = array( 'user_id' => $user_id );
+
+	if ( $blog_only != '' ) {
+		$where['blog_id'] = $wpdb->blogid;
+	}
+
+	// Now delete the logs.
+	$wpdb->delete(
+		$wpdb->wordpoints_points_logs
+		,$where
+		,'%d'
+	);
+}
+add_action( 'deleted_user', 'wordpoints_delete_points_logs_for_user' );
+
+/**
+ * Delete logs and meta for a blog when it is deleted.
+ *
+ * @since 1.2.0
+ *
+ * @action delete_blog
+ *
+ * @param int $blog_id The ID of the blog being deleted.
+ */
+function wordpoints_delete_points_logs_for_blog( $blog_id ) {
+
+	global $wpdb;
+
+	// Delete log meta.
+	$wpdb->query(
+		$wpdb->prepare(
+			"
+				DELETE
+				FROM {$wpdb->wordpoints_points_log_meta}
+				WHERE log_id IN(
+					SELECT id
+					FROM {$wpdb->wordpoints_points_logs}
+					WHERE blog_id = %d
+				)
+			"
+			,$blog_id
+		)
+	);
+
+	// Now delete the logs.
+	$wpdb->delete(
+		$wpdb->wordpoints_points_logs
+		,array( 'blog_id' => $blog_id )
+		,'%d'
+	);
+}
+add_action( 'delete_blog', 'wordpoints_delete_points_logs_for_blog' );
 
 // end of file /components/points/includes/functions.php

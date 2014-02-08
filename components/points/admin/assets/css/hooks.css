@@ -16,6 +16,7 @@
  * 7. Accessibility mode
  * 8. Points type chooser
  * 9. Wide screen
+ * 10. Delete points dialog
  */
 
 /*
@@ -252,7 +253,7 @@ div.hook-liquid-right {
 }
 
 div#hooks-right .points-settings {
-	margin: 10px auto;
+	margin: 0 auto;
 }
 
 /*
@@ -391,7 +392,7 @@ div#hooks-right .hook-top {
 }
 
 div#hooks-right .hooks-sortables {
-	padding: 0 8px;
+	padding: 8px;
 	margin-bottom: 9px;
 	position: relative;
 	min-height: 123px;
@@ -600,7 +601,6 @@ div#hooks-right .closed .hooks-sortables {
 .hooks-chooser li {
 	padding: 10px 15px 10px 35px;
 	border-bottom: 1px solid #ccc;
-	background: #fff;
 	margin: 0;
 	cursor: pointer;
 	outline: none;
@@ -608,8 +608,12 @@ div#hooks-right .closed .hooks-sortables {
 	transition: background: 0.2s ease-in-out;
 }
 
-.hooks-chooser li:hover,
-.hooks-chooser li:focus {
+.hooks-chooser li:not(.hooks-chooser-selected) {
+	background-color: #fff;
+}
+
+.hooks-chooser li:not(.hooks-chooser-selected):hover,
+.hooks-chooser li:not(.hooks-chooser-selected):focus {
 	background: rgba(255,255,255,0.7);
 }
 
@@ -629,7 +633,6 @@ div#hooks-right .closed .hooks-sortables {
 }
 
 .hooks-chooser li.hooks-chooser-selected {
-	background: #2ea2cc;
 	color: #fff;
 }
 
@@ -688,4 +691,22 @@ div#hooks-right .closed .hooks-sortables {
 		width: 100%;
 		margin: 0;
 	}
+}
+
+/*
+ * 10. Delete points dialog.
+ */
+
+.wordpoints-delete-type-dialog .ui-dialog-content {
+    padding: 0 10px;
+}
+
+.wordpoints-delete-type-dialog .button-primary {
+    float: right;
+}
+
+.wordpoints-delete-type-dialog .ui-dialog-buttonpane .ui-dialog-buttonset {
+    float: none;
+    width: 100%;
+    padding: 0 5px;
 }

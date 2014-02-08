@@ -7,39 +7,43 @@
  * @since 1.0.0
  */
 
-if ( isset( $_POST['add_new'], $_POST['save-points-type'] ) && 1 == (int) $_POST['add_new'] ) {
+if ( current_user_can( 'manage_wordpoints_points_types' ) ) {
 
-	// - We are creating a new points type.
+	if ( isset( $_POST['add_new'], $_POST['save-points-type'] ) && 1 == (int) $_POST['add_new'] ) {
 
-	unset( $_GET['error'], $_GET['message'] );
+		// - We are creating a new points type.
 
-	$settings = array();
+		unset( $_GET['error'], $_GET['message'] );
 
-	$settings['name']   = trim( $_POST['points-name'] );
-	$settings['prefix'] = ltrim( $_POST['points-prefix'] );
-	$settings['suffix'] = rtrim( $_POST['points-suffix'] );
+		$settings = array();
 
-	if ( ! wordpoints_add_points_type( wp_unslash( $settings ) ) ) {
+		$settings['name']   = trim( $_POST['points-name'] );
+		$settings['prefix'] = ltrim( $_POST['points-prefix'] );
+		$settings['suffix'] = rtrim( $_POST['points-suffix'] );
 
-		// - Unable to create this, give an error.
-		$_GET['error'] = 2;
+		if ( ! wordpoints_add_points_type( wp_unslash( $settings ) ) ) {
+
+			// - Unable to create this, give an error.
+			$_GET['error'] = 2;
+		}
+
+	} elseif ( ! empty( $_POST['delete-points-type'] ) ) {
+
+		// - We are deleting a points type.
+
+		unset( $_GET['error'], $_GET['message'] );
+
+		if ( isset( $_POST['points-slug'] ) && wordpoints_delete_points_type( $_POST['points-slug'] ) ) {
+
+			$_GET['message'] = 1;
+
+		} else {
+
+			$_GET['error'] = 3;
+		}
 	}
 
-} elseif ( ! empty( $_POST['delete-points-type'] ) ) {
-
-	// - We are deleting a points type.
-
-	unset( $_GET['error'], $_GET['message'] );
-
-	if ( isset( $_POST['points-slug'] ) && wordpoints_delete_points_type( $_POST['points-slug'] ) ) {
-
-		$_GET['message'] = 1;
-
-	} else {
-
-		$_GET['error'] = 3;
-	}
-}
+} // if ( current_user_can( 'manage_wordpoints_points_types' ) )
 
 // Get all points types.
 $points_types = wordpoints_get_points_types();
@@ -57,12 +61,26 @@ $errors = array(
 	__( 'Error while deleting.', 'wordpoints' ),
 );
 
+if ( is_network_admin() ) {
+	$title = _x( 'Network Points Hooks', 'page title', 'wordpoints' );
+} else {
+	$title = _x( 'Points Hooks', 'page title', 'wordpoints' );
+}
+
 ?>
 
 <div class="wrap">
-	<h2><?php echo esc_html( _x( 'Points Hooks', 'page title', 'wordpoints' ) ); ?></h2>
+	<h2><?php echo esc_html( $title ); ?></h2>
 
 	<?php
+
+	if ( empty( $points_types ) && ! current_user_can( 'manage_wordpoints_points_types' ) ) {
+
+		wordpoints_show_admin_error( __( 'No points types have been created yet. Only network administrators can create points types.', 'wordpoints' ) );
+
+		echo '</div>';
+		return;
+	}
 
 	if ( isset( $_GET['message'] ) && isset( $messages[ $_GET['message'] ] ) ) {
 
@@ -71,6 +89,12 @@ $errors = array(
 	} elseif ( isset( $_GET['error'] ) && isset( $errors[ $_GET['error'] ] ) ) {
 
 		wordpoints_show_admin_error( $errors[ $_GET['error'] ] );
+	}
+
+	if ( is_network_admin() && current_user_can( 'manage_network_wordpoints_points_hooks' ) ) {
+
+		// Display network wide hooks.
+		WordPoints_Points_Hooks::set_network_mode( true );
 	}
 
 	/**
@@ -107,7 +131,14 @@ $errors = array(
 					</h3>
 				</div>
 				<div class="hook-holder inactive hook-holder">
-					<?php WordPoints_Points_Hooks::list_inactive(); ?>
+					<div id="_inactive_hooks" class="hooks-sortables">
+						<div class="points-type-description">
+							<p class="description">
+								<?php _e( 'Drag hooks here to remove them from the points type but keep their settings.', 'wordpoints' ); ?>
+							</p>
+						</div>
+						<?php WordPoints_Points_Hooks::list_by_points_type( '_inactive_hooks' ); ?>
+					</div>
 					<div class="clear"></div>
 				</div>
 			</div>
@@ -120,52 +151,80 @@ $errors = array(
 
 			<?php
 
-				$i = 0;
+			$i = 0;
 
-				foreach ( $points_types as $slug => $points_type ) {
+			foreach ( $points_types as $slug => $points_type ) {
 
-					$wrap_class = 'hooks-holder-wrap';
-					if ( ! empty( $points_type['class'] ) )
-						$wrap_class .= ' points-type-' . $points_type['class'];
-
-					if ( $i )
-						$wrap_class .= ' closed';
-
-					?>
-
-					<div class="<?php echo esc_attr( $wrap_class ); ?>">
-						<div class="points-type-name">
-							<div class="points-type-name-arrow"><br /></div>
-							<h3><?php echo esc_html( $points_type['name'] ); ?><span class="spinner"></span></h3>
-						</div>
-						<?php WordPoints_Points_Hooks::list_by_points_type( $slug ); // Show the control forms for each of the hooks in this points type. ?>
-					</div>
-
-					<?php
-
-					$i++;
+				$wrap_class = 'hooks-holder-wrap';
+				if ( ! empty( $points_type['class'] ) ) {
+					$wrap_class .= ' points-type-' . $points_type['class'];
 				}
 
-				$closed = '';
+				if ( $i ) {
+					$wrap_class .= ' closed';
+				}
 
-				if ( $i > 0 )
-					$closed .= 'closed';
+				?>
+
+				<div class="<?php echo esc_attr( $wrap_class ); ?>">
+					<div class="points-type-name">
+						<div class="points-type-name-arrow"><br /></div>
+						<h3><?php echo esc_html( $points_type['name'] ); ?><span class="spinner"></span></h3>
+					</div>
+					<div id="<?php echo esc_attr( $slug ); ?>" class="hooks-sortables">
+
+						<?php
+
+						if ( current_user_can( 'manage_wordpoints_points_types' ) ) {
+							WordPoints_Points_Hooks::points_type_form( $slug );
+						}
+
+						WordPoints_Points_Hooks::list_by_points_type( $slug );
+
+						?>
+
+					</div>
+				</div>
+
+				<?php
+
+				$i++;
+			}
+
+			if ( current_user_can( 'manage_wordpoints_points_types' ) ) {
+
+				?>
+
+				<div class="hooks-holder-wrap new-points-type <?php echo ( $i > 0 ) ? 'closed' : ''; ?>">
+					<div class="points-type-name">
+						<div class="points-type-name-arrow"><br /></div>
+						<h3><?php esc_html_e( 'Add New Points Type', 'wordpoints' ); ?><span class="spinner"></span></h3>
+					</div>
+					<div class="wordpoints-points-add-new hooks-sortables hook">
+						<?php WordPoints_Points_Hooks::points_type_form(); ?>
+					</div>
+				</div>
+
+				<?php
+
+			}
+
 			?>
-
-			<div class="hooks-holder-wrap new-points-type <?php echo $closed; ?>">
-				<div class="points-type-name">
-					<div class="points-type-name-arrow"><br /></div>
-					<h3><?php esc_html_e( 'Add New Points Type', 'wordpoints' ); ?><span class="spinner"></span></h3>
-				</div>
-				<div class="wordpoints-points-add-new hooks-sortables hook">
-					<?php WordPoints_Points_Hooks::points_type_form(); ?>
-				</div>
-			</div>
 
 		</div>
 	</div>
 	<form action="" method="post">
-		<?php wp_nonce_field( 'save-wordpoints-points-hooks', '_wpnonce_hooks', false ); ?>
+		<?php
+
+		if ( WordPoints_Points_Hooks::get_network_mode() ) {
+			$field = 'save-network-wordpoints-points-hooks';
+		} else {
+			$field = 'save-wordpoints-points-hooks';
+		}
+
+		wp_nonce_field( $field, '_wpnonce_hooks', false );
+
+		?>
 	</form>
 
 	<?php

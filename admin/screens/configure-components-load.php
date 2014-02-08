@@ -7,8 +7,12 @@
  * @since 1.1.0
  */
 
-if ( wordpoints_admin_get_current_tab() != 'components' || ! isset( $_POST['wordpoints_component'], $_POST['wordpoints_component_action'], $_POST['_wpnonce'] ) )
+if (
+	wordpoints_admin_get_current_tab() != 'components'
+	|| ! isset( $_POST['wordpoints_component'], $_POST['wordpoints_component_action'], $_POST['_wpnonce'] )
+) {
 	return;
+}
 
 $components = WordPoints_Components::instance();
 
@@ -45,9 +49,9 @@ wp_redirect(
 			'page'                 => 'wordpoints_configure',
 			'tab'                  => 'components',
 			'wordpoints_component' => $_POST['wordpoints_component'],
-			'_wpnonce'             => wp_create_nonce( "wordpoints_component_" . key( $message ) . "-{$_POST['wordpoints_component']}" )
+			'_wpnonce'             => wp_create_nonce( 'wordpoints_component_' . key( $message ) . "-{$_POST['wordpoints_component']}" ),
 		)
-		, admin_url( 'admin.php' )
+		, self_admin_url( 'admin.php' )
 	)
 );
 

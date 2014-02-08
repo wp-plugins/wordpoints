@@ -36,17 +36,19 @@ function wordpoints_int( &$maybe_int ) {
 		case 'integer': break;
 
 		case 'string':
-			if ( $maybe_int === (string) (int) $maybe_int )
+			if ( $maybe_int === (string) (int) $maybe_int ) {
 				$maybe_int = (int) $maybe_int;
-			else
+			} else {
 				$maybe_int = false;
+			}
 		break;
 
 		case 'double':
-			if ( $maybe_int == (float) (int) $maybe_int )
+			if ( $maybe_int == (float) (int) $maybe_int ) {
 				$maybe_int = (int) $maybe_int;
-			else
+			} else {
 				$maybe_int = false;
+			}
 		break;
 
 		default:
@@ -185,10 +187,19 @@ function wordpoints_debug_message( $message, $function, $file, $line ) {
  */
 function wordpoints_get_array_option( $option, $context = 'default' ) {
 
-	if ( 'site' == $context ) {
-		$value = get_site_option( $option, array() );
-	} else {
-		$value = get_option( $option, array() );
+	switch ( $context ) {
+
+		case 'default':
+			$value = get_option( $option, array() );
+		break;
+
+		case 'site':
+			$value = get_site_option( $option, array() );
+		break;
+
+		case 'network':
+			$value = wordpoints_get_network_option( $option, array() );
+		break;
 	}
 
 	if ( ! is_array( $value ) ) {
@@ -196,6 +207,95 @@ function wordpoints_get_array_option( $option, $context = 'default' ) {
 	}
 
 	return $value;
+}
+
+/**
+ * Get an option or site option from the database, based on the plugin's status.
+ *
+ * If the plugin is network activated on a multisite install, this will return a
+ * network ('site') option. Otherwise it will return a regular option.
+ *
+ * @since 1.2.0
+ *
+ * @param string $option  The name of the option to get.
+ * @param mixed  $default A default value to return if the option isn't found.
+ *
+ * @return mixed The option value if it exists, or $default (false by default).
+ */
+function wordpoints_get_network_option( $option, $default = false ) {
+
+	if ( is_wordpoints_network_active() ) {
+		return get_site_option( $option, $default );
+	} else {
+		return get_option( $option, $default );
+	}
+}
+
+/**
+ * Add an option or site option, based on the plugin's activation status.
+ *
+ * If the plugin is network activated on a multisite install, this will add a
+ * network ('site') option. Otherwise it will create a regular option.
+ *
+ * @since 1.2.0
+ *
+ * @param string $option   The name of the option to add.
+ * @param mixed  $value    The value for the option.
+ * @param string $autoload Whether to automaticaly load the option. 'yes' (default)
+ *                         or 'no'. Does not apply if WordPoints is network active.
+ *
+ * @return bool Whether the option was added successfully.
+ */
+function wordpoints_add_network_option( $option, $value, $autoload = 'yes' ) {
+
+	if ( is_wordpoints_network_active() ) {
+		return add_site_option( $option, $value );
+	} else {
+		return add_option( $option, $value, '', $autoload );
+	}
+}
+
+/**
+ * Update an option or site option, based on the plugin's activation status.
+ *
+ * If the plugin is network activated on a multisite install, this will update a
+ * network ('site') option. Otherwise it will update a regular option.
+ *
+ * @since 1.2.0
+ *
+ * @param string $option The name of the option to update.
+ * @param mixed  $value  The new value for the option.
+ *
+ * @return bool Whether the option was updated successfully.
+ */
+function wordpoints_update_network_option( $option, $value ) {
+
+	if ( is_wordpoints_network_active() ) {
+		return update_site_option( $option, $value );
+	} else {
+		return update_option( $option, $value );
+	}
+}
+
+/**
+ * Delete an option or site option, based on the plugin's activation status.
+ *
+ * If the plugin is network activated on a multisite install, this will delete a
+ * network ('site') option. Otherwise it will delete a regular option.
+ *
+ * @since 1.2.0
+ *
+ * @param string $option The name of the option to delete.
+ *
+ * @return bool Whether the option was successfully deleted.
+ */
+function wordpoints_delete_network_option( $option ) {
+
+	if ( is_wordpoints_network_active() ) {
+		return delete_site_option( $option );
+	} else {
+		return delete_option( $option );
+	}
 }
 
 /**
@@ -429,7 +529,22 @@ function wordpoints_list_post_types( $options, $args = array() ) {
 // Miscellaneous.
 //
 
-if ( defined( 'WORDPOINTS_SYMLINK' ) ) {
+/**
+ * Check if the plugin is network activated.
+ *
+ * @since 1.2.0
+ *
+ * @return bool True if WordPoints is network activated, false otherwise.
+ */
+function is_wordpoints_network_active() {
+
+	require_once ABSPATH . '/wp-admin/includes/plugin.php';
+
+	return is_plugin_active_for_network(
+		plugin_basename( WORDPOINTS_DIR . 'wordpoints.php' )
+	);
+}
+
 /**
  * Fix URLs where WordPress doesn't follow symlinks.
  *
@@ -447,7 +562,9 @@ function wordpoints_symlink_fix( $url, $path, $plugin ) {
 
 	return $url;
 }
-add_filter( 'plugins_url', 'wordpoints_symlink_fix', 10, 3 );
+
+if ( defined( 'WORDPOINTS_SYMLINK' ) ) {
+	add_filter( 'plugins_url', 'wordpoints_symlink_fix', 10, 3 );
 }
 
 /**
@@ -476,8 +593,9 @@ function wordpoints_dir_include( $dir ) {
 
 	foreach ( glob( $dir . '*/*.php' ) as $file ) {
 
-		if ( preg_match( '~/([^/]+)/\1.php$~', $file ) )
+		if ( preg_match( '~/([^/]+)/\1.php$~', $file ) ) {
 			include_once $file;
+		}
 	}
 }
 
@@ -496,7 +614,7 @@ function wordpoints_dir_include( $dir ) {
  */
 function wordpoints_get_excluded_users( $context ) {
 
-	$user_ids = wordpoints_get_array_option( 'wordpoints_excluded_users' );
+	$user_ids = wordpoints_get_array_option( 'wordpoints_excluded_users', 'network' );
 
 	/**
 	 * Excluded users option.
@@ -523,8 +641,12 @@ function wordpoints_get_excluded_users( $context ) {
  */
 function wordpoints_shortcode_error( $message ) {
 
-	if ( ! ( get_post() && current_user_can( 'edit_post', get_the_ID() ) ) && ! current_user_can( 'manage_options' ) )
+	if (
+		! ( get_post() && current_user_can( 'edit_post', get_the_ID() ) )
+		&& ! current_user_can( 'manage_options' )
+	) {
 		return;
+	}
 
 	return '<p class="wordpoints-shortcode-error">' . esc_html__( 'Shortcode error:', 'wordpoints' ) . ' ' . $message . '</p>';
 }
@@ -555,23 +677,35 @@ function wordpoints_shortcode_error( $message ) {
  */
 function wordpoints_modules_user_cap_filter( $all_capabilities, $capabilities ) {
 
-	if ( in_array( 'install_wordpoints_modules', $capabilities ) && isset( $all_capabilities['install_plugins'] ) ) {
-
+	if (
+		in_array( 'install_wordpoints_modules', $capabilities )
+		&& ! isset( $all_capabilities['install_wordpoints_modules'] )
+		&& isset( $all_capabilities['install_plugins'] )
+	) {
 		$all_capabilities['install_wordpoints_modules'] = $all_capabilities['install_plugins'];
 	}
 
-	if ( in_array( 'manage_ntework_wordpoints_modules', $capabilities ) && isset( $all_capabilities['manage_network_plugins'] ) ) {
-
+	if (
+		in_array( 'manage_ntework_wordpoints_modules', $capabilities )
+		&& ! isset( $all_capabilities['manage_ntework_wordpoints_modules'] )
+		&& isset( $all_capabilities['manage_network_plugins'] )
+	) {
 		$all_capabilities['manage_ntework_wordpoints_modules'] = $all_capabilities['manage_network_plugins'];
 	}
 
-	if ( in_array( 'activate_wordpoints_modules', $capabilities ) && isset( $all_capabilities['activate_plugins'] ) ) {
-
+	if (
+		in_array( 'activate_wordpoints_modules', $capabilities )
+		&& ! isset( $all_capabilities['activate_wordpoints_modules'] )
+		&& isset( $all_capabilities['activate_plugins'] )
+	) {
 		$all_capabilities['activate_wordpoints_modules'] = $all_capabilities['activate_plugins'];
 	}
 
-	if ( in_array( 'delete_wordpoints_modules', $capabilities ) && isset( $all_capabilities['delete_plugins'] ) ) {
-
+	if (
+		in_array( 'delete_wordpoints_modules', $capabilities )
+		&& ! isset( $all_capabilities['delete_wordpoints_modules'] )
+		&& isset( $all_capabilities['delete_plugins'] )
+	) {
 		$all_capabilities['delete_wordpoints_modules'] = $all_capabilities['delete_plugins'];
 	}
 

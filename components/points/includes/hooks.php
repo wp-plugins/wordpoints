@@ -64,13 +64,14 @@ class WordPoints_Registration_Points_Hook extends WordPoints_Points_Hook {
 
 		foreach ( $this->get_instances() as $number => $instance ) {
 
-			if ( isset( $instance['points'] ) )
+			if ( isset( $instance['points'] ) ) {
 				wordpoints_add_points( $user_id, $instance['points'], $this->points_type( $number ), 'register' );
+			}
 		}
 	}
 
 	/**
-	 * Display the log entry for a transaction.
+	 * Generate the log entry for a transaction.
 	 *
 	 * @since 1.0.0
 	 *
@@ -113,13 +114,11 @@ class WordPoints_Registration_Points_Hook extends WordPoints_Points_Hook {
 
 		$instance = array_merge( $this->defaults, $instance );
 
-		$points = wordpoints_posint( $instance['points'] );
-
 		?>
 
 		<p>
 			<label for="<?php $this->the_field_id( 'points' ); ?>"><?php _ex( 'Points:', 'form label', 'wordpoints' ); ?></label>
-			<input class="widefat" name="<?php $this->the_field_name( 'points' ); ?>"  id="<?php $this->the_field_id( 'points' ); ?>" type="text" value="<?php echo $points; ?>" />
+			<input class="widefat" name="<?php $this->the_field_name( 'points' ); ?>"  id="<?php $this->the_field_id( 'points' ); ?>" type="text" value="<?php echo wordpoints_posint( $instance['points'] ); ?>" />
 		</p>
 
 		<?php
@@ -172,6 +171,8 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 
 		add_filter( 'wordpoints_points_log-post_publish', array( $this, 'publish_logs' ), 10, 6 );
 		add_filter( 'wordpoints_points_log-post_delete', array( $this, 'delete_logs' ), 10, 6 );
+
+		add_action( 'delete_post', array( $this, 'clean_logs_on_post_deletion' ) );
 	}
 
 	/**
@@ -189,8 +190,9 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 	 */
 	public function publish_hook( $new_status, $old_status, $post ) {
 
-		if ( $new_status != 'publish' )
+		if ( $new_status != 'publish' ) {
 			return;
+		}
 
 		foreach ( $this->get_instances() as $number => $instance ) {
 
@@ -200,8 +202,12 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 
 			if (
 				(
-					$instance['post_type'] == 'ALL'
-					|| $instance['post_type'] == $post->post_type
+					$instance['post_type'] == $post->post_type
+					|| (
+						$instance['post_type'] == 'ALL'
+						&& post_type_exists( $post->post_type )
+						&& get_post_type_object( $post->post_type )->public
+					)
 				)
 				&& ! $this->awarded_points_already( $post->ID, $points_type )
 			) {
@@ -216,6 +222,7 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 	 *
 	 * @since 1.0.0
 	 * @since 1.1.0 The post_type is now passed as metadata when points are awarded.
+	 * @since 1.1.2 Points are only removed if the post type is public.
 	 *
 	 * @action before_delete_post Added by the constructor.
 	 *
@@ -232,9 +239,15 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 			if (
 				! empty( $instance['post_type'] )
 				&& (
-					$instance['post_type'] == 'ALL'
-					|| $instance['post_type'] == $post->post_type
+					$instance['post_type'] == $post->post_type
+					|| (
+						$instance['post_type'] == 'ALL'
+						&& post_type_exists( $post->post_type )
+						&& get_post_type_object( $post->post_type )->public
+					)
 				)
+				&& $post->post_status !== 'auto-draft'
+				&& $post->post_title !== __( 'Auto Draft', 'default' )
 			) {
 
 				wordpoints_alter_points(
@@ -249,7 +262,7 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 	}
 
 	/**
-	 * Display the log entry for a publish post transaction.
+	 * Generate the log entry for a publish post transaction.
 	 *
 	 * @since 1.0.0
 	 *
@@ -266,11 +279,26 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 	 */
 	public function publish_logs( $text, $points, $points_type, $user_id, $log_type, $meta ) {
 
-		$post = get_post( $meta['post_id'], OBJECT, 'display' );
+		$post = null;
+
+		if ( isset( $meta['post_id'] ) ) {
+			$post = get_post( $meta['post_id'], OBJECT, 'display' );
+		}
 
 		if ( null == $post ) {
 
-			return _x( 'Post published.', 'points log description', 'wordpoints' );
+			$post_type = null;
+
+			if ( isset( $meta['post_type'] ) && post_type_exists( $meta['post_type'] ) ) {
+				$post_type = get_post_type_object( $meta['post_type'] );
+			}
+
+			if ( $post_type ) {
+				/* translators: %s is the name of a post type. */
+				return sprintf( _x( '%s published.', 'points log description', 'wordpoints' ), $post_type->labels->singular_name );
+			} else {
+				return _x( 'Post published.', 'points log description', 'wordpoints' );
+			}
 
 		} else {
 
@@ -290,7 +318,7 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 	}
 
 	/**
-	 * Display the log entry for a transaction.
+	 * Generate the log entry for a transaction.
 	 *
 	 * The data isn't sanitized here becuase we do that before saving it.
 	 *
@@ -351,6 +379,70 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 	}
 
 	/**
+	 * Clean the logs when a post is deleted.
+	 *
+	 * Cleans the metadata for any logs related to this post. The post ID meta field
+	 * is updated in the database, to instead store the post type. If the post type
+	 * isn't available, we just delete those rows.
+	 *
+	 * After the metadata is cleaned up, the affected logs are regenerated.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @action delete_post Added by the constructor.
+	 *
+	 * @param int $post_id The ID of the post being deleted.
+	 *
+	 * @return void
+	 */
+	public function clean_logs_on_post_deletion( $post_id ) {
+
+		global $wpdb;
+
+		$logs_query = new WordPoints_Points_Logs_Query(
+			array(
+				'fields'     => 'id',
+				'log_type'   => 'post_publish',
+				'meta_query' => array(
+					array(
+						'key'   => 'post_id',
+						'value' => $post_id,
+					)
+				)
+			)
+		);
+
+		$log_ids = $logs_query->get( 'col' );
+
+		if ( ! $log_ids ) {
+			return;
+		}
+
+		$post = get_post( $post_id );
+
+		if ( ! $post ) {
+
+			$wpdb->delete(
+				$wpdb->wordpoints_points_log_meta
+				, array( 'meta_key' => 'post_id', 'meta_value' => $post_id )
+				, array( '%s', '%d' )
+			);
+
+		} else {
+
+			$wpdb->update(
+				$wpdb->wordpoints_points_log_meta
+				, array( 'meta_key' => 'post_type', 'meta_value' => $post->post_type )
+				, array( 'meta_key' => 'post_id', 'meta_value' => $post_id )
+				, array( '%s', '%s' )
+				, array( '%s', '%d' )
+			);
+		}
+
+		wordpoints_regenerate_points_logs( $log_ids );
+	}
+
+	/**
 	 * Update a particular instance of this hook.
 	 *
 	 * @since 1.0.0
@@ -381,22 +473,31 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 
 		$instance = array_merge( $this->defaults, $instance );
 
-		$publish = wordpoints_posint( $instance['publish'] );
-		$trash   = wordpoints_posint( $instance['trash'] );
-
 		?>
 
 		<p>
 			<label for="<?php $this->the_field_id( 'post_type' ); ?>"><?php _e( 'Select post type:', 'wordpoints' ); ?></label>
-			<?php wordpoints_list_post_types( array( 'selected' => $instance['post_type'], 'id' => $this->get_field_id( 'post_type' ), 'name' => $this->get_field_name( 'post_type' ), 'class' => 'widefat' ), array( 'public' => true ) ); ?>
+			<?php
+
+			wordpoints_list_post_types(
+				array(
+					'selected' => $instance['post_type'],
+					'id'       => $this->get_field_id( 'post_type' ),
+					'name'     => $this->get_field_name( 'post_type' ),
+					'class'    => 'widefat',
+				)
+				, array( 'public' => true )
+			);
+
+			?>
 		</p>
 		<p>
 			<label for="<?php $this->the_field_id( 'publish' ); ?>"><?php _e( 'Points added when published:', 'wordpoints' ); ?></label>
-			<input class="widefat" name="<?php $this->the_field_name( 'publish' ); ?>"  id="<?php $this->the_field_id( 'publish' ); ?>" type="text" value="<?php echo $publish; ?>" />
+			<input class="widefat" name="<?php $this->the_field_name( 'publish' ); ?>"  id="<?php $this->the_field_id( 'publish' ); ?>" type="text" value="<?php echo wordpoints_posint( $instance['publish'] ); ?>" />
 		</p>
 		<p>
 			<label for="<?php $this->the_field_id( 'trash' ); ?>"><?php _e( 'Points removed when deleted:', 'wordpoints' ); ?></label>
-			<input class="widefat" name="<?php $this->the_field_name( 'trash' ); ?>"  id="<?php $this->the_field_id( 'trash' ); ?>" type="text" value="<?php echo $trash; ?>" />
+			<input class="widefat" name="<?php $this->the_field_name( 'trash' ); ?>"  id="<?php $this->the_field_id( 'trash' ); ?>" type="text" value="<?php echo wordpoints_posint( $instance['trash'] ); ?>" />
 		</p>
 
 		<?php
@@ -445,6 +546,8 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 
 		add_filter( 'wordpoints_points_log-comment_approve', array( $this, 'approve_logs' ), 10, 6 );
 		add_filter( 'wordpoints_points_log-comment_disapprove', array( $this, 'disapprove_logs' ), 10, 6 );
+
+		add_action( 'delete_comment', array( $this, 'clean_logs_on_comment_deletion' ) );
 	}
 
 	/**
@@ -465,8 +568,9 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 	 */
 	public function hook( $new_status, $old_status, $comment ) {
 
-		if ( ! $comment->user_id || $old_status == $new_status )
+		if ( ! $comment->user_id || $old_status == $new_status ) {
 			return;
+		}
 
 		if ( 'approved' == $new_status ) {
 
@@ -476,8 +580,15 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 
 				$points_type = $this->points_type( $number );
 
-				if ( ! $this->awarded_points_already( $comment->comment_ID, $points_type ) )
-					wordpoints_add_points( $comment->user_id, $instance['approve'], $points_type, 'comment_approve', array( 'comment_id' => $comment->comment_ID ) );
+				if ( ! $this->awarded_points_already( $comment->comment_ID, $points_type ) ) {
+					wordpoints_add_points(
+						$comment->user_id
+						, $instance['approve']
+						, $points_type
+						, 'comment_approve'
+						, array( 'comment_id' => $comment->comment_ID )
+					);
+				}
 			}
 
 		} elseif ( 'approved' == $old_status ) {
@@ -518,10 +629,11 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 	 */
 	public function new_comment_hook( $comment_id, $comment ) {
 
-		if ( 0 == $comment->user_id )
+		if ( 0 == $comment->user_id ) {
 			return;
+		}
 
-		switch( $comment->comment_approved ) {
+		switch ( $comment->comment_approved ) {
 
 			// Comment hasn't been approved yet.
 			case 0: return;
@@ -542,7 +654,7 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 	}
 
 	/**
-	 * Display the log entry for an approve comment transaction.
+	 * Generate the log entry for an approve comment transaction.
 	 *
 	 * @since 1.0.0
 	 *
@@ -559,17 +671,44 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 	 */
 	public function approve_logs( $text, $points, $points_type, $user_id, $log_type, $meta ) {
 
-		$comment = get_comment( $meta['comment_id'] );
+		$comment = false;
+
+		if ( isset( $meta['comment_id'] ) ) {
+			$comment = get_comment( $meta['comment_id'] );
+		}
 
 		if ( ! $comment ) {
 
-			return '<span title="' . __( 'Comment removed...', 'wordpoints' ) . '">' . _x( 'Comment', 'points log description', 'wordpoints' ) . '</span>';
+			$post = false;
+
+			if ( isset( $meta['post_id'] ) ) {
+				$post = get_post( $meta['post_id'] );
+			}
+
+			if ( $post ) {
+
+				$post_title = get_the_title( $post->ID );
+
+				$link = '<a href="' . get_permalink( $post->ID ) . '">'
+					. ( $post_title ? $post_title : _x( '(no title)', 'post title', 'wordpoints' ) )
+					. '</a>';
+
+				$text = sprintf( _x( 'Comment on %s.', 'points log description', 'wordpoints' ), $link );
+
+			} else {
+
+				$text = _x( 'Comment', 'points log description', 'wordpoints' );
+			}
+
+			return '<span title="' . __( 'Comment removed...', 'wordpoints' ) . '">' . $text . '</span>';
 
 		} else {
 
-			$detail = wp_trim_words( strip_tags( $comment->comment_content ) );
+			$detail     = wp_trim_words( strip_tags( $comment->comment_content ) );
 			$post_title = get_the_title( $comment->comment_post_ID );
-			$link = '<a href="' . get_comment_link( $comment ) . '">' . ( $post_title ? $post_title : _x( '(no title)', 'post title', 'wordpoints' ) ) . '</a>';
+			$link       = '<a href="' . get_comment_link( $comment ) . '">'
+				. ( $post_title ? $post_title : _x( '(no title)', 'post title', 'wordpoints' ) )
+				. '</a>';
 
 			/* translators: %s will be the post's title. */
 			return '<span title="' . esc_attr( $detail ) . '">' . sprintf( _x( 'Comment on %s.', 'points log description', 'wordpoints' ), $link ) . '</span>';
@@ -577,7 +716,7 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 	}
 
 	/**
-	 * Display the log entry for a transaction.
+	 * Generate the log entry for a transaction.
 	 *
 	 * @since 1.0.0
 	 *
@@ -643,6 +782,70 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 	}
 
 	/**
+	 * Clean the logs on comment deletion.
+	 *
+	 * Cleans the metadata for any logs related to this comment. The comment ID meta
+	 * field is updated in the database, to instead store the post ID of the post the
+	 * comment was on. If the post ID isn't available, we just delete those rows.
+	 *
+	 * Once the metadata is cleaned up, the logs for this comment are regenerated.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @action delete_comment Added by the constructor.
+	 *
+	 * @param int $comment_id The ID of the comment being deleted.
+	 *
+	 * @return void
+	 */
+	public function clean_logs_on_comment_deletion( $comment_id ) {
+
+		global $wpdb;
+
+		$query = new WordPoints_Points_Logs_Query(
+			array(
+				'fields'     => 'id',
+				'log_type'   => 'comment_approve',
+				'meta_query' => array(
+					array(
+						'key'   => 'comment_id',
+						'value' => $comment_id,
+					),
+				),
+			)
+		);
+
+		$log_ids = $query->get( 'col' );
+
+		if ( ! $log_ids ) {
+			return;
+		}
+
+		$comment = get_comment( $comment_id );
+
+		if ( ! $comment ) {
+
+			$wpdb->delete(
+				$wpdb->wordpoints_points_log_meta
+				, array( 'meta_key' => 'comment_id', 'meta_value' => $comment_id )
+				, array( '%s', '%d' )
+			);
+
+		} else {
+
+			$wpdb->update(
+				$wpdb->wordpoints_points_log_meta
+				, array( 'meta_key' => 'post_id', 'meta_value' => $comment->comment_post_ID )
+				, array( 'meta_key' => 'comment_id', 'meta_value' => $comment_id )
+				, array( '%s', '%d' )
+				, array( '%s', '%d' )
+			);
+		}
+
+		wordpoints_regenerate_points_logs( $log_ids );
+	}
+
+	/**
 	 * Update a particular instance of this hook.
 	 *
 	 * @since 1.0.0
@@ -675,18 +878,15 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 
 		$instance = array_merge( $this->defaults, $instance );
 
-		$approve    = wordpoints_posint( $instance['approve'] );
-		$disapprove = wordpoints_posint( $instance['disapprove'] );
-
 		?>
 
 		<p>
 			<label for="<?php $this->the_field_id( 'approve' ); ?>"><?php _e( 'Points for comment:', 'wordpoints' ); ?></label>
-			<input class="widefat" name="<?php $this->the_field_name( 'approve' ); ?>"  id="<?php $this->the_field_id( 'approve' ); ?>" type="text" value="<?php echo $approve; ?>" />
+			<input class="widefat" name="<?php $this->the_field_name( 'approve' ); ?>"  id="<?php $this->the_field_id( 'approve' ); ?>" type="text" value="<?php echo wordpoints_posint( $instance['approve'] ); ?>" />
 		</p>
 		<p>
 			<label for="<?php $this->the_field_id( 'disapprove' ); ?>"><?php _e( 'Points subtracted if comment removed:', 'wordpoints' ); ?></label>
-			<input class="widefat" name="<?php $this->the_field_name( 'disapprove' ); ?>"  id="<?php $this->the_field_id( 'disapprove' ); ?>" type="text" value="<?php echo $disapprove; ?>" />
+			<input class="widefat" name="<?php $this->the_field_name( 'disapprove' ); ?>"  id="<?php $this->the_field_id( 'disapprove' ); ?>" type="text" value="<?php echo wordpoints_posint( $instance['disapprove'] ); ?>" />
 		</p>
 
 		<?php
@@ -728,7 +928,7 @@ class WordPoints_Periodic_Points_Hook extends WordPoints_Points_Hook {
 
 		parent::init( _x( 'Periodic Points', 'points hook name', 'wordpoints' ), array( 'description' => __( 'Award a user points when they visit your site at least once in a given time period.', 'wordpoints' ) ) );
 
-		add_action( 'set_current_user', array( $this, 'hook' ) );
+		add_action( 'init', array( $this, 'hook' ) );
 
 		add_filter( 'wordpoints_points_log-periodic', array( $this, 'logs' ), 10, 6 );
 	}
@@ -746,13 +946,15 @@ class WordPoints_Periodic_Points_Hook extends WordPoints_Points_Hook {
 
 		$user_id = get_current_user_id();
 
-		if ( ! $user_id )
+		if ( ! $user_id ) {
 			return;
+		}
 
-		$last_visit = get_user_meta( $user_id, 'wordpoints_points_period_start', true );
+		$last_visit = get_user_option( 'wordpoints_points_period_start', $user_id );
 
-		if ( ! is_array( $last_visit ) )
+		if ( ! is_array( $last_visit ) ) {
 			$last_visit = array();
+		}
 
 		$now = current_time( 'timestamp' );
 
@@ -776,12 +978,14 @@ class WordPoints_Periodic_Points_Hook extends WordPoints_Points_Hook {
 
 		if ( $awarded_points ) {
 
-			update_user_meta( $user_id, 'wordpoints_points_period_start', $last_visit );
+			$global = ( ! is_multisite() || is_wordpoints_network_active() );
+
+			update_user_option( $user_id, 'wordpoints_points_period_start', $last_visit, $global );
 		}
 	}
 
 	/**
-	 * Display the log entry for a transaction.
+	 * Generate the log entry for a transaction.
 	 *
 	 * @since 1.0.0
 	 *
@@ -856,8 +1060,6 @@ class WordPoints_Periodic_Points_Hook extends WordPoints_Points_Hook {
 
 		$instance = array_merge( $this->defaults, $instance );
 
-		$points = wordpoints_posint( $instance['points'] );
-
 		$dropdown_args = array(
 			'selected' => $instance['period'],
 			'id'       => $this->get_field_id( 'period' ),
@@ -871,7 +1073,7 @@ class WordPoints_Periodic_Points_Hook extends WordPoints_Points_Hook {
 
 		<p>
 			<label><?php _ex( 'Points:', 'form label', 'wordpoints' ); ?></label>
-			<input class="widefat" name="<?php $this->the_field_name( 'points' ); ?>"  id="<?php $this->the_field_id( 'points' ); ?>" type="text" value="<?php echo $points; ?>" />
+			<input class="widefat" name="<?php $this->the_field_name( 'points' ); ?>"  id="<?php $this->the_field_id( 'points' ); ?>" type="text" value="<?php echo wordpoints_posint( $instance['points'] ); ?>" />
 		</p>
 		<p>
 			<label for="<?php $this->the_field_id( 'period' ); ?>"><?php _ex( 'Period:', 'length of time', 'wordpoints' ); ?></label>
