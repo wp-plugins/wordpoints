@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<ruleset name="WordPress Coding Standards for Plugins">
+	<description>Generally-applicable sniffs for WordPress plugins</description>
+
+	<rule ref="WordPress">
+		<!--
+			These rules are excluded because they produce error-level false
+			positives. They will be added back in when the changes are commited to
+			the stable version upstream. That will happen for some of these when
+			WordPress-Coding-Standards/WordPress-Coding-Standards#128 gets
+			merged from the develop branch. Until then, the issue numbers are
+			supplied.
+		-->
+		<exclude name="WordPress.WhiteSpace.ScopeIndent" /><!-- #122 -->
+		<exclude name="WordPress.WhiteSpace.ControlStructureSpacing" /><!-- #141 (#128) -->
+		<exclude name="WordPress.WhiteSpace.OperatorSpacing" /><!-- #68 -->
+		<exclude name="WordPress.Objects.ObjectInstantiation" /><!-- #49 (#128) -->
+		<exclude name="WordPress.XSS.EscapeOutput" /><!-- #144 -->
+		<exclude name="WordPress.Arrays.ArrayDeclaration" /><!-- #16 (#128) -->
+	</rule>
+	<rule ref="WordPress.NamingConventions.ValidFunctionName">
+		<exclude-pattern>/tests/*</exclude-pattern><!-- because of PHPUnit method names -->
+	</rule>
+
+	<rule ref="Squiz.WhiteSpace.SuperfluousWhitespace"/>
+	<rule ref="Generic.PHP.DisallowShortOpenTag"/>
+	<rule ref="Generic.Files.ByteOrderMark"/>
+	<rule ref="Generic.PHP.LowerCaseConstant"/>
+	<rule ref="Generic.WhiteSpace.DisallowSpaceIndent"/>
+	<rule ref="Generic.PHP.NoSilencedErrors" />
+	<rule ref="Generic.ControlStructures.InlineControlStructure">
+		<properties>
+			<property name="error" value="0" /><!-- because of https://pear.php.net/bugs/20155 -->
+		</properties>
+	</rule>
+	<rule ref="Generic.Files.LineEndings">
+		<properties>
+			<property name="eolChar" value="\n"/>
+		</properties>
+	</rule>
+
+</ruleset>

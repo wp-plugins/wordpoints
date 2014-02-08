@@ -3,8 +3,8 @@ Contributors: jdgrimes
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=TPXS6B98HURLJ&lc=US&item_name=WordPoints&item_number=wordpressorg&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_LG%2egif%3aNonHosted
 Tags: points, awards, rewards, cubepoints, credits, gamify
 Requires at least: 3.7
-Tested up to: 3.8
-Stable tag: 1.1.0
+Tested up to: 3.9-alpha-27092
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -39,6 +39,8 @@ For more information on that, see the [developer docs](http://wordpoints.org/dev
 
 == Installation ==
 
+Before installing on multisite, it is recommended that you [read this](http://wordpoints.org/user-guide/multisite/).
+
 1. Download and unzip the plugin file
 1. Upload the resulting `/wordpoints/` folder to the `/wp-content/plugins/` directory
 1. Activate the plugin through the 'Plugins' menu in WordPress
@@ -61,8 +63,8 @@ development. Find out more [here](http://wordpoints.org/roadmap/).
 
 = Does WordPoints support Multisite? =
 
-No, the current version hasn't been tested with multisite. I plan to add support for
-it soon, though.
+Yes, WordPoints fully supports multisite. It is recommended that you [read up on it here](http://wordpoints.org/user-guide/multisite/)
+before you install it.
 
 = Why doesn't WordPoints support my old outdated WordPress version? =
 
@@ -78,13 +80,29 @@ points are awarded.
 
 == Changelog ==
 
+= 1.2.0 =
+* New: Support for WordPress multisite See [here](http://wordpoints.org/user-guide/multisite/) for full details.
+* New: Network-wide points hooks for multisite.
+* Fixed: Delete the points logs for a user when they are deleted.
+* Fixed: Clean up the points logs for a post when it is deleted, removing the link.
+* Fixed: Clean up the points logs for a comment when it is deleted, removing the link and comment text.
+
+= 1.1.2 =
+* Fixed: The post points hook was awarding points for auto-drafts and post revisions.
+* Fixed: The periodic points hook wasn’t working in some cases.
+* Fixed: There was a fatal error in the uninstall script, causing a blank screen when uninstalling the plugin.
+
+= 1.1.1 =
+* New: The Brazilian Portugese language file was added to the plugin, thanks to Gabriel Galvao.
+* Fixed: The language files are being loaded properly now.
+* Fixed: The points component is activated by default. (We tried and failed to do that back in 1.0.1).
+
 = 1.1.0 =
 * New: You can now add points hooks to a points type by clicking on the hook and
 choosing the points type to add it to.
 * New: The plugin is fully translatable, and pot file is now included in `/languages`.
 * New: For developers, this version introduces an [improved modules API](http://wordpoints.org/developer-guide/modules/).
-* New: Also for developers, the logs query class now implements `WP_Meta_Query` and
-`WP_Date_Query`.
+* New: Also for developers, the logs query class now implements `WP_Meta_Query` and `WP_Date_Query`.
 * Fixed: Use the correct post type name in the points logs instead of the generic "Post".
 
 = 1.0.1 =
@@ -95,6 +113,16 @@ choosing the points type to add it to.
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+* This is a major update which adds full support for WordPress multisite.
+
+= 1.1.2 =
+* This update is a maintenance release with some fixes for bugs in the periodic and post points hooks and the uninstall routine.
+
+= 1.1.1 =
+* This update is a maintenance release with some localization and installation
+improvements. It is recommended that all users upgrade.
 
 = 1.1.0 =
 * This update includes improvements to the points hooks UI, and also many improvements

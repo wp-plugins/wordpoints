@@ -27,6 +27,17 @@ function wordpointstests_manually_load_plugin() {
 	require WORDPOINTS_TESTS_DIR . '/../../src/wordpoints.php';
 
 	wordpoints_activate();
+
+	if ( is_multisite() && getenv( 'WORDPOINTS_NETWORK_ACTIVE' ) ) {
+
+		$plugins = get_site_option( 'active_sitewide_plugins' );
+
+		$wordpoints = plugin_basename( WORDPOINTS_DIR . 'wordpoints.php' );
+
+		$plugins[ $wordpoints ] = time();
+
+		update_site_option( 'active_sitewide_plugins', $plugins );
+	}
 }
 
 /**
@@ -77,8 +88,9 @@ function wordpointstests_do_shortcode_func( $tag, array $atts = array(), $conten
 
 	global $shortcode_tags;
 
-	if ( ! isset( $shortcode_tags[ $tag ] ) )
+	if ( ! isset( $shortcode_tags[ $tag ] ) ) {
 		return false;
+	}
 
 	return call_user_func( $shortcode_tags[ $tag ], $atts, $content, $tag );
 }
@@ -93,13 +105,21 @@ function wordpointstests_do_shortcode_func( $tag, array $atts = array(), $conten
  */
 function wordpointstests_add_points_hook( $hook_type, $instance = array() ) {
 
-	update_option( 'wordpoints_points_types_hooks', array( 'points' => array( $hook_type . '-1' ) ) );
+	if ( WordPoints_Points_Hooks::get_network_mode() ) {
+		update_site_option( 'wordpoints_points_types_hooks', array( 'points' => array( $hook_type . '-1' ) ) );
+	} else {
+		update_option( 'wordpoints_points_types_hooks', array( 'points' => array( $hook_type . '-1' ) ) );
+	}
 
 	$hook = WordPoints_Points_Hooks::get_handler_by_id_base( $hook_type );
 
-	if ( $hook instanceof WordPoints_Points_Hook ) {
-		$hook->update_callback( $instance, 1 );
+	if ( ! $hook instanceof WordPoints_Points_Hook ) {
+		return false;
 	}
+
+	$hook->update_callback( $instance, 1 );
+
+	return $hook;
 }
 
 /**
@@ -130,7 +150,7 @@ function wordpointstests_add_widget( $id_base, array $settings = array(), $sideb
 	} else {
 
 		$sidebar_id = key( $sidebars );
-		$sidebar = array_shift( $sidebars );
+		$sidebar    = array_shift( $sidebars );
 	}
 
 	$sidebar[] = $id_base . '-' . $multi_number;
@@ -164,7 +184,7 @@ function wordpointstests_add_widget( $id_base, array $settings = array(), $sideb
 function wordpointstests_selenium_is_running() {
 
 	$selenium_running = false;
-	$fp = @fsockopen( 'localhost', 4444 );
+	$fp = fsockopen( 'localhost', 4444 );
 
 	if ( $fp !== false ) {
 
@@ -185,8 +205,9 @@ function wordpointstests_selenium_is_running() {
  */
 function wordpointstests_start_selenium() {
 
-	if ( ! defined( 'WORDPOINTS_TESTS_SELENIUM' ) )
+	if ( ! defined( 'WORDPOINTS_TESTS_SELENIUM' ) ) {
 		return false;
+	}
 
 	$result = shell_exec( 'java -jar ' . escapeshellarg( WORDPOINTS_TESTS_SELENIUM ) );
 
@@ -211,7 +232,7 @@ function wordpointstests_ui_user() {
 		$user_id = $user_factory->create(
 			array(
 				'user_login' => 'wordpoints_ui_tester',
-				'user_email' => 'wordpoints.ui.tester@example.com'
+				'user_email' => 'wordpoints.ui.tester@example.com',
 			)
 		);
 
@@ -239,11 +260,12 @@ function wordpointstests_symlink_plugin( $plugin, $plugin_dir, $link_name = null
 
 		shell_exec( 'ln -s ' . escapeshellarg( $plugin_dir ) . ' ' . escapeshellarg( $link_name ) );
 
-		if ( ! is_link( $link_name ) )
+		if ( ! is_link( $link_name ) ) {
 			return false;
+		}
 	}
 
-    return true;
+	return true;
 }
 
 // end of file /tests/phpunit/includes/functions.php

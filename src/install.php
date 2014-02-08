@@ -8,7 +8,7 @@
  */
 
 // Add plugin data.
-add_option(
+wordpoints_add_network_option(
 	'wordpoints_data',
 	array(
 		'version'    => WORDPOINTS_VERSION,
@@ -18,6 +18,8 @@ add_option(
 );
 
 // Activate the Points component.
-WordPoints_Components::instance()->activate( 'points' );
+$wordpoints_components = WordPoints_Components::instance();
+$wordpoints_components->load();
+$wordpoints_components->activate( 'points' );
 
 // end of file /install.php

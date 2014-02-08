@@ -35,15 +35,15 @@ class WordPoints_Points_UnitTestCase extends WP_UnitTestCase {
 
 		parent::setUp();
 
+		WordPoints_Points_Hooks::set_network_mode( false );
+
 		$this->points_data = array(
 			'name'   => 'Points',
 			'prefix' => '$',
 			'suffix' => 'pts.',
 		);
 
-		add_option( 'wordpoints_points_types', array( 'points' => $this->points_data ) );
-
-		WordPoints_Points_Types::_reset();
+		wordpoints_add_network_option( 'wordpoints_points_types', array( 'points' => $this->points_data ) );
 	}
 }
 

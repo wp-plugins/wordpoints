@@ -9,7 +9,7 @@
 
 global $wpdb;
 
-$wpdb->wordpoints_points_logs = "{$wpdb->base_prefix}wordpoints_points_logs";
+$wpdb->wordpoints_points_logs     = "{$wpdb->base_prefix}wordpoints_points_logs";
 $wpdb->wordpoints_points_log_meta = "{$wpdb->base_prefix}wordpoints_points_log_meta";
 
 /**
@@ -72,7 +72,7 @@ add_action( 'wordpoints_components_register', 'wordpoints_points_component_regis
  */
 function wordpoints_points_component_activate() {
 
-	$wordpoints_data = wordpoints_get_array_option( 'wordpoints_data' );
+	$wordpoints_data = wordpoints_get_array_option( 'wordpoints_data', 'network' );
 
 	if ( ! isset( $wordpoints_data['components']['points']['version'] ) ) {
 
@@ -97,7 +97,7 @@ add_action( 'wordpoints_component_activate-points', 'wordpoints_points_component
  */
 function wordpoints_points_component_uninstall() {
 
-	$wordpoints_data = wordpoints_get_array_option( 'wordpoints_data' );
+	$wordpoints_data = wordpoints_get_array_option( 'wordpoints_data', 'network' );
 
 	if ( isset( $wordpoints_data['components']['points']['version'] ) ) {
 
@@ -117,6 +117,48 @@ add_action( 'wordpoints_uninstall_component-points', 'wordpoints_points_componen
 if ( ! wordpoints_component_is_active( 'points' ) ) {
 	return;
 }
+
+/**
+ * Update the points component.
+ *
+ * @since 1.2.0
+ *
+ * @action wordpoints_components_loaded
+ */
+function wordpoints_points_component_update() {
+
+	$db_version = '1.0.0';
+
+	$wordpoints_data = wordpoints_get_network_option( 'wordpoints_data' );
+
+	if ( isset( $wordpoints_data['components']['points']['version'] ) ) {
+		$db_version = $wordpoints_data['components']['points']['version'];
+	}
+
+	// If the DB version isn't less than the code version, we don't need to upgrade.
+	if ( version_compare( $db_version, WORDPOINTS_VERSION ) != -1 ) {
+		return;
+	}
+
+	/**
+	 * The update functions for the points component.
+	 *
+	 * @since 1.2.0
+	 */
+	require_once WORDPOINTS_DIR . 'components/points/includes/update.php';
+
+	switch ( 1 ) {
+
+		case version_compare( '1.2.0', $db_version ):
+			wordpoints_points_update_1_2_0();
+		// fallthru
+	}
+
+	$wordpoints_data['components']['points']['version'] = WORDPOINTS_VERSION;
+
+	wordpoints_update_network_option( 'wordpoints_data', $wordpoints_data );
+}
+add_action( 'wordpoints_components_loaded', 'wordpoints_points_component_update' );
 
 /**
  * Register scripts and styles for the component.
@@ -195,6 +237,13 @@ include_once WORDPOINTS_DIR . 'components/points/includes/widgets.php';
  * @since 1.0.0
  */
 include_once WORDPOINTS_DIR . 'components/points/includes/logs.php';
+
+/**
+ * Deprecated functions and classes.
+ *
+ * @since 1.2.0
+ */
+include_once WORDPOINTS_DIR . 'components/points/includes/deprecated.php';
 
 if ( is_admin() ) {
 

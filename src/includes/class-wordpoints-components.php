@@ -108,18 +108,6 @@ final class WordPoints_Components {
 	 */
 	private function __clone() {}
 
-	/**
-	 * Reset the $active member var.
-	 *
-	 * This resets the array of active modules from the database when it is updated.
-	 *
-	 * @since 1.0.0
-	 */
-	private function _reset_active() {
-
-		$this->active = wordpoints_get_array_option( 'wordpoints_active_components' );
-	}
-
 	//
 	// Public Methods.
 	//
@@ -137,12 +125,11 @@ final class WordPoints_Components {
 	 */
 	public static function set_up() {
 
-		if ( isset( self::$instance ) )
+		if ( isset( self::$instance ) ) {
 			return;
+		}
 
 		self::$instance = new WordPoints_Components();
-
-		self::$instance->_reset_active();
 
 		add_action( 'plugins_loaded', array( self::$instance, 'load' ) );
 	}
@@ -206,8 +193,9 @@ final class WordPoints_Components {
 	 */
 	public function get() {
 
-		if ( ! isset( $this->registered ) )
+		if ( ! isset( $this->registered ) ) {
 			return false;
+		}
 
 		return $this->registered;
 	}
@@ -221,6 +209,7 @@ final class WordPoints_Components {
 	 */
 	public function get_active() {
 
+		$this->active = wordpoints_get_array_option( 'wordpoints_active_components', 'network' );
 		return $this->active;
 	}
 
@@ -273,8 +262,9 @@ final class WordPoints_Components {
 
 		$slug = $component['slug'];
 
-		if ( $this->is_registered( $slug ) || empty( $component['name'] ) || empty( $slug ) )
+		if ( $this->is_registered( $slug ) || empty( $component['name'] ) || empty( $slug ) ) {
 			return false;
+		}
 
 		$this->registered[ $slug ] = array_intersect_key( $component, $defaults );
 
@@ -326,17 +316,16 @@ final class WordPoints_Components {
 	 */
 	public function activate( $slug ) {
 
-		if ( ! $this->is_registered( $slug ) )
+		if ( ! $this->is_registered( $slug ) ) {
 			return false;
+		}
 
 		// If this component isn't already active, activate it.
 		if ( ! $this->is_active( $slug ) ) {
 
 			$this->active[ $slug ] = 1;
 
-			if ( ! update_option( 'wordpoints_active_components', $this->active ) ) {
-
-				$this->_reset_active();
+			if ( ! wordpoints_update_network_option( 'wordpoints_active_components', $this->active ) ) {
 				return false;
 			}
 
@@ -369,16 +358,15 @@ final class WordPoints_Components {
 	 */
 	public function deactivate( $slug ) {
 
-		if ( ! $this->is_registered( $slug ) )
+		if ( ! $this->is_registered( $slug ) ) {
 			return false;
+		}
 
 		if ( $this->is_active( $slug ) ) {
 
 			unset( $this->active[ $slug ] );
 
-			if ( ! update_option( 'wordpoints_active_components', $this->active ) ) {
-
-				$this->_reset_active();
+			if ( ! wordpoints_update_network_option( 'wordpoints_active_components', $this->active ) ) {
 				return false;
 			}
 
@@ -407,7 +395,7 @@ final class WordPoints_Components {
 	 */
 	public function is_active( $slug ) {
 
-		$this->_reset_active();
+		$this->get_active();
 
 		$is_active = isset( $this->active[ $slug ] );
 

@@ -203,7 +203,7 @@ final class WordPoints_Modules_List_Table extends WP_List_Table {
 		if ( $orderby ) {
 
 			$orderby = ucfirst( $orderby );
-			$order = strtoupper( $order );
+			$order   = strtoupper( $order );
 
 			uasort( $this->items, array( $this, '_order_callback' ) );
 		}
@@ -216,10 +216,12 @@ final class WordPoints_Modules_List_Table extends WP_List_Table {
 			$this->items = array_slice( $this->items, $start, $modules_per_page );
 		}
 
-		$this->set_pagination_args( array(
-			'total_items' => $total_this_page,
-			'per_page'    => $modules_per_page,
-		) );
+		$this->set_pagination_args(
+			array(
+				'total_items' => $total_this_page,
+				'per_page'    => $modules_per_page,
+			)
+		);
 	}
 
 	/**
@@ -291,7 +293,7 @@ final class WordPoints_Modules_List_Table extends WP_List_Table {
 		if ( ! empty( $modules['all'] ) ) {
 			_e( 'No modules found.', 'wordpoints' );
 		} else {
-			printf( __( 'You do not appear to have any modules available at this time. <a href="%s">Install some</a>.', 'wordpoints' ), self_admin_url( 'admin.php?page=wordpoints_install_modules' ) );
+			printf( __( 'You do not appear to have any modules available at this time. <a href="%s">Install some</a>.', 'wordpoints' ), esc_url( self_admin_url( 'admin.php?page=wordpoints_install_modules' ) ) );
 		}
 	}
 
@@ -508,7 +510,7 @@ final class WordPoints_Modules_List_Table extends WP_List_Table {
 					$actions['activate'] = '<a href="' . wp_nonce_url( add_query_arg( 'action', 'activate', $url ), "activate-module_{$module_file}" ) . '" class="edit">' . __( 'Network Activate', 'wordpoints' ) . '</a>';
 				}
 
-				if ( current_user_can( 'delete_wordpoints_modules' ) && ! wordpoints_is_module_active( $module_file ) ) {
+				if ( current_user_can( 'delete_wordpoints_modules' ) && ! is_wordpoints_module_active( $module_file ) ) {
 					$actions['delete'] = '<a href="' . wp_nonce_url( 'admin.php?page=wordpoints_modules&action=delete-selected&amp;checked[]=' . $module_file . '&amp;module_status=' . $context . '&amp;paged=' . $page . '&amp;s=' . $s, 'bulk-modules' ) . '" class="delete">' . __( 'Delete', 'wordpoints' ) . '</a>';
 				}
 			}
@@ -564,9 +566,9 @@ final class WordPoints_Modules_List_Table extends WP_List_Table {
 
 		$class = ( $is_active ) ? 'active' : 'inactive';
 
-		$checkbox_id =  "checkbox_" . md5( $module_data['name'] );
+		$checkbox_id = 'checkbox_' . md5( $module_data['name'] );
 
-		$checkbox = "<label class='screen-reader-text' for='" . $checkbox_id . "' >" . sprintf( __( 'Select %s', 'wordpoints' ), $module_data['name'] ) . "</label>"
+		$checkbox = "<label class='screen-reader-text' for='" . $checkbox_id . "' >" . sprintf( __( 'Select %s', 'wordpoints' ), $module_data['name'] ) . '</label>'
 			. "<input type='checkbox' name='checked[]' value='" . esc_attr( $module_file ) . "' id='" . $checkbox_id . "' />";
 
 		$description = '<p>' . ( $module_data['description'] ? $module_data['description'] : '&nbsp;' ) . '</p>';
@@ -608,7 +610,7 @@ final class WordPoints_Modules_List_Table extends WP_List_Table {
 				case 'name':
 					echo "<td class='module-title'{$style}><strong>{$module_name}</strong>";
 					echo $this->row_actions( $actions, true );
-					echo "</td>";
+					echo '</td>';
 				break;
 
 				case 'description':
@@ -634,7 +636,7 @@ final class WordPoints_Modules_List_Table extends WP_List_Table {
 					}
 
 					if ( ! empty( $module_data['module_uri'] ) ) {
-						$module_meta[] = '<a href="' . $module_data['module_uri'] . '" title="' . esc_attr__( 'Visit module site', 'wordpoints' ) . '">' . __( 'Visit module site', 'wordpoints' ) . '</a>';
+						$module_meta[] = '<a href="' . $module_data['module_uri'] . '">' . __( 'Visit module site', 'wordpoints' ) . '</a>';
 					}
 
 					/**
@@ -653,7 +655,7 @@ final class WordPoints_Modules_List_Table extends WP_List_Table {
 
 					echo implode( ' | ', $module_meta );
 
-					echo "</div></td>";
+					echo '</div></td>';
 				break;
 
 				default:
@@ -668,13 +670,13 @@ final class WordPoints_Modules_List_Table extends WP_List_Table {
 					 * @param array  $module_data The module's info.
 					 */
 					do_action( 'wordpoints_manage_modules_custom_column', $column_name, $module_file, $module_data );
-					echo "</td>";
+					echo '</td>';
 
 			} // switch ( $column_name )
 
 		} // foreach ( $columns )
 
-		echo "</tr>";
+		echo '</tr>';
 
 		/**
 		 * After each row in the module list table.

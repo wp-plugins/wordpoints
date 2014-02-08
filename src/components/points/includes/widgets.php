@@ -120,16 +120,19 @@ class WordPoints_My_Points_Widget extends WordPoints_Points_Widget {
 	 */
 	public function widget( $args, $instance ) {
 
-		if ( ! is_user_logged_in() && empty( $instance['text_alt'] ) )
+		if ( ! is_user_logged_in() && empty( $instance['text_alt'] ) ) {
 			return;
+		}
 
 		$this->make_a_points_type( $instance['points_type'] );
 
-		if ( ! $instance['points_type'] )
+		if ( ! $instance['points_type'] ) {
 			return;
+		}
 
-		if ( ! wordpoints_posint( $instance['number_logs'] ) )
+		if ( ! wordpoints_posint( $instance['number_logs'] ) ) {
 			$instance['number_logs'] = 0;
+		}
 
 		echo $args['before_widget'];
 
@@ -231,8 +234,9 @@ class WordPoints_My_Points_Widget extends WordPoints_Points_Widget {
 		$new_instance['text']     = trim( $new_instance['text'] );
 		$new_instance['alt_text'] = trim( $new_instance['alt_text'] );
 
-		if ( ! wordpoints_posint( $new_instance['number_logs'] ) )
+		if ( ! wordpoints_posint( $new_instance['number_logs'] ) ) {
 			$new_instance['number_logs'] = 0;
+		}
 
 		$this->make_a_points_type( $new_instance['points_type'] );
 
@@ -274,7 +278,7 @@ class WordPoints_My_Points_Widget extends WordPoints_Points_Widget {
 			<small><i><?php _e( '%points% will be replaced with the points of the logged in user', 'wordpoints' ); ?></i></small>
 		</p>
 		<p>
-			<label for="<?php echo $this->get_field_id( 'alt_text' ); ?>"><?php _e( 'Text if the user is not logged in', 'wordpoints'); ?></label>
+			<label for="<?php echo $this->get_field_id( 'alt_text' ); ?>"><?php _e( 'Text if the user is not logged in', 'wordpoints' ); ?></label>
 			<input type="text" class="widefat" id="<?php echo $this->get_field_id( 'alt_text' ); ?>" name="<?php echo $this->get_field_name( 'alt_text' ); ?>" value="<?php echo esc_attr( $instance['alt_text'] ); ?>" />
 			<small><i><?php _e( 'Leave this field blank to hide the widget if the user is not logged in', 'wordpoints' ); ?></i></small>
 		</p>
@@ -331,8 +335,9 @@ class WordPoints_Top_Users_Points_Widget extends WordPoints_Points_Widget {
 
 		$this->make_a_points_type( $instance['points_type'] );
 
-		if ( ! $instance['points_type'] )
+		if ( ! $instance['points_type'] ) {
 			return;
+		}
 
 		echo $args['before_widget'];
 
@@ -346,13 +351,15 @@ class WordPoints_Top_Users_Points_Widget extends WordPoints_Points_Widget {
 			echo $args['before_title'] . $title . $args['after_title'];
 		}
 
-		if ( empty( $instance['num_users'] ) )
+		if ( empty( $instance['num_users'] ) ) {
 			$instance['num_users'] = $this->defaults['num_users'];
+		}
 
 		$top_users = wordpoints_points_get_top_users( $instance['num_users'], $instance['points_type'] );
 
-		if ( ! $top_users )
+		if ( ! $top_users ) {
 			return;
+		}
 
 		wp_enqueue_style( 'wordpoints-top-users' );
 
@@ -417,8 +424,9 @@ class WordPoints_Top_Users_Points_Widget extends WordPoints_Points_Widget {
 
 		$new_instance['title'] = strip_tags( $new_instance['title'] );
 
-		if ( ! wordpoints_posint( $new_instance['num_users'] ) )
+		if ( ! wordpoints_posint( $new_instance['num_users'] ) ) {
 			$new_instance['num_users'] = $this->defaults['num_users'];
+		}
 
 		$this->make_a_points_type( $new_instance['points_type'] );
 
@@ -443,8 +451,9 @@ class WordPoints_Top_Users_Points_Widget extends WordPoints_Points_Widget {
 			'class'    => 'widefat',
 		);
 
-		if ( ! wordpoints_posint( $instance['num_users'] ) )
+		if ( ! wordpoints_posint( $instance['num_users'] ) ) {
 			$instance['num_users'] = $this->defaults['num_users'];
+		}
 
 		?>
 
@@ -458,7 +467,7 @@ class WordPoints_Top_Users_Points_Widget extends WordPoints_Points_Widget {
 		</p>
 		<p>
 			<label for="<?php echo $this->get_field_id( 'num_users' ); ?>"><?php _e( 'Number of top users to show', 'wordpoints' ); ?></label>
-			<input type="text" class="widefat" id="<?php echo $this->get_field_id( 'num_users' ); ?>" name="<?php echo $this->get_field_name( 'num_users' ); ?>" value="<?php echo $instance['num_users']; ?>" />
+			<input type="text" class="widefat" id="<?php echo $this->get_field_id( 'num_users' ); ?>" name="<?php echo $this->get_field_name( 'num_users' ); ?>" value="<?php echo absint( $instance['num_users'] ); ?>" />
 		</p>
 
 		<?php
@@ -500,11 +509,13 @@ class WordPoints_Points_Logs_Widget extends WordPoints_Points_Widget {
 	 */
 	public function widget( $args, $instance ) {
 
-		if ( ! wordpoints_is_points_type( $instance['points_type'] ) )
+		if ( ! wordpoints_is_points_type( $instance['points_type'] ) ) {
 			return;
+		}
 
-		if ( ! wordpoints_posint( $instance['number_logs'] ) )
+		if ( ! wordpoints_posint( $instance['number_logs'] ) ) {
 			$instance['number_logs'] = $this->defaults['number_logs'];
+		}
 
 		echo $args['before_widget'];
 
@@ -563,8 +574,9 @@ class WordPoints_Points_Logs_Widget extends WordPoints_Points_Widget {
 
 		$new_instance['title'] = strip_tags( $new_instance['title'] );
 
-		if ( ! wordpoints_posint( $new_instance['number_logs'] ) )
+		if ( ! wordpoints_posint( $new_instance['number_logs'] ) ) {
 			$new_instance['number_logs'] = $this->defaults['number_logs'];
+		}
 
 		$this->make_a_points_type( $new_instance['points_type'] );
 
@@ -589,8 +601,9 @@ class WordPoints_Points_Logs_Widget extends WordPoints_Points_Widget {
 			'class'    => 'widefat',
 		);
 
-		if ( ! wordpoints_posint( $instance['number_logs'] ) )
+		if ( ! wordpoints_posint( $instance['number_logs'] ) ) {
 			$instance['number_logs'] = $this->defaults['number_logs'];
+		}
 
 		?>
 
@@ -604,7 +617,7 @@ class WordPoints_Points_Logs_Widget extends WordPoints_Points_Widget {
 		</p>
 		<p>
 			<label for="<?php echo $this->get_field_id( 'number_logs' ); ?>"><?php _e( 'Number of log entries to display', 'wordpoints' ); ?></label>
-			<input type="text" class="widefat" id="<?php echo $this->get_field_id( 'number_logs' ); ?>" name="<?php echo $this->get_field_name( 'number_logs' ); ?>" value="<?php echo $instance['number_logs']; ?>" />
+			<input type="text" class="widefat" id="<?php echo $this->get_field_id( 'number_logs' ); ?>" name="<?php echo $this->get_field_name( 'number_logs' ); ?>" value="<?php echo absint( $instance['number_logs'] ); ?>" />
 		</p>
 
 		<?php

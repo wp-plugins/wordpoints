@@ -13,6 +13,7 @@
  * @since 1.0.0
  *
  * @group points
+ * @group points_logs
  */
 class WordPoints_Points_Log_Query_Test extends WordPoints_Points_UnitTestCase {
 
@@ -50,6 +51,7 @@ class WordPoints_Points_Log_Query_Test extends WordPoints_Points_UnitTestCase {
 
 		$this->assertTrue( wordpoints_is_points_logs_query( 'default' ) );
 		$this->assertTrue( wordpoints_is_points_logs_query( 'current_user' ) );
+		$this->assertTrue( wordpoints_is_points_logs_query( 'network' ) );
 	}
 
 	/**
@@ -142,6 +144,43 @@ class WordPoints_Points_Log_Query_Test extends WordPoints_Points_UnitTestCase {
 		$second = array_shift( $result );
 
 		$this->assertLessThan( $second->points, $first->points );
+	}
+
+	/**
+	 * Test the 'id_*' query args.
+	 *
+	 * @since 1.2.0
+	 */
+	function test_id_query_args() {
+
+		// Create a user and add some points to generate some logs.
+		$user_id = $this->factory->user->create();
+
+		wordpoints_alter_points( $user_id, 10, 'points', 'test' );
+		wordpoints_alter_points( $user_id, 20, 'points', 'test' );
+
+		// Make sure that the two logs were added.
+		$query = new WordPoints_Points_Logs_Query;
+
+		$logs = $query->get();
+
+		$this->assertEquals( 2, count( $logs ) );
+
+		// Try the 'id__in' query arg.
+		$query_2 = new WordPoints_Points_Logs_Query( array( 'id__in' => array( $logs[0]->id ) ) );
+
+		$logs_2 = $query_2->get();
+
+		$this->assertEquals( 1, count( $logs_2 ) );
+		$this->assertEquals( $logs[0]->id, $logs_2[0]->id );
+
+		// Try the 'id__not_in' query arg.
+		$query_3 = new WordPoints_Points_Logs_Query( array( 'id__not_in' => array( $logs[0]->id ) ) );
+
+		$logs_3 = $query_3->get();
+
+		$this->assertEquals( 1, count( $logs_3 ) );
+		$this->assertEquals( $logs[1]->id, $logs_3[0]->id );
 	}
 
 	/**
@@ -353,6 +392,56 @@ class WordPoints_Points_Log_Query_Test extends WordPoints_Points_UnitTestCase {
 		wordpoints_alter_points( $user_id, 10, 'points', 'test' );
 
 		$this->assertEquals( 0, $query->count() );
+	}
+
+	/**
+	 * Test the blog_* query arg.
+	 *
+	 * @since 1.2.0
+	 */
+	public function test_blog_query_arg() {
+
+		if ( ! is_multisite() ) {
+			$this->markTestSkipped( 'Tests are not using multisite.' );
+		}
+
+		$user_id = $this->factory->user->create();
+		$blog_id = $this->factory->blog->create();
+
+		wordpoints_alter_points( $user_id, 10, 'points', 'test' );
+
+		switch_to_blog( $blog_id );
+
+		if ( ! is_wordpoints_network_active() ) {
+			wordpoints_add_points_type( array( 'name' => 'points' ) );
+		}
+
+		wordpoints_alter_points( $this->factory->user->create(), 20, 'points', 'test' );
+
+		restore_current_blog();
+
+		$query = new WordPoints_Points_Logs_Query();
+
+		$this->assertEquals( 1, $query->count() );
+		$this->assertEquals( 10, $query->get( 'row' )->points );
+
+		$query = new WordPoints_Points_Logs_Query( array( 'blog_id' => $blog_id ) );
+
+		$this->assertEquals( 1, $query->count() );
+		$this->assertEquals( 20, $query->get( 'row' )->points );
+
+		$query = new WordPoints_Points_Logs_Query( array( 'blog_id' => false ) );
+
+		$this->assertEquals( 2, $query->count() );
+
+		$query = new WordPoints_Points_Logs_Query( array( 'blog__in' => array( 1, $blog_id ) ) );
+
+		$this->assertEquals( 2, $query->count() );
+
+		$query = new WordPoints_Points_Logs_Query( array( 'blog__not_in' => array( 1 ) ) );
+
+		$this->assertEquals( 1, $query->count() );
+		$this->assertEquals( 20, $query->get( 'row' )->points );
 	}
 }
 
