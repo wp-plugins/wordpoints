@@ -3,8 +3,8 @@ Contributors: jdgrimes
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=TPXS6B98HURLJ&lc=US&item_name=WordPoints&item_number=wordpressorg&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_LG%2egif%3aNonHosted
 Tags: points, awards, rewards, cubepoints, credits, gamify
 Requires at least: 3.7
-Tested up to: 3.9-alpha-27092
-Stable tag: 1.2.0
+Tested up to: 3.9-alpha-27298
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -80,6 +80,12 @@ points are awarded.
 
 == Changelog ==
 
+= 1.3.0 =
+* New: User avatars are displayed in the points logs table.
+* New: Added [`[wordpoints_points]`](http://wordpoints.org/user-guide/shortcodes/wordpoints_points/) shortcode to display a user's points.
+* New: Users' points total may be [stored in a custom meta key](http://wordpoints.org/?p=153), allowing integration with other plugins.
+* Fixed: Logs for posts that have become private or protected are hidden from users who can't access them.
+
 = 1.2.0 =
 * New: Support for WordPress multisite See [here](http://wordpoints.org/user-guide/multisite/) for full details.
 * New: Network-wide points hooks for multisite.
@@ -113,6 +119,10 @@ choosing the points type to add it to.
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.3.0 =
+* This is a feature release which adds the [wordpoints_points] shortcode, among
+other things.
 
 = 1.2.0 =
 * This is a major update which adds full support for WordPress multisite.

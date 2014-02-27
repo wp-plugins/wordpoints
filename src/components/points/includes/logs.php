@@ -288,23 +288,20 @@ function wordpoints_show_points_logs( $logs, array $args = array() ) {
 
 		$extra_classes .= ' datatables';
 
-		wordpoints_enqueue_datatables( '.wordpoints-points-logs.datatables' );
-	}
+		$datatables_args = array();
 
-	if ( ! $args['show_users'] ) {
+		if ( ! $args['show_users'] ) {
 
-		$extra_classes .= ' hide-user-column';
-
-		?>
-
-		<style type="text/css">
-		.wordpoints-points-logs.hide-user-column th:first-child,
-		.wordpoints-points-logs.hide-user-column tr td:first-child {
-			display: none;
+			$datatables_args = array(
+				'aoColumns' => array(
+					array(),
+					array(),
+					array( 'bSearchable' => false ),
+				)
+			);
 		}
-		</style>
 
-		<?php
+		wordpoints_enqueue_datatables( '.wordpoints-points-logs.datatables', $datatables_args );
 	}
 
 	$columns = array(
@@ -316,9 +313,28 @@ function wordpoints_show_points_logs( $logs, array $args = array() ) {
 
 	?>
 
+	<br />
 	<table class="wordpoints-points-logs widefat<?php echo esc_attr( $extra_classes ); ?>">
-		<thead><tr><th scope="col"><?php echo $columns['user']; ?></th><th scope="col"><?php echo $columns['points']; ?></th><th scope="col"><?php echo $columns['description']; ?></th><th scope="col"><?php echo $columns['time']; ?></th></tr></thead>
-		<tfoot><tr><th scope="col"><?php echo $columns['user']; ?></th><th scope="col"><?php echo $columns['points']; ?></th><th scope="col"><?php echo $columns['description']; ?></th><th scope="col"><?php echo $columns['time']; ?></th></tr></tfoot>
+		<thead>
+			<tr>
+				<?php if ( $args['show_users'] ) : ?>
+				<th><?php echo $columns['user']; ?></th>
+				<?php endif; ?>
+				<th scope="col"><?php echo $columns['points']; ?></th>
+				<th scope="col"><?php echo $columns['description']; ?></th>
+				<th scope="col"><?php echo $columns['time']; ?></th>
+			</tr>
+		</thead>
+		<tfoot>
+			<tr>
+				<?php if ( $args['show_users'] ) : ?>
+				<th><?php echo $columns['user']; ?></th>
+				<?php endif; ?>
+				<th scope="col"><?php echo $columns['points']; ?></th>
+				<th scope="col"><?php echo $columns['description']; ?></th>
+				<th scope="col"><?php echo $columns['time']; ?></th>
+			</tr>
+		</tfoot>
 		<tbody>
 
 			<?php
@@ -327,12 +343,31 @@ function wordpoints_show_points_logs( $logs, array $args = array() ) {
 
 			foreach ( $logs->get() as $log ) {
 
+				/**
+				 * Filter whether the current user can view this points log.
+				 *
+				 * This is a dynamic hook, where the {$log->log_type} portion will
+				 * be the type of this log entry. For example, for a registration log
+				 * it would be 'wordpoints_user_can_view_points_log-register'.
+				 *
+				 * @since 1.3.0
+				 *
+				 * @param bool   $can_view Whether the user can view the log entry
+				 *                         (the default is true).
+				 * @param object $log      The log entry object.
+				 */
+				if ( ! apply_filters( "wordpoints_user_can_view_points_log-{$log->log_type}", true, $log ) ) {
+					continue;
+				}
+
 				$user = get_userdata( $log->user_id );
 
 				?>
 
 				<tr class="wordpoints-log-id-<?php echo $log->id; ?>">
-					<td><?php echo sanitize_user_field( 'display_name', $user->display_name, $log->user_id, 'display' ); ?></td>
+					<?php if ( $args['show_users'] ) : ?>
+					<td><?php echo get_avatar( $user->ID, 32 ); ?><?php echo sanitize_user_field( 'display_name', $user->display_name, $log->user_id, 'display' ); ?></td>
+					<?php endif; ?>
 					<td><?php echo wordpoints_format_points( $log->points, $log->points_type, 'logs' ); ?></td>
 					<td><?php echo $log->text; ?></td>
 					<td title="<?php echo $log->date; ?> UTC"><?php echo human_time_diff( strtotime( $log->date ), $current_time ); ?></td>

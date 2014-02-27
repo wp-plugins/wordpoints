@@ -4,7 +4,7 @@
  * Plugin Name: WordPoints
  * Plugin URI: http://wordpoints.org/
  * Description: Create one or more points systems for your site, and reward user activity.
- * Version: 1.2.0
+ * Version: 1.3.0
  * Author: J.D. Grimes
  * Author URI: http://codesymphony.co/
  * License: GPLv2
@@ -40,7 +40,7 @@
  *
  * @package WordPoints
  * @author J.D. Grimes <jdg@codesymphony.co>
- * @version 1.2.0
+ * @version 1.3.0
  * @license http://opensource.org/licenses/gpl-license.php GPL, version 2 or later.
  * @copyright 2013-2014 J.D. Grimes
  */
@@ -51,8 +51,10 @@
  * @since 1.0.0
  *
  * @action activate_wordpoints/wordpoints.php
+ *
+ * @param bool $network_active Whether the plugin is being network activated.
  */
-function wordpoints_activate() {
+function wordpoints_activate( $network_active ) {
 
 	// Get the plugin version and other data from the database.
 	$wordpoints_data = wordpoints_get_network_option( 'wordpoints_data' );
@@ -70,6 +72,48 @@ function wordpoints_activate() {
 	}
 }
 register_activation_hook( __FILE__, 'wordpoints_activate' );
+
+/**
+ * Update the plugin.
+ *
+ * @since 1.3.0
+ *
+ * @action plugins_loaded
+ */
+function wordpoints_update() {
+
+	$db_version = '1.0.0';
+
+	$wordpoints_data = wordpoints_get_network_option( 'wordpoints_data' );
+
+	if ( isset( $wordpoints_data['version'] ) ) {
+		$db_version = $wordpoints_data['version'];
+	}
+
+	// If the DB version isn't less than the code version, we don't need to upgrade.
+	if ( version_compare( $db_version, WORDPOINTS_VERSION ) != -1 ) {
+		return;
+	}
+
+	/**
+	 * The update functions for the plugin.
+	 *
+	 * @since 1.3.0
+	 */
+	require_once WORDPOINTS_DIR . 'includes/update.php';
+
+	switch ( 1 ) {
+
+		case version_compare( '1.3.0', $db_version ):
+			wordpoints_update_1_3_0();
+		// fallthru
+	}
+
+	$wordpoints_data['version'] = WORDPOINTS_VERSION;
+
+	wordpoints_update_network_option( 'wordpoints_data', $wordpoints_data );
+}
+add_action( 'plugins_loaded', 'wordpoints_update' );
 
 /**
  * Plugin defined constants.

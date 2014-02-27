@@ -28,7 +28,7 @@ define( 'WORDPOINTS_TESTS_DIR', dirname( dirname( __FILE__ ) ) );
  *
  * @const WORDPOINTS_TESTS_VERSION
  */
-define( 'WORDPOINTS_TESTS_VERSION', '1.2.0' );
+define( 'WORDPOINTS_TESTS_VERSION', '1.3.0' );
 
 /**
  * The WP plugin uninstall testing bootstrap.
@@ -98,5 +98,12 @@ require WORDPOINTS_TESTS_DIR . '/includes/uninstall/bootstrap.php';
  * @since 1.0.0
  */
 require_once WORDPOINTS_TESTS_DIR . '/includes/class-wordpoints-points-unittestcase.php';
+
+/**
+ * The WordPoints_Points_AJAX_UnitTestCase class.
+ *
+ * @since 1.3.0
+ */
+require_once WORDPOINTS_TESTS_DIR . '/includes/class-wordpoints-points-ajax-unittestcase.php';
 
 // end of file /tests/phpunit/includes/bootstrap.php

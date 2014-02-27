@@ -64,7 +64,10 @@ foreach ( $components->get() as $component => $data ) {
 	do_action( "wordpoints_uninstall_component-{$component}" );
 }
 
-// Delete settings and clear the cache.
+// Custom capabilities to remove.
+$capabilities = array_keys( wordpoints_get_custom_caps() );
+
+// Delete settings, remove custom caps, and clear the cache.
 if ( is_multisite() ) {
 
 	delete_site_option( 'wordpoints_data' );
@@ -89,6 +92,8 @@ if ( is_multisite() ) {
 		delete_option( 'wordpoints_recently_activated_modules' );
 
 		wp_cache_delete( 'wordpoints_modules' );
+
+		wordpoints_remove_custom_caps( $capabilities );
 	}
 
 	switch_to_blog( $original_blog_id );
@@ -105,6 +110,8 @@ if ( is_multisite() ) {
 	delete_option( 'wordpoints_recently_activated_modules' );
 
 	wp_cache_delete( 'wordpoints_modules' );
+
+	wordpoints_remove_custom_caps( $capabilities );
 }
 
 // end of file /uninstall.php

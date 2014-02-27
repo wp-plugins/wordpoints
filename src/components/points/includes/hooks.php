@@ -173,6 +173,8 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 		add_filter( 'wordpoints_points_log-post_delete', array( $this, 'delete_logs' ), 10, 6 );
 
 		add_action( 'delete_post', array( $this, 'clean_logs_on_post_deletion' ) );
+
+		add_filter( 'wordpoints_user_can_view_points_log-post_publish', array( $this, 'user_can_view' ), 10, 2 );
 	}
 
 	/**
@@ -443,6 +445,31 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 	}
 
 	/**
+	 * Check if a user can view a particular log entry.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @filter wordpoints_user_can_view_points_log-post_publish Added by the constructor.
+	 *
+	 * @param bool   $can_view Whether the user can view this log entry.
+	 * @param object $log      The log object.
+	 *
+	 * @return bool Whether the user can view this log.
+	 */
+	public function user_can_view( $can_view, $log ) {
+
+		if ( $can_view ) {
+			$post_id = wordpoints_get_points_log_meta( $log->id, 'post_id', true );
+
+			if ( $post_id ) {
+				$can_view = current_user_can( 'read_post', $post_id );
+			}
+		}
+
+		return $can_view;
+	}
+
+	/**
 	 * Update a particular instance of this hook.
 	 *
 	 * @since 1.0.0
@@ -548,6 +575,8 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 		add_filter( 'wordpoints_points_log-comment_disapprove', array( $this, 'disapprove_logs' ), 10, 6 );
 
 		add_action( 'delete_comment', array( $this, 'clean_logs_on_comment_deletion' ) );
+
+		add_filter( 'wordpoints_user_can_view_points_log-comment_approve', array( $this, 'user_can_view' ), 10, 2 );
 	}
 
 	/**
@@ -843,6 +872,31 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 		}
 
 		wordpoints_regenerate_points_logs( $log_ids );
+	}
+
+	/**
+	 * Check if a user can view a particular log entry.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @filter wordpoints_user_can_view_points_log-comment_approve Added by the constructor.
+	 *
+	 * @param bool   $can_view Whether the user can view this log entry.
+	 * @param object $log      The log object.
+	 *
+	 * @return bool Whether the user can view this log.
+	 */
+	public function user_can_view( $can_view, $log ) {
+
+		if ( $can_view ) {
+			$comment_id = wordpoints_get_points_log_meta( $log->id, 'comment_id', true );
+
+			if ( $comment_id && ( $comment = get_comment( $comment_id ) ) ) {
+				$can_view = current_user_can( 'read_post', $comment->comment_post_ID );
+			}
+		}
+
+		return $can_view;
 	}
 
 	/**
