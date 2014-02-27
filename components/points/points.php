@@ -72,6 +72,42 @@ add_action( 'wordpoints_components_register', 'wordpoints_points_component_regis
  */
 function wordpoints_points_component_activate() {
 
+	// The component isn't loaded on activation, so we must include dependencies.
+	include_once WORDPOINTS_DIR . 'components/points/includes/functions.php';
+
+	/*
+	 * Regenerate the custom caps every time on multisite, because they depend on
+	 * network activation status.
+	 */
+	if ( is_multisite() ) {
+
+		global $wpdb;
+
+		$custom_caps = wordpoints_points_get_custom_caps();
+		$custom_caps_keys = array_keys( $custom_caps );
+
+		$network_active = is_wordpoints_network_active();
+
+		$blog_ids = $wpdb->get_col( "SELECT blog_id FROM {$wpdb->blogs}" );
+
+		foreach ( $blog_ids as $blog_id ) {
+
+			switch_to_blog( $blog_id );
+
+			wordpoints_remove_custom_caps( $custom_caps_keys );
+
+			if ( $network_active ) {
+				wordpoints_add_custom_caps( $custom_caps );
+			}
+
+			restore_current_blog();
+		}
+
+		if ( ! $network_active ) {
+			wordpoints_add_custom_caps( $custom_caps );
+		}
+	}
+
 	$wordpoints_data = wordpoints_get_array_option( 'wordpoints_data', 'network' );
 
 	if ( ! isset( $wordpoints_data['components']['points']['version'] ) ) {
@@ -151,6 +187,10 @@ function wordpoints_points_component_update() {
 
 		case version_compare( '1.2.0', $db_version ):
 			wordpoints_points_update_1_2_0();
+		// fallthru
+
+		case version_compare( '1.3.0', $db_version ):
+			wordpoints_points_update_1_3_0();
 		// fallthru
 	}
 

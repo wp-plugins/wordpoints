@@ -239,8 +239,9 @@ function wordpoints_delete_points_type( $slug ) {
  *
  * The number of points a user has is stored in the user meta. This function was
  * introduced to allow the meta_key for that value to be retrieved easily internally.
- * The meta key is "wordpoints_points-{$type}" for single sites, and when network
- * active on multisite. When not network-active on multisite, the key is prefixed
+ * If the meta_key setting for the ponits type is set, that is used. Otherwise the
+ * meta key is "wordpoints_points-{$type}" for single sites, and when network
+ * active on multisite; and when not network-active on multisite, the key is prefixed
  * with the blog's table prefix, to avoid collisions from different blogs.
  *
  * Note that because it uses is_wordpoints_network_active(), it can only be trusted
@@ -250,6 +251,7 @@ function wordpoints_delete_points_type( $slug ) {
  * returned.
  *
  * @since 1.2.0
+ * @since 1.3.0 Now checks the meta_key points type setting.
  *
  * @param string $points_type The slug of the points type to get the meta key for.
  *
@@ -261,7 +263,13 @@ function wordpoints_get_points_user_meta_key( $points_type ) {
 		return false;
 	}
 
-	if ( ! is_multisite() || is_wordpoints_network_active() ) {
+	$setting = wordpoints_get_points_type_setting( $points_type, 'meta_key' );
+
+	if ( ! empty( $setting ) ) {
+
+		$meta_key = $setting;
+
+	} elseif ( ! is_multisite() || is_wordpoints_network_active() ) {
 
 		$meta_key = "wordpoints_points-{$points_type}";
 
@@ -1098,65 +1106,20 @@ function wordpoints_points_get_top_users( $num_users, $points_type ) {
 }
 
 /**
- * Add 'set_wordpoints_points' psuedo capability.
+ * Get the custom caps added by the points component.
  *
- * Filters a user's capabilities, e.g., when current_user_can() is called. Adds
- * the pseudo-capability 'set_wordpoints_points', which can be checked for as
- * with any other capability:
+ * @since 1.3.0
  *
- * current_user_can( 'set_wordpoints_points' );
- *
- * Default is that this will be true if the user can 'manage_options'. Override
- * this by adding your own filter with a lower priority (e.g., 15), and
- * manipulating the $all_capabilities array.
- *
- * @since 1.0.0
- * @since 1.2.0 Adds the capability 'manage_wordpoints_points_types'.
- *
- * @filter user_has_cap
- *
- * @see http://codex.wordpress.org/Plugin_API/Filter_Reference/user_has_cap
- *
- * @param array $all_capabilities All of the capabilities of a user.
- * @param array $capabilities     Capabilities to check a user for.
- * @param array $args             Other arguments.
+ * @return array The custom capabilities as keys, WP core counterparts as values.
  */
-function wordpoints_points_user_cap_filter( $all_capabilities, $capabilities, $args ) {
+function wordpoints_points_get_custom_caps() {
 
-	if (
-		in_array( 'set_wordpoints_points', $capabilities )
-		&& ! isset( $all_capabilities['set_wordpoints_points'] )
-		&& isset( $all_capabilities['manage_options'] )
-	) {
-		$all_capabilities['set_wordpoints_points'] = $all_capabilities['manage_options'];
-	}
-
-	if (
-		in_array( 'manage_wordpoints_points_types', $capabilities )
-		&& ! isset( $all_capabilities['manage_wordpoints_points_types'] )
-	) {
-
-		if ( isset( $all_capabilities['manage_network_options'] ) ) {
-
-			$all_capabilities['manage_wordpoints_points_types'] = $all_capabilities['manage_network_options'];
-
-		} elseif ( ! is_wordpoints_network_active() && isset( $all_capabilities['manage_options'] ) ) {
-
-			$all_capabilities['manage_wordpoints_points_types'] = $all_capabilities['manage_options'];
-		}
-	}
-
-	if (
-		in_array( 'manage_network_wordpoints_points_hooks', $capabilities )
-		&& ! isset( $all_capabilities['manage_network_wordpoints_points_hooks'] )
-		&& isset( $all_capabilities['manage_network_options'] )
-	) {
-		$all_capabilities['manage_network_wordpoints_points_hooks'] = $all_capabilities['manage_network_options'];
-	}
-
-	return $all_capabilities;
+	return array(
+		'set_wordpoints_points'                  => 'manage_options',
+		'manage_network_wordpoints_points_hooks' => 'manage_network_options',
+		'manage_wordpoints_points_types'         => ( is_wordpoints_network_active() ) ? 'manage_network_options' : 'manage_options',
+	);
 }
-add_filter( 'user_has_cap', 'wordpoints_points_user_cap_filter', 10, 3 );
 
 /**
  * Format points for display.
@@ -1313,5 +1276,47 @@ function wordpoints_delete_points_logs_for_blog( $blog_id ) {
 	);
 }
 add_action( 'delete_blog', 'wordpoints_delete_points_logs_for_blog' );
+
+/**
+ * Display a message with a points type's settings when it uses a custom meta key.
+ *
+ * @since 1.3.0
+ *
+ * @action wordpoints_points_type_form_top
+ *
+ * @param string $points_type The type of points the settings are being shown for.
+ */
+function wordpoints_points_settings_custom_meta_key_message( $points_type ) {
+
+	$custom_key = wordpoints_get_points_type_setting( $points_type, 'meta_key' );
+
+	if ( ! empty( $custom_key ) ) {
+		echo '<p>' . sprintf( __( 'This points type uses a custom meta key: %s', 'wordpoints' ), $custom_key ) . '</p>';
+	}
+}
+add_action( 'wordpoints_points_type_form_top', 'wordpoints_points_settings_custom_meta_key_message' );
+
+/**
+ * Show a message on the points logs admin panel when a type uses a custom meta key.
+ *
+ * @since 1.3.0
+ *
+ * @action wordpoints_admin_points_logs_tab
+ *
+ * @param string $points_type The type of points whose logs are being displayed.
+ */
+function wordpoints_points_logs_custom_meta_key_message( $points_type ) {
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+
+	$custom_key = wordpoints_get_points_type_setting( $points_type, 'meta_key' );
+
+	if ( ! empty( $custom_key ) ) {
+		wordpoints_show_admin_error( sprintf( __( 'This points type uses a custom meta key ("%s"). If this key is also used by another plugin, changes made by it will not be logged. Only transactions performed by WordPoints are included in the logs.', 'wordpoints' ), $custom_key ) );
+	}
+}
+add_action( 'wordpoints_admin_points_logs_tab', 'wordpoints_points_logs_custom_meta_key_message' );
 
 // end of file /components/points/includes/functions.php

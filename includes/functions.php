@@ -540,9 +540,21 @@ function is_wordpoints_network_active() {
 
 	require_once ABSPATH . '/wp-admin/includes/plugin.php';
 
-	return is_plugin_active_for_network(
+	$network_active = is_plugin_active_for_network(
 		plugin_basename( WORDPOINTS_DIR . 'wordpoints.php' )
 	);
+
+	/**
+	 * Filter whether the plugin is network active.
+	 *
+	 * This is primarily used during install, when the above checks won't work. It's
+	 * not really intended for general use.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param bool $network_active Whether WordPoints is network activated.
+	 */
+	return apply_filters( 'is_wordpoints_network_active', $network_active );
 }
 
 /**
@@ -652,65 +664,72 @@ function wordpoints_shortcode_error( $message ) {
 }
 
 /**
- * Add module related capabilities.
+ * Get the custom capabilities.
  *
- * Filters a user's capabilities, e.g., when current_user_can() is called. Adds the
- * pseudo-capabilities 'install_wordpoints_modules', 'manage_ntework_wordpoints_modules',
- * which can be checked for as with any other capability:
+ * @since 1.3.0
  *
- * current_user_can( 'install_wordpoints_modules' );
- *
- * Default is that these will be true if the user has the corresponding capability
- * for plugins. Override this by adding your own filter with a lower priority (e.g.,
- * 15), and manipulating the $all_capabilities array.
- *
- * @since 1.1.0
- *
- * @filter user_has_cap
- *
- * @see http://codex.wordpress.org/Plugin_API/Filter_Reference/user_has_cap
- *
- * @param array $all_capabilities All of the capabilities of a user.
- * @param array $capabilities     Capabilities to check a user for.
- *
- * @return array All of the users capabilities.
+ * @return array The custom capabilities as keys, WP core counterparts as values.
  */
-function wordpoints_modules_user_cap_filter( $all_capabilities, $capabilities ) {
+function wordpoints_get_custom_caps() {
 
-	if (
-		in_array( 'install_wordpoints_modules', $capabilities )
-		&& ! isset( $all_capabilities['install_wordpoints_modules'] )
-		&& isset( $all_capabilities['install_plugins'] )
-	) {
-		$all_capabilities['install_wordpoints_modules'] = $all_capabilities['install_plugins'];
-	}
-
-	if (
-		in_array( 'manage_ntework_wordpoints_modules', $capabilities )
-		&& ! isset( $all_capabilities['manage_ntework_wordpoints_modules'] )
-		&& isset( $all_capabilities['manage_network_plugins'] )
-	) {
-		$all_capabilities['manage_ntework_wordpoints_modules'] = $all_capabilities['manage_network_plugins'];
-	}
-
-	if (
-		in_array( 'activate_wordpoints_modules', $capabilities )
-		&& ! isset( $all_capabilities['activate_wordpoints_modules'] )
-		&& isset( $all_capabilities['activate_plugins'] )
-	) {
-		$all_capabilities['activate_wordpoints_modules'] = $all_capabilities['activate_plugins'];
-	}
-
-	if (
-		in_array( 'delete_wordpoints_modules', $capabilities )
-		&& ! isset( $all_capabilities['delete_wordpoints_modules'] )
-		&& isset( $all_capabilities['delete_plugins'] )
-	) {
-		$all_capabilities['delete_wordpoints_modules'] = $all_capabilities['delete_plugins'];
-	}
-
-	return $all_capabilities;
+	return array(
+		'install_wordpoints_modules'        => 'install_plugins',
+		'manage_network_wordpoints_modules' => 'manage_network_plugins',
+		'activate_wordpoints_modules'       => 'activate_plugins',
+		'delete_wordpoints_modules'         => 'delete_plugins',
+	);
 }
-add_filter( 'user_has_cap', 'wordpoints_modules_user_cap_filter', 10, 2 );
+
+/**
+ * Add custom capabilities to the desired roles.
+ *
+ * Used during installation.
+ *
+ * @since 1.3.0
+ *
+ * @param array $capabilities The capabilities to add as keys, WP core counterparts
+ *                            as values.
+ */
+function wordpoints_add_custom_caps( $capabilities ) {
+
+	global $wp_roles;
+
+	if ( ! $wp_roles instanceof WP_Roles ) {
+		$wp_roles = new WP_Roles;
+	}
+
+	foreach ( $wp_roles->role_objects as $role ) {
+
+		foreach ( $capabilities as $custom_cap => $core_cap ) {
+			if ( $role->has_cap( $core_cap ) ) {
+				$role->add_cap( $custom_cap );
+			}
+		}
+	}
+}
+
+/**
+ * Remove custom capabilities.
+ *
+ * Used during uninstallation.
+ *
+ * @since 1.3.0
+ *
+ * @param array $capabilities The list of capabilities to remove.
+ */
+function wordpoints_remove_custom_caps( $capabilities ) {
+
+	global $wp_roles;
+
+	if ( ! $wp_roles instanceof WP_Roles ) {
+		$wp_roles = new WP_Roles;
+	}
+
+	foreach ( $wp_roles->role_objects as $role ) {
+		foreach ( $capabilities as $custom_cap ) {
+			$role->remove_cap( $custom_cap );
+		}
+	}
+}
 
 // end of file /includes/functions.php
