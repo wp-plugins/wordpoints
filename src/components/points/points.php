@@ -13,32 +13,6 @@ $wpdb->wordpoints_points_logs     = "{$wpdb->base_prefix}wordpoints_points_logs"
 $wpdb->wordpoints_points_log_meta = "{$wpdb->base_prefix}wordpoints_points_log_meta";
 
 /**
- * The points logs database table name.
- *
- * This table is network-wide on multisite installs.
- *
- * @since 1.0.0
- * @deprecated 1.1.0
- * @deprecated Use $wpdb->wordpoints_points_logs instead.
- *
- * @type string
- */
-define( 'WORDPOINTS_POINTS_LOGS_DB', $wpdb->wordpoints_points_logs );
-
-/**
- * The points logs meta database table name.
- *
- * This table is network-wide on multisite installs.
- *
- * @since 1.0.0
- * @deprecated 1.1.0
- * @deprecated Use $wpdb->wordpoints_points_log_meta instead.
- *
- * @type string
- */
-define( 'WORDPOINTS_POINTS_LOG_META_DB', $wpdb->wordpoints_points_log_meta );
-
-/**
  * Register the points component.
  *
  * @since 1.0.0
@@ -192,6 +166,10 @@ function wordpoints_points_component_update() {
 		case version_compare( '1.3.0', $db_version ):
 			wordpoints_points_update_1_3_0();
 		// fallthru
+
+		case version_compare( '1.4.0', $db_version ):
+			wordpoints_points_update_1_4_0();
+		// fallthru
 	}
 
 	$wordpoints_data['components']['points']['version'] = WORDPOINTS_VERSION;
@@ -244,11 +222,46 @@ include_once WORDPOINTS_DIR . 'components/points/includes/class-wordpoints-point
 include_once WORDPOINTS_DIR . 'components/points/includes/class-wordpoints-points-hook.php';
 
 /**
- * Included points hooks.
+ * The registration points hook
  *
- * @since 1.0.0
+ * @since 1.4.0
  */
-include_once WORDPOINTS_DIR . 'components/points/includes/hooks.php';
+include_once WORDPOINTS_DIR . 'components/points/includes/hooks/registration.php';
+
+/**
+ * The post publish points hook
+ *
+ * @since 1.4.0
+ */
+include_once WORDPOINTS_DIR . 'components/points/includes/hooks/post.php';
+
+/**
+ * The post delete points hook
+ *
+ * @since 1.4.0
+ */
+include_once WORDPOINTS_DIR . 'components/points/includes/hooks/post-delete.php';
+
+/**
+ * The comment points hook
+ *
+ * @since 1.4.0
+ */
+include_once WORDPOINTS_DIR . 'components/points/includes/hooks/comment.php';
+
+/**
+ * The comment removed points hook
+ *
+ * @since 1.4.0
+ */
+include_once WORDPOINTS_DIR . 'components/points/includes/hooks/comment-removed.php';
+
+/**
+ * The periodic points hook
+ *
+ * @since 1.4.0
+ */
+include_once WORDPOINTS_DIR . 'components/points/includes/hooks/periodic.php';
 
 /**
  * Points logs query class.

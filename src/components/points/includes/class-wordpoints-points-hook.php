@@ -98,6 +98,8 @@ abstract class WordPoints_Points_Hook {
 	/**
 	 * Echo the settings update form.
 	 *
+	 * @since 1.0.0
+	 *
 	 * @param array $instance Current settings.
 	 *
 	 * @return bool Whether the hook has a form.
@@ -105,7 +107,55 @@ abstract class WordPoints_Points_Hook {
 	abstract protected function form( $instance );
 
 	//
-	// Public Methods.
+	// Public Non-final Methods.
+	//
+
+	/**
+	 * Get the number of points for a particular instance.
+	 *
+	 * @since 1.4.0
+	 *
+	 * @param int|string $number The hook number or ID to get the points for.
+	 *
+	 * @return int|bool The number of points for this instance, or false.
+	 */
+	public function get_points( $number = null ) {
+
+		if ( isset( $number ) ) {
+			$number = $this->get_number_by_id( $number );
+		} else {
+			$number = $this->number;
+		}
+
+		$instances = $this->get_instances();
+
+		if ( isset( $instances[ $number ]['points'] ) ) {
+			return $instances[ $number ]['points'];
+		}
+
+		return false;
+	}
+
+	//
+	// Protected Non-final Methods.
+	//
+
+	/**
+	 * Generate the description for an instance of a points hook.
+	 *
+	 * @since 1.4.0
+	 *
+	 * @param array $instance The settings for the hook instance, or an emtpy array.
+	 *
+	 * @return string The hook instance's description.
+	 */
+	protected function generate_description( $instance = array() ) {
+
+		return $this->options['description'];
+	}
+
+	//
+	// Public Final Methods.
 	//
 
 	/**
@@ -139,6 +189,33 @@ abstract class WordPoints_Points_Hook {
 		}
 
 		return $this->id_base . '-' . (int) $number;
+	}
+
+	/**
+	 * Get the number for the current hook instance.
+	 *
+	 * The current instance number is only set properly at certain times, such as
+	 * just after saving the instance. So use with care.
+	 *
+	 * @since 1.4.0
+	 *
+	 * @return int|bool The current hook number, or false.
+	 */
+	final public function get_number() {
+
+		return $this->number;
+	}
+
+	/**
+	 * Set the current instance by number or ID.
+	 *
+	 * @since 1.4.0
+	 *
+	 * @param int|string $instance_id The number or ID of an instance.
+	 */
+	final public function set_number( $instance_id ) {
+
+		$this->number = $this->get_number_by_id( $instance_id );
 	}
 
 	/**
@@ -312,7 +389,7 @@ abstract class WordPoints_Points_Hook {
 		// Get all saved instances of this points hook.
 		$all_instances = $this->get_instances( $type );
 
-		$this->_set( $number );
+		$this->set_number( $number );
 
 		$old_instance = isset( $all_instances[ $this->number ] ) ? $all_instances[ $this->number ] : array();
 
@@ -377,6 +454,8 @@ abstract class WordPoints_Points_Hook {
 			unset( $all_instances[ $number ] );
 
 			$this->_save_instances( $all_instances );
+
+			WordPoints_Points_Hooks::_unregister_hook( $hook_id );
 		}
 	}
 
@@ -391,7 +470,7 @@ abstract class WordPoints_Points_Hook {
 	 */
 	final public function form_callback( $number ) {
 
-		$this->_set( $number );
+		$this->set_number( $number );
 
 		if ( WordPoints_Points_Hooks::get_network_mode() ) {
 			$type = 'network';
@@ -404,7 +483,7 @@ abstract class WordPoints_Points_Hook {
 		if ( 0 == $this->number ) {
 
 			// We echo out a form where 'number' can be set later.
-			$this->_set( '__i__' );
+			$this->set_number( '__i__' );
 			$instance = array();
 
 		} else {
@@ -444,8 +523,143 @@ abstract class WordPoints_Points_Hook {
 		}
 	}
 
+	/**
+	 * Constructs name attributes for use in form() fields.
+	 *
+	 * This function should be used in form() methods to create name attributes for
+	 * fields to be saved by update(). Note that the returned value is escaped with
+	 * esc_attr().
+	 *
+	 * @since 1.0.0
+	 *
+	 * @see WordPoints_Points_Hook::the_field_name()
+	 *
+	 * @param string $field_name Field name.
+	 *
+	 * @return string Name attribute for $field_name.
+	 */
+	final public function get_field_name( $field_name ) {
+
+		return esc_attr( 'hook-' . $this->id_base . '[' . $this->number . '][' . $field_name . ']' );
+	}
+
+	/**
+	 * Echo a name attribute for use in form() fields.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @uses WordPoints_Points_Hook::get_field_name()
+	 *
+	 * @param string $field_name The field name.
+	 */
+	final public function the_field_name( $field_name ) {
+
+		echo $this->get_field_name( $field_name );
+	}
+
+	/**
+	 * Constructs id attributes for use in form() fields.
+	 *
+	 * This function should be used in form() methods to create id attributes for
+	 * fields to be saved by update(). Note that the returned value is escaped with
+	 * esc_attr().
+	 *
+	 * @since 1.0.0
+	 *
+	 * @seee WordPoints_Points_Hook::the_field_id()
+	 *
+	 * @param string $field_name Field name.
+	 *
+	 * @return string ID attribute for $field_name.
+	 */
+	final public function get_field_id( $field_name ) {
+
+		return esc_attr( 'hook-' . $this->id_base . '-' . $this->number . '-' . $field_name );
+	}
+
+	/**
+	 * Echo an id attribute for use in form() fields.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @uses WordPoints_Points_Hook::get_field_id()
+	 *
+	 * @param string $field_name The field name.
+	 */
+	final public function the_field_id( $field_name ) {
+
+		echo $this->get_field_id( $field_name );
+	}
+
+	/**
+	 * Retrieve the description for the hook.
+	 *
+	 * @since 1.4.0
+	 *
+	 * @param string $type The type of description to return. If 'generated', a user-
+	 *                     defined description will not be returned.
+	 *
+	 * @return string The hook's description.
+	 */
+	final public function get_description( $type = 'any' ) {
+
+		$instances = $this->get_instances();
+
+		if ( $type !== 'generated' && ! empty( $instances[ $this->number ]['_description'] ) ) {
+			return $instances[ $this->number ]['_description'];
+		}
+
+		$instance = ( isset( $instances[ $this->number ] ) ) ? $instances[ $this->number ] : array();
+
+		/**
+		 * Filter the description for a points hook.
+		 *
+		 * @since 1.4.0
+		 *
+		 * @param string                 $description The description.
+		 * @param WordPoints_Points_Hook $hook        The points hook object.
+		 * @param array                  $instance    The settings for this instance.
+		 */
+		return apply_filters( 'wordpoints_points_hook_description', $this->generate_description( $instance ), $this, $instance );
+	}
+
+	/**
+	 * Get the points type for an instance.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $number The instance number.
+	 *
+	 * @return string|bool
+	 */
+	final public function points_type( $number = null ) {
+
+		if ( ! isset( $number ) ) {
+			$number = $this->number;
+		}
+
+		if ( $network_mode = ( strpos( $number, 'network_' ) === 0 ) ) {
+			$number = (int) str_replace( 'network_', '', $number );
+		}
+
+		$current_mode = WordPoints_Points_Hooks::get_network_mode();
+
+		if ( $current_mode !== $network_mode ) {
+			WordPoints_Points_Hooks::set_network_mode( $network_mode );
+		}
+
+		$points_type = WordPoints_Points_Hooks::get_points_type( $this->get_id( $number ) );
+
+		// Reset network mode if it was changed.
+		if ( $current_mode !== $network_mode ) {
+			WordPoints_Points_Hooks::set_network_mode( $current_mode );
+		}
+
+		return $points_type;
+	}
+
 	//
-	// Protected Methods.
+	// Protected Final Methods.
 	//
 
 	/**
@@ -485,7 +699,7 @@ abstract class WordPoints_Points_Hook {
 		// Register all standard instances of this hook.
 		foreach ( array_keys( $this->get_instances( 'standard' ) ) as $number ) {
 
-			$this->_set( $number );
+			$this->set_number( $number );
 
 			WordPoints_Points_Hooks::_register_hook( $this );
 		}
@@ -493,126 +707,15 @@ abstract class WordPoints_Points_Hook {
 		// Register all network instances of this hook.
 		foreach ( array_keys( $this->get_instances( 'network' ) ) as $number ) {
 
-			$this->_set( $number );
+			$this->set_number( $number );
 
 			WordPoints_Points_Hooks::_register_network_hook( $this );
 		}
 	}
 
-	/**
-	 * Constructs name attributes for use in form() fields.
-	 *
-	 * This function should be used in form() methods to create name attributes for
-	 * fields to be saved by update(). Note that the returned value is escaped with
-	 * esc_attr().
-	 *
-	 * @since 1.0.0
-	 *
-	 * @see WordPoints_Points_Hook::the_field_name()
-	 *
-	 * @param string $field_name Field name.
-	 *
-	 * @return string Name attribute for $field_name.
-	 */
-	final protected function get_field_name( $field_name ) {
-
-		return esc_attr( 'hook-' . $this->id_base . '[' . $this->number . '][' . $field_name . ']' );
-	}
-
-	/**
-	 * Echo a name attribute for use in form() fields.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @uses WordPoints_Points_Hook::get_field_name()
-	 *
-	 * @param string $field_name The field name.
-	 */
-	final protected function the_field_name( $field_name ) {
-
-		echo $this->get_field_name( $field_name );
-	}
-
-	/**
-	 * Constructs id attributes for use in form() fields.
-	 *
-	 * This function should be used in form() methods to create id attributes for
-	 * fields to be saved by update(). Note that the returned value is escaped with
-	 * esc_attr().
-	 *
-	 * @since 1.0.0
-	 *
-	 * @seee WordPoints_Points_Hook::the_field_id()
-	 *
-	 * @param string $field_name Field name.
-	 *
-	 * @return string ID attribute for $field_name.
-	 */
-	final protected function get_field_id( $field_name ) {
-
-		return esc_attr( 'hook-' . $this->id_base . '-' . $this->number . '-' . $field_name );
-	}
-
-	/**
-	 * Echo an id attribute for use in form() fields.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @uses WordPoints_Points_Hook::get_field_id()
-	 *
-	 * @param string $field_name The field name.
-	 */
-	final protected function the_field_id( $field_name ) {
-
-		echo $this->get_field_id( $field_name );
-	}
-
-	/**
-	 * Get the points type for an instance.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $number The instance number.
-	 *
-	 * @return string|bool
-	 */
-	final protected function points_type( $number ) {
-
-		if ( $network_mode = ( strpos( $number, 'network_' ) === 0 ) ) {
-			$number = (int) str_replace( 'network_', '', $number );
-		}
-
-		$current_mode = WordPoints_Points_Hooks::get_network_mode();
-
-		if ( $current_mode !== $network_mode ) {
-			WordPoints_Points_Hooks::set_network_mode( $network_mode );
-		}
-
-		$points_type = WordPoints_Points_Hooks::get_points_type( $this->get_id( $number ) );
-
-		// Reset network mode if it was changed.
-		if ( $current_mode !== $network_mode ) {
-			WordPoints_Points_Hooks::set_network_mode( $current_mode );
-		}
-
-		return $points_type;
-	}
-
 	//
-	// Private Methods.
+	// Private Final Methods.
 	//
-
-	/**
-	 * Set up an instance of a points hook.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param int $number The id number of the instance.
-	 */
-	final private function _set( $number ) {
-
-		$this->number = $number;
-	}
 
 	/**
 	 * Save the settings of all the hook's instances.

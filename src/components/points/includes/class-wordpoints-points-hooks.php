@@ -109,6 +109,13 @@ final class WordPoints_Points_Hooks {
 	 */
 	public static function initialize_hooks() {
 
+		/**
+		 * Points hooks may be registered on this action.
+		 *
+		 * @since 1.4.0
+		 */
+		do_action( 'wordpoints_points_hooks_register' );
+
 		$handlers = array_unique( self::$handlers );
 
 		foreach ( $handlers as $handler ) {
@@ -158,6 +165,21 @@ final class WordPoints_Points_Hooks {
 	}
 
 	/**
+	 * Deregister an instance of a hook.
+	 *
+	 * It will unregister a regular hook or a network hook, depending on the current
+	 * network mode.
+	 *
+	 * @since 1.4.0
+	 *
+	 * @param string $hook_id The ID of the hook.
+	 */
+	public static function _unregister_hook( $hook_id ) {
+
+		unset( self::$hooks[ $hook_id ] );
+	}
+
+	/**
 	 * Get all registered points hooks.
 	 *
 	 * @since 1.0.0
@@ -181,6 +203,8 @@ final class WordPoints_Points_Hooks {
 		if ( ! isset( self::$hooks[ $hook_id ] ) ) {
 			return false;
 		}
+
+		self::$hooks[ $hook_id ]->set_number( $hook_id );
 
 		return self::$hooks[ $hook_id ];
 	}
