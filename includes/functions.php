@@ -313,7 +313,7 @@ function wordpoints_db_table_exists( $table ) {
 
 	global $wpdb;
 
-	$_table = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
+	$_table = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', like_escape( $table ) ) );
 
 	return ( $_table == $table ) ? true : false;
 }
@@ -414,19 +414,34 @@ class WordPoints_Dropdown_Builder {
 	/**
 	 * Construct the class with the options and arguments.
 	 *
-	 * @since 1.0.0
+	 * The options may be an associative array with the option values as keys and the
+	 * options' text as values. It can also be an array of arrays or objects, where
+	 * the options' text and value are elements of the array. To specify the key for
+	 * the values and option text, use the 'values_key' and 'options_key' arguments,
+	 * respectively.
 	 *
-	 * @param string[] $options The options for the <select> element.
-	 * @param array    $args {
-	 *        @type string $selected The value selected. Default is none.
-	 *        @type string $id       The value for the id attribute of the element.
-	 *              The default is empty.
-	 *        @type string $name     The value for the name attribute of the element.
-	 *              The default is empty.
-	 *        @type string $class    The value for the class attribute of the
-	 *              element. The default is empty.
+	 * @since 1.0.0
+	 * @since 1.4.0 The $options argument may now be passed as an array of arrays or
+	 *              objects, and the 'options_key' and 'values_key' args were added.
+	 *
+	 * @param (string|array|object)[] $options The options for the <select> element.
+	 * @param array                   $args    {
+	 *        Arguments for the display of the select element.
+	 *
+	 *        @type string $selected         The value selected. Default is none.
+	 *        @type string $id               The value for the id attribute of the
+	 *                                       element. The default is empty.
+	 *        @type string $name             The value for the name attribute of the
+	 *                                       element. The default is empty.
+	 *        @type string $class            The value for the class attribute of the
+	 *                                       element. The default is empty.
 	 *        @type string $show_option_none The text for a "none" option. The value
-	 *              will always be '-1'. Default is empty (does not show an option).
+	 *                                       will always be '-1'. Default is empty
+	 *                                       (does not show an option).
+	 *        @type string $options_key      The key for the option name if each
+	 *                                       option is an array.
+	 *        @type string $values_key       The key for the option value if each
+	 *                                       option is an array or object.
 	 * }
 	 */
 	public function __construct( array $options, array $args ) {
@@ -472,7 +487,13 @@ class WordPoints_Dropdown_Builder {
 
 		foreach ( $this->options as $value => $option ) {
 
-			echo '<option value="', esc_attr( $value ), '"', selected( $value, $this->args['selected'] ), '>', esc_html( $option ), '</option>';
+			if ( isset( $this->args['values_key'], $this->args['options_key'] ) ) {
+				$option = (array) $option;
+				$value = $option[ $this->args['values_key'] ];
+				$option = $option[ $this->args['options_key'] ];
+			}
+
+			echo '<option value="', esc_attr( $value ), '"', selected( $value, $this->args['selected'], false ), '>', esc_html( $option ), '</option>';
 		}
 	}
 
@@ -555,28 +576,6 @@ function is_wordpoints_network_active() {
 	 * @param bool $network_active Whether WordPoints is network activated.
 	 */
 	return apply_filters( 'is_wordpoints_network_active', $network_active );
-}
-
-/**
- * Fix URLs where WordPress doesn't follow symlinks.
- *
- * This allows you to define WORDPOINTS_SYMLINK in wp-config.php and have the plugin
- * symlinked to the plugins directory of your install.
- *
- * @filter plugins_url
- */
-function wordpoints_symlink_fix( $url, $path, $plugin ) {
-
-	if ( strstr( $plugin, 'wordpoints' ) ) {
-
-		$url = str_replace( WORDPOINTS_SYMLINK, 'wordpoints', $url );
-	}
-
-	return $url;
-}
-
-if ( defined( 'WORDPOINTS_SYMLINK' ) ) {
-	add_filter( 'plugins_url', 'wordpoints_symlink_fix', 10, 3 );
 }
 
 /**
@@ -731,5 +730,36 @@ function wordpoints_remove_custom_caps( $capabilities ) {
 		}
 	}
 }
+
+/**
+ * Map custom meta capabilities.
+ *
+ * @since 1.4.0
+ *
+ * @filter map_meta_cap
+ *
+ * @param array  $caps    The user's capabilities.
+ * @param string $cap     The current capability in question.
+ * @param int    $user_id The ID of the user whose caps are being checked.
+ *
+ * @return array The user's capabilities.
+ */
+function wordpoints_map_custom_meta_caps( $caps, $cap, $user_id ) {
+
+	switch ( $cap ) {
+		case 'install_wordpoints_modules':
+			if ( defined( 'DISALLOW_FILE_MODS' ) && DISALLOW_FILE_MODS ) {
+				$caps[] = 'do_not_allow';
+			} elseif ( is_multisite() && ! is_super_admin( $user_id ) ) {
+				$caps[] = 'do_not_allow';
+			} else {
+				$caps[] = $cap;
+			}
+		break;
+	}
+
+	return $caps;
+}
+add_filter( 'map_meta_cap', 'wordpoints_map_custom_meta_caps', 10, 3 );
 
 // end of file /includes/functions.php

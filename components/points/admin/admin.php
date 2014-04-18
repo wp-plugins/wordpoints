@@ -185,6 +185,37 @@ function wordpoints_points_hooks_access_body_class( $classes ) {
 }
 
 /**
+ * Display the hook description field in the hook forms.
+ *
+ * @since 1.4.0
+ *
+ * @action wordpoints_in_points_hook_form
+ *
+ * @param bool                   $has_form Whether this instance displayed a form.
+ * @param array                  $instance The settings for this hook instance.
+ * @param WordPoints_Points_Hook $hook     The points hook object.
+ */
+function wordpoints_points_hook_description_form( $has_form, $instance, $hook ) {
+
+	$description = ( isset( $instance['_description'] ) ) ? $instance['_description'] : '';
+
+	?>
+
+	<hr />
+
+	<div class="hook-instance-description">
+		<label for="<?php $hook->the_field_name( '_description' ); ?>"><?php _ex( 'Description (optional):', 'points hook', 'wordpoints' ); ?></label>
+		<input type="text" id="<?php $hook->the_field_id( '_description' ); ?>" name="<?php $hook->the_field_name( '_description' ); ?>" class="widefat" value="<?php echo esc_attr( $description ); ?>" />
+		<p class="description"><?php printf( _x( 'Default: %s', 'points hook description', 'wordpoints' ), $hook->get_description( 'generated' ) ); ?></p>
+	</div>
+
+	<br />
+
+	<?php
+}
+add_action( 'wordpoints_in_points_hook_form', 'wordpoints_points_hook_description_form', 10, 3 );
+
+/**
  * Display the user's points on their profile page.
  *
  * @since 1.0.0
@@ -220,8 +251,10 @@ function wordpoints_points_profile_options( $user ) {
 				<th scope="row"><?php echo esc_html( $type['name'] ); ?></th>
 				<td>
 					<input type="hidden" name="<?php echo esc_attr( "wordpoints_points_old-{$slug}" ); ?>" value="<?php echo esc_attr( $points ); ?>" />
-					<input type="text" name="<?php echo esc_attr( "wordpoints_points-{$slug}" ); ?>" value="<?php echo esc_attr( $points ); ?>" />
+					<input type="text" name="<?php echo esc_attr( "wordpoints_points-{$slug}" ); ?>" value="<?php echo esc_attr( $points ); ?>" autocomplete="off" />
 					<input type="checkbox" value="1" name="<?php echo esc_attr( "wordpoints_points_set-{$slug}" ); ?>" />
+					<?php /* translators: %s is the number of points. */ ?>
+					<span><?php printf( __( '(current: %s)', 'wordpoints' ), $points ); ?></span>
 				</td>
 			</tr>
 
@@ -289,7 +322,7 @@ function wordpoints_points_profile_options_update( $user_id ) {
 
 		if ( isset( $_POST[ "wordpoints_points_set-{$slug}" ], $_POST[ "wordpoints_points-{$slug}" ], $_POST[ "wordpoints_points_old-{$slug}" ] ) ) {
 
-			wordpoints_alter_points( $user_id, $_POST[ "wordpoints_points-{$slug}" ] - $_POST[ "wordpoints_points_old-{$slug}" ], $slug, 'profile_edit', array( 'user_id' => get_current_user_id(), 'reason' => $_POST['wordpoints_set_reason'] ) );
+			wordpoints_alter_points( $user_id, $_POST[ "wordpoints_points-{$slug}" ] - $_POST[ "wordpoints_points_old-{$slug}" ], $slug, 'profile_edit', array( 'user_id' => get_current_user_id(), 'reason' => esc_html( wp_unslash( $_POST['wordpoints_set_reason'] ) ) ) );
 		}
 	}
 }

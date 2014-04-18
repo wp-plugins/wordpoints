@@ -1,10 +1,10 @@
 === WordPoints ===
 Contributors: jdgrimes
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=TPXS6B98HURLJ&lc=US&item_name=WordPoints&item_number=wordpressorg&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_LG%2egif%3aNonHosted
-Tags: points, awards, rewards, cubepoints, credits, gamify
+Tags: points, awards, rewards, cubepoints, credits, gamify, multisite
 Requires at least: 3.7
-Tested up to: 3.9-alpha-27298
-Stable tag: 1.3.0
+Tested up to: 3.9
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -27,12 +27,14 @@ displayed on the front end of your site using the [`[wordpoints_points_logs]`](h
 shortcode.
 
 You can also display a list of the top users based on the number of points they have
-using the [`[wordpoints_points_top]`](http://wordpoints.org/user-guide/points-shortcodes/wordpoints_points_logs/) shortcode.
+using the [`[wordpoints_points_top]`](http://wordpoints.org/user-guide/points-shortcodes/wordpoints_points_logs/)
+shortcode.
 
-The plugin also provides [several widgets](http://wordpoints.org/user-guide/widgets/) that you can use.
+The plugin also provides [several widgets](http://wordpoints.org/user-guide/widgets/)
+that you can use.
 
-Many more features a planned in the near future, and you can check out the roadmap on
-the plugin website, [WordPoints.org](http://wordpoints.org/roadmap/).
+Many more features are planned in the near future, and you can check out the roadmap
+on the plugin website, [WordPoints.org](http://wordpoints.org/roadmap/).
 
 It is also possible to extend the default functionality of the plugin using modules.
 For more information on that, see the [developer docs](http://wordpoints.org/developer-guide/).
@@ -52,7 +54,7 @@ Before installing on multisite, it is recommended that you [read this](http://wo
 
 Maybe it will soon - just ask for it!
 
-= How can I manually change a users points? =
+= How can I manually change a user's points? =
 
 You can manually adjust a user's points from their profile page in the admin.
 
@@ -79,6 +81,15 @@ upgrade now before it's too late. Seriously!
 points are awarded.
 
 == Changelog ==
+
+= 1.4.0 =
+* New: Added [`[wordpoints_how_to_get_points]`](http://wordpoints.org/user-guide/shortcodes/wordpoints_how_to_get_points/) shortcode to display a list of active points hooks.
+* New: Override hook descriptions shown by the new how to get points shortcode on the hooks admin screen.
+* Updated: The current number of points a user has is displayed on their admin profile page to administrators in addition to the inputs.
+* Updated: The post points hook has been split in to the Post and Post Delete points hooks.
+* Updated: The comments points hook has been split into the Comment and Comment Removed points hooks.
+* Updated: Calculate the periods for the periodic points hook relative to the calendar instead of the user's last visit.
+* Fixed: Clean the points logs for comment approvals when a post is deleted, removing the dead link to the post.
 
 = 1.3.0 =
 * New: User avatars are displayed in the points logs table.
@@ -119,6 +130,10 @@ choosing the points type to add it to.
 * Initial release
 
 == Upgrade Notice ==
+
+= 1.4.0 =
+* This is a feature release, which add the [wordpoints_how_to_get_points] shortcode,
+and other improvements.
 
 = 1.3.0 =
 * This is a feature release which adds the [wordpoints_points] shortcode, among
