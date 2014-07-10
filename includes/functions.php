@@ -44,7 +44,7 @@ function wordpoints_int( &$maybe_int ) {
 		break;
 
 		case 'double':
-			if ( $maybe_int == (float) (int) $maybe_int ) {
+			if ( $maybe_int === (float) (int) $maybe_int ) {
 				$maybe_int = (int) $maybe_int;
 			} else {
 				$maybe_int = false;
@@ -106,68 +106,6 @@ function wordpoints_negint( &$maybe_int ) {
 }
 
 //
-// Debugging.
-//
-
-/**
- * Check if debugging is on.
- *
- * @since 1.0.0
- *
- * @return bool
- */
-function wordpoints_debug() {
-
-	if ( defined( 'WORDPOINTS_DEBUG' ) ) {
-
-		$debug = WORDPOINTS_DEBUG;
-
-	} else {
-
-		$debug = WP_DEBUG;
-	}
-
-	return $debug;
-}
-
-/**
- * Issue a debug message that may be logged or displayed.
- *
- * We call do_action( 'wordpoints_debug_message' ) so folks can generate a stack
- * trace if they want.
- *
- * @since 1.0.0
- *
- * @uses wordpoints_debug() To check whether debugging is enabled.
- *
- * @param string $message  The message.
- * @param string $function The function in which the message was issued.
- * @param string $file     The file in which the message was issued.
- * @param int    $line     The line on which the message was issued.
- */
-function wordpoints_debug_message( $message, $function, $file, $line ) {
-
-	if ( wordpoints_debug() ) {
-
-		trigger_error( "WordPoints Debug Error: '{$message}' in {$function} in {$file} on line {$line}" );
-
-		/**
-		 * Debug error triggered.
-		 *
-		 * You can use this to do debug_backtrace() if needed.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param string $message  The error message.
-		 * @param string $function The function in which the error occured.
-		 * @param string $file     The file in which the error occured.
-		 * @param int    $line     The line on which the message was issued.
-		 */
-		do_action( 'wordpoints_debug_message', $message, $function, $file, $line );
-	}
-}
-
-//
 // Databae Helpers.
 //
 
@@ -179,6 +117,7 @@ function wordpoints_debug_message( $message, $function, $file, $line ) {
  *
  * @since 1.0.0
  * @since 1.1.0 The $conext parameter was added for site options.
+ * @since 1.2.0 The 'network' context was added.
  *
  * @param string $option The name of the option to get.
  * @param string $context The context for the option. Use 'site' to get site options.
@@ -200,6 +139,10 @@ function wordpoints_get_array_option( $option, $context = 'default' ) {
 		case 'network':
 			$value = wordpoints_get_network_option( $option, array() );
 		break;
+
+		default:
+			_doing_it_wrong( __FUNCTION__, sprintf( 'Unknown option context "%s"', $context ), '1.2.0' );
+			$value = array();
 	}
 
 	if ( ! is_array( $value ) ) {
@@ -311,9 +254,15 @@ function wordpoints_delete_network_option( $option ) {
  */
 function wordpoints_db_table_exists( $table ) {
 
-	global $wpdb;
+	global $wpdb, $wp_version;
 
-	$_table = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', like_escape( $table ) ) );
+	if ( version_compare( $wp_version, '4.0-alpha-28611-src', '>=' ) ) {
+		$esc_table = $wpdb->esc_like( $table );
+	} else {
+		$esc_table = like_escape( $table );
+	}
+
+	$_table = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $esc_table ) );
 
 	return ( $_table == $table ) ? true : false;
 }
@@ -341,28 +290,18 @@ function wordpoints_prepare__in( $_in, $format = '%s' ) {
 
 	if ( ! in_array( $format, $formats ) ) {
 
-		wordpoints_debug_message( "invalid format '{$format}', allowed values are %s, %d, and %f", __FUNCTION__, __FILE__, __LINE__ );
+		_doing_it_wrong( __FUNCTION__, "WordPoints Debug Error: invalid format '{$format}', allowed values are %s, %d, and %f", '1.0.0' );
 
 		$format = '%s';
-	}
-
-	// Validate $_in.
-	$type = gettype( $_in );
-
-	if ( 'array' != $type ) {
-
-		wordpoints_debug_message( "\$_in must be an array, {$type} given", __FUNCTION__, __FILE__, __LINE__ );
-
-		return false;
 	}
 
 	$_in = array_unique( $_in );
 
 	$count = count( $_in );
 
-	if ( 0 == $count ) {
+	if ( 0 === $count ) {
 
-		wordpoints_debug_message( 'empty array passed as first parameter', __FUNCTION__, __FILE__, __LINE__ );
+		_doing_it_wrong( __FUNCTION__, 'WordPoints Debug Error: empty array passed as first parameter', '1.0.0' );
 
 		return false;
 	}
@@ -446,7 +385,7 @@ class WordPoints_Dropdown_Builder {
 	 */
 	public function __construct( array $options, array $args ) {
 
-		$this->args = wp_parse_args( $args, $this->args );
+		$this->args = array_merge( $this->args, $args );
 
 		$this->options = $options;
 	}
@@ -533,7 +472,7 @@ function wordpoints_list_post_types( $options, $args = array() ) {
 		'class'    => '',
 	);
 
-	$options = wp_parse_args( $options, $defaults );
+	$options = array_merge( $defaults, $options );
 
 	echo '<select class="' . esc_attr( $options['class'] ) . '" name="' . esc_attr( $options['name'] ) . '" id="' . esc_attr( $options['id'] ) . '">';
 	echo '<option value="ALL"' . selected( $options['selected'], 'ALL' ) . '>' . esc_html( _x( 'Any', 'post type', 'wordpoints' ) ) . '</option>';
@@ -576,38 +515,6 @@ function is_wordpoints_network_active() {
 	 * @param bool $network_active Whether WordPoints is network activated.
 	 */
 	return apply_filters( 'is_wordpoints_network_active', $network_active );
-}
-
-/**
- * Include once all .php files in a directory and subdirectories.
- *
- * Gets the paths of all files in $dir and in any subdirectories of $dir. Paths of
- * files in subdirectories are filtered out unless the filename matches the name of
- * the subdirectory.
- *
- * Used to include modules and components.
- *
- * @since 1.0.0
- *
- * @uses trailingslashit() To ensure $dir has a trailing slash.
- *
- * @param string $dir The directory to include the files from.
- */
-function wordpoints_dir_include( $dir ) {
-
-	$dir = trailingslashit( $dir );
-
-	foreach ( glob( $dir . '*.php' ) as $file ) {
-
-		include_once $file;
-	}
-
-	foreach ( glob( $dir . '*/*.php' ) as $file ) {
-
-		if ( preg_match( '~/([^/]+)/\1.php$~', $file ) ) {
-			include_once $file;
-		}
-	}
 }
 
 /**
@@ -714,7 +621,7 @@ function wordpoints_add_custom_caps( $capabilities ) {
  *
  * @since 1.3.0
  *
- * @param array $capabilities The list of capabilities to remove.
+ * @param string[] $capabilities The list of capabilities to remove.
  */
 function wordpoints_remove_custom_caps( $capabilities ) {
 
@@ -761,5 +668,26 @@ function wordpoints_map_custom_meta_caps( $caps, $cap, $user_id ) {
 	return $caps;
 }
 add_filter( 'map_meta_cap', 'wordpoints_map_custom_meta_caps', 10, 3 );
+
+/**
+ * Add custom capabilities to new sites on creation when in network mode.
+ *
+ * @since 1.5.0
+ *
+ * @action wpmu_new_blog
+ *
+ * @param int $blog_id The ID of the new site.
+ */
+function wordpoints_add_custom_caps_to_new_sites( $blog_id ) {
+
+	if ( ! is_wordpoints_network_active() ) {
+		return;
+	}
+
+	switch_to_blog( $blog_id );
+	wordpoints_add_custom_caps( wordpoints_get_custom_caps() );
+	restore_current_blog();
+}
+add_action( 'wpmu_new_blog', 'wordpoints_add_custom_caps_to_new_sites' );
 
 // end of file /includes/functions.php

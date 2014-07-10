@@ -311,7 +311,7 @@ class WordPoints_Points_Logs_Query {
 	 * @param string $method The method to use. Options are 'results', 'row', and
 	 *        'col', and 'var'.
 	 *
-	 * @return mixed The results fo the query, or false on failure.
+	 * @return mixed The results of the query, or false on failure.
 	 */
 	public function get( $method = 'results', $use_cache = true ) {
 
@@ -319,7 +319,7 @@ class WordPoints_Points_Logs_Query {
 
 		if ( ! in_array( $method, $methods ) ) {
 
-			wordpoints_debug_message( "invalid get method {$method}, possible values are " . implode( ', ', $methods ), __METHOD__, __FILE__, __LINE__ );
+			_doing_it_wrong( __METHOD__, "WordPoints Debug Error: invalid get method {$method}, possible values are " . implode( ', ', $methods ), '1.0.0' );
 
 			return false;
 		}
@@ -362,6 +362,128 @@ class WordPoints_Points_Logs_Query {
 	}
 
 	/**
+	 * Prime the cache.
+	 *
+	 * Calling this function will pre-fill this instance's cache from the object
+	 * cache. Not all queries are cached, only those for which this method is called.
+	 * If you want your query to be cached, then you should call this function
+	 * immediately after constructing the new query.
+	 *
+	 * If the results aren't found in the cache, the query will be run and the
+	 * results cached.
+	 *
+	 * The $key passed is used as the cache key in the 'wordpoints_points_logs_query'
+	 * cache group. Multiple queries can use the same key, and you are encouraged to
+	 * group queries under a single key that will be invalidated simultaneously.
+	 *
+	 * Several placeholders are supported within the key to allow for better query
+	 * grouping. They are replaced with the values of the query args of the same
+	 * name:
+	 *  - %points_type%
+	 *  - %user_id%
+	 *
+	 * The default $key is 'default:%points_type%', which corresponds to the named
+	 * log query 'default'. This key's cache is invalidated each time a new log is
+	 * added to the database.
+	 *
+	 * Other keys that are used by WordPoints internally correspond to the other
+	 * named points log queries. The cache key is specified when the named query is
+	 * registered with wordpoints_register_points_logs_query(). Custom named queries
+	 * registered this way can be given their own keys as well. Keep in mind though,
+	 * that the caches for queries implementing placeholders will be cleared
+	 * automatically by wordpoints_clean_points_logs_cache() when a new matching log
+	 * is added to the database.
+	 *
+	 * The $methods paramater determies which methods of retrieving the data will be
+	 * cached. To cache multiple methods, pass an array. Priming the 'results' method
+	 * will automatically cache the 'count' as well, by counting the results.
+	 * However, if you are only going to use the count, you should specify 'count'
+	 * instead, to avoid pulling unneeded data from the database into the cache.
+	 *
+	 * The $network parameter determines whether the query will be cached in a global
+	 * cache group (for the entire network) or per-site. This is a moot point except
+	 * on multisite installs.
+	 *
+	 * @since 1.5.0
+	 *
+	 * @param string $key     The cache key to use.
+	 * @param string $methods The query method(s) to cache, 'results' (default),
+	 *                        'var', 'col', 'row', or 'count'.
+	 * @param string $network Whether this is a network-wide query.
+	 */
+	public function prime_cache( $key = 'default:%points_type%', $methods = 'results', $network = false ) {
+
+		$key = str_replace(
+			array(
+				'%points_type%',
+				'%user_id%',
+			)
+			, array(
+				$this->_args['points_type'],
+				$this->_args['user_id'],
+			)
+			, $key
+		);
+
+		if ( $network ) {
+			$group = 'wordpoints_network_points_logs_query';
+		} else {
+			$group = 'wordpoints_points_logs_query';
+		}
+
+		$cache = wp_cache_get( $key, $group );
+
+		if ( ! is_array( $cache ) ) {
+			$cache = array();
+		}
+
+		$query = md5( $this->get_sql() );
+
+		if ( ! isset( $cache[ $query ] ) ) {
+			$cache[ $query ] = array();
+		}
+
+		$methods = array_unique( (array) $methods );
+
+		foreach ( $methods as $method ) {
+
+			if (
+				(
+					'count' === $method
+					&& ! isset( $cache[ $query ]['count'] )
+				)
+				|| ! isset( $cache[ $query ][ "get_{$method}" ] )
+			) {
+
+				switch ( $method ) {
+
+					case 'results':
+						$cache[ $query ]['get_results'] = $this->get();
+						$cache[ $query ]['count'] = count( $cache[ $query ]['get_results'] );
+					break;
+
+					case 'count':
+						$cache[ $query ]['count'] = $this->count();
+					break;
+
+					case 'var':
+					case 'col':
+					case 'row':
+						$cache[ $query ][ "get_{$method}" ] = $this->get( $method );
+					break;
+
+					default:
+						return;
+				}
+
+				wp_cache_set( $key, $cache, $group );
+			}
+		}
+
+		$this->_cache = array_merge( $this->_cache, $cache[ $query ] );
+	}
+
+	/**
 	 * Filter date query valid columns for WP_Date_Query.
 	 *
 	 * Adds `date` to the list of valid columns for `wordpoints_points_logs.date`.
@@ -370,9 +492,9 @@ class WordPoints_Points_Logs_Query {
 	 *
 	 * @filter date_query_valid_columns Added by self::_prepare_where().
 	 *
-	 * @param array $valid_columns The names of the valid columns for date queries.
+	 * @param string[] $valid_columns The names of the valid columns for date queries.
 	 *
-	 * @return array The valid columns.
+	 * @return string[] The valid columns.
 	 */
 	public function date_query_valid_columns_filter( $valid_columns ) {
 
@@ -442,7 +564,7 @@ class WordPoints_Points_Logs_Query {
 
 		$get = "get_{$method}";
 
-		return $wpdb->$get( $this->_get_sql() );;
+		return $wpdb->$get( $this->_get_sql() );
 	}
 
 	/**
@@ -482,7 +604,7 @@ class WordPoints_Points_Logs_Query {
 			} elseif ( in_array( $_fields, $this->_fields ) ) {
 				$fields = $_fields;
 			} else {
-				wordpoints_debug_message( "invalid field {$_fields}, possible values are " . implode( ', ', $this->_fields ), __METHOD__, __FILE__, __LINE__ );
+				_doing_it_wrong( __METHOD__, "WordPoints Debug Error: invalid field {$_fields}, possible values are " . implode( ', ', $this->_fields ), '1.0.0' );
 			}
 
 		} elseif ( 'array' == $var_type ) {
@@ -491,7 +613,7 @@ class WordPoints_Points_Logs_Query {
 			$_fields = array_intersect( $this->_fields, $_fields );
 
 			if ( ! empty( $diff ) ) {
-				wordpoints_debug_message( 'invalid field(s) "' . implode( '", "', $diff ) . '" given', __METHOD__, __FILE__, __LINE__ );
+				_doing_it_wrong( __METHOD__, 'WordPoints Debug Error: invalid field(s) "' . implode( '", "', $diff ) . '" given', '1.0.0' );
 			}
 
 			if ( ! empty( $_fields ) ) {
@@ -568,9 +690,9 @@ class WordPoints_Points_Logs_Query {
 
 			$_points = $this->_args['points'];
 
-			if ( isset( $_points ) && ! wordpoints_int( $this->_args['points'] ) ) {
+			if ( ! wordpoints_int( $this->_args['points'] ) ) {
 
-				wordpoints_debug_message( "'points' must be an integer, " . gettype( $_points ) . ' given',  __METHOD__, __FILE__, __LINE__ );
+				_doing_it_wrong( __METHOD__, "WordPoints Debug Error: 'points' must be an integer, " . gettype( $_points ) . ' given',  '1.0.0' );
 
 			} else {
 
@@ -578,7 +700,7 @@ class WordPoints_Points_Logs_Query {
 
 				if ( ! in_array( $this->_args['points__compare'], $comparisons ) ) {
 
-					wordpoints_debug_message( "invalid 'points__compare' {$this->_args['points__compare']}, possible values are " . implode( ', ', $comparisions ), __METHOD__, __FILE__, __LINE__ );
+					_doing_it_wrong( __METHOD__, "WordPoints Debug Error: invalid 'points__compare' {$this->_args['points__compare']}, possible values are " . implode( ', ', $comparisons ), '1.0.0' );
 				}
 
 				$this->_wheres[] = $wpdb->prepare( "`points` {$this->_args['points__compare']} %d", $this->_args['points'] );
@@ -669,7 +791,7 @@ class WordPoints_Points_Logs_Query {
 
 		if ( wordpoints_int( $this->_args['limit'] ) === false ) {
 
-			wordpoints_debug_message( "'limit' must be a positive integer, " . ( strval( $_var ) ? $_var : gettype( $_var ) ) . ' given', __METHOD__, __FILE__, __LINE__ );
+			_doing_it_wrong( __METHOD__, "WordPoints Debug Error: 'limit' must be a positive integer, " . ( strval( $_var ) ? $_var : gettype( $_var ) ) . ' given', '1.0.0' );
 
 			$this->_args['limit'] = 0;
 		}
@@ -678,7 +800,7 @@ class WordPoints_Points_Logs_Query {
 
 		if ( wordpoints_int( $this->_args['start'] ) === false ) {
 
-			wordpoints_debug_message( "'start' must be a positive integer, " . ( strval( $_var ) ? $_var : gettype( $_var ) ) . ' given', __METHOD__, __FILE__, __LINE__ );
+			_doing_it_wrong( __METHOD__, "WordPoints Debug Error: 'start' must be a positive integer, " . ( strval( $_var ) ? $_var : gettype( $_var ) ) . ' given', '1.0.0' );
 
 			$this->_args['start'] = 0;
 		}
@@ -708,7 +830,7 @@ class WordPoints_Points_Logs_Query {
 
 		if ( ! in_array( $order, array( 'DESC', 'ASC' ) ) ) {
 
-			wordpoints_debug_message( "invalid 'order' \"{$order}\", possible values are DESC and ASC", __METHOD__, __FILE__, __LINE__ );
+			_doing_it_wrong( __METHOD__, "WordPoints Debug Error: invalid 'order' \"{$order}\", possible values are DESC and ASC", '1.0.0' );
 			$order = 'DESC';
 		}
 
@@ -726,7 +848,7 @@ class WordPoints_Points_Logs_Query {
 
 		} elseif ( ! in_array( $order_by, $this->_fields ) ) {
 
-			wordpoints_debug_message( "invalid 'orderby' \"{$orderby}\", possible values are " . implode( ', ', $this->_fields ), __METHOD__, __FILE__, __LINE__ );
+			_doing_it_wrong( __METHOD__, "WordPoints Debug Error: invalid 'orderby' \"{$order_by}\", possible values are " . implode( ', ', $this->_fields ), '1.0.0' );
 			return;
 		}
 
@@ -770,28 +892,8 @@ class WordPoints_Points_Logs_Query {
 	 */
 	private function _prepare_posint__in( $in, $column, $type = 'IN' ) {
 
-		if ( ! empty( $in ) ) {
-
-			$var_type = gettype( $in );
-
-			if ( 'array' == $var_type ) {
-
-				$in = array_filter( array_map( 'wordpoints_posint', $in ) );
-
-				if ( ! empty( $in ) ) {
-
-					$in = wordpoints_prepare__in( $in, '%d' );
-
-					if ( $in ) {
-						$this->_wheres[] = "{$column} {$type} ({$in})";
-					}
-				}
-
-			} else {
-
-				wordpoints_debug_message( "\$in must be an array, {$var_type} given", __METHOD__, __FILE__, __LINE__ );
-			}
-		}
+		$in = array_filter( array_map( 'wordpoints_posint', $in ) );
+		$this->_prepare__in( $in, $column, $type, '%d' );
 	}
 }
 

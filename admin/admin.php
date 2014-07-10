@@ -32,23 +32,14 @@ include_once WORDPOINTS_DIR . 'admin/screens/configure.php';
  */
 function wordpoints_get_main_admin_menu() {
 
-	$action = current_filter();
-	$is_network_active = is_wordpoints_network_active();
+	$slug = 'wordpoints_configure';
 
 	/*
-	 * If the plugin is network active and we are displaying the network menu, or if
-	 * it isn't and we're displaying the site admin menu, the settings page is the
-	 * main one.
+	 * If the plugin is network active and we are displaying the regular admin menu,
+	 * the modules screen should be the main one (the configure menu is only for the
+	 * network admin when network active).
 	 */
-	if (
-		( $is_network_active && 'network_admin_menu' === $action )
-		|| ( ! $is_network_active && 'admin_menu' === $action )
-	) {
-
-		$slug = 'wordpoints_configure';
-
-	} elseif ( 'network_admin_menu' !== $action ) {
-
+	if ( is_wordpoints_network_active() && 'admin_menu' === current_filter() ) {
 		$slug = 'wordpoints_modules';
 	}
 
@@ -196,6 +187,24 @@ function wordpoints_admin_screen_install_modules() {
 }
 
 /**
+ * Set up for the configure screen.
+ *
+ * @since 1.5.0
+ *
+ * @action load-toplevel_page_wordpoints_configure
+ */
+function wordpoints_admin_sreen_configure_load() {
+
+	/**
+	 * Set up for the WordPoints » Configure administration screen.
+	 *
+	 * @since 1.5.0
+	 */
+	require WORDPOINTS_DIR . 'admin/screens/configure-settings-load.php';
+}
+add_action( 'load-toplevel_page_wordpoints_configure', 'wordpoints_admin_sreen_configure_load' );
+
+/**
  * Activate/deactivate components.
  *
  * This function handles activation and deactivation of components from the
@@ -272,7 +281,7 @@ function wordpoints_admin_get_current_tab( array $tabs = null ) {
 
 	if ( isset( $_GET['tab'] ) ) {
 
-		$tab = $_GET['tab'];
+		$tab = sanitize_key( $_GET['tab'] );
 	}
 
 	if ( isset( $tabs ) && ! isset( $tabs[ $tab ] ) ) {
@@ -306,7 +315,11 @@ function wordpoints_admin_show_tabs( $tabs, $show_heading = true ) {
 
 	echo '<h2 class="nav-tab-wrapper">';
 
-	$page = rawurlencode( $_GET['page'] );
+	$page = '';
+
+	if ( isset( $_GET['page'] ) ) {
+		$page = rawurlencode( sanitize_key( $_GET['page'] ) );
+	}
 
 	foreach ( $tabs as $tab => $name ) {
 

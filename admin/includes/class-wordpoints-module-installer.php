@@ -95,7 +95,7 @@ class WordPoints_Module_Installer extends WP_Upgrader {
 
 		$result = parent::install_package( $args );
 
-		if ( ( $key = array_search( $module_dir, $wp_theme_directories ) ) !== false) {
+		if ( ( $key = array_search( $module_dir, $wp_theme_directories ) ) !== false ) {
 
 			unset( $wp_theme_directories[ $key ] );
 		}
@@ -194,7 +194,7 @@ class WordPoints_Module_Installer extends WP_Upgrader {
 	 *
 	 * @since 1.1.0
 	 *
-	 * @return string|bool The module path or false on failure.
+	 * @return string|false The module path or false on failure.
 	 */
 	public function module_info() {
 

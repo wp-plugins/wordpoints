@@ -107,20 +107,20 @@ function wordpoints_ajax_save_points_hook() {
 		$settings = array();
 
 		if ( isset( $_POST['points-name'] ) ) {
-			$settings['name'] = trim( $_POST['points-name'] );
+			$settings['name'] = wp_unslash( trim( esc_html( $_POST['points-name'] ) ) );
 		}
 
 		if ( isset( $_POST['points-prefix'] ) ) {
-			$settings['prefix'] = ltrim( $_POST['points-prefix'] );
+			$settings['prefix'] = wp_unslash( ltrim( esc_html( $_POST['points-prefix'] ) ) );
 		}
 
 		if ( isset( $_POST['points-suffix'] ) ) {
-			$settings['suffix'] = rtrim( $_POST['points-suffix'] );
+			$settings['suffix'] = wp_unslash( rtrim( esc_html( $_POST['points-suffix'] ) ) );
 		}
 
-		$settings = wp_unslash( $settings );
+		$points_type = sanitize_key( $_POST['points-slug'] );
 
-		$old_settings = wordpoints_get_points_type( $_POST['points-slug'] );
+		$old_settings = wordpoints_get_points_type( $points_type );
 
 		if ( false === $old_settings ) {
 			wp_die( -1 );
@@ -130,12 +130,12 @@ function wordpoints_ajax_save_points_hook() {
 			$settings = array_merge( $old_settings, $settings );
 		}
 
-		if ( ! wordpoints_update_points_type( $_POST['points-slug'], $settings ) ) {
+		if ( ! wordpoints_update_points_type( $points_type, $settings ) ) {
 
 			// If this fails, show the user a message along with the form.
 			echo '<p>' . __( 'An error has occurred. Please try again.', 'wordpoints' ) . '</p>';
 
-			WordPoints_Points_Hooks::points_type_form( $_POST['points-slug'], 'none' );
+			WordPoints_Points_Hooks::points_type_form( $points_type, 'none' );
 		}
 
 	} else {
@@ -146,12 +146,10 @@ function wordpoints_ajax_save_points_hook() {
 			wp_die( -1 );
 		}
 
-		$id_base        = $_POST['id_base'];
-		$hook_id        = $_POST['hook-id'];
-		$points_type_id = $_POST['points_type'];
+		$id_base        = sanitize_key( $_POST['id_base'] );
+		$hook_id        = sanitize_key( $_POST['hook-id'] );
+		$points_type_id = sanitize_key( $_POST['points_type'] );
 		$number         = (int) $_POST['hook_number'];
-
-		$points_hooks = WordPoints_Points_Hooks::get_all();
 
 		/*
 		 * Normally the hook ID will be in 'hook-id' when we are updating a hook.
@@ -170,22 +168,24 @@ function wordpoints_ajax_save_points_hook() {
 			$hook_id = $id_base . '-' . $number;
 		}
 
-		if ( isset( $points_hooks[ $hook_id ] ) ) {
-			$hook = $points_hooks[ $hook_id ];
-		}
+		$hook = WordPoints_Points_Hooks::get_handler( $hook_id );
 
-		$settings = ( isset( $_POST[ 'hook-' . $id_base ] ) && is_array( $_POST[ 'hook-' . $id_base ] ) ) ? $_POST[ 'hook-' . $id_base ] : false;
+		$settings = false;
+
+		if ( isset( $_POST[ 'hook-' . $id_base ] ) && is_array( $_POST[ 'hook-' . $id_base ] ) ) {
+			$settings = wp_unslash( $_POST[ 'hook-' . $id_base ] );
+		}
 
 		$points_types_hooks = WordPoints_Points_Hooks::get_points_types_hooks();
 
 		// Get the hooks for this points type.
 		$points_type_hooks = ( isset( $points_types_hooks[ $points_type_id ] ) ) ? $points_types_hooks[ $points_type_id ] : array();
 
-		if ( isset( $_POST['delete_hook'] ) && $_POST['delete_hook'] ) {
+		if ( ! empty( $_POST['delete_hook'] ) ) {
 
 			// - We are deleting a hook instance.
 
-			if ( ! isset( $hook ) ) {
+			if ( false === $hook ) {
 				wp_die( $error );
 			}
 
@@ -200,7 +200,7 @@ function wordpoints_ajax_save_points_hook() {
 
 			wp_die();
 
-		} elseif ( $settings && ! isset( $hook ) ) {
+		} elseif ( $settings && false === $hook ) {
 
 			// - We are creating a new a new instance of a hook.
 
@@ -222,7 +222,7 @@ function wordpoints_ajax_save_points_hook() {
 
 			// - We are updating the settings for an instance of a hook.
 
-			if ( ! isset( $hook ) ) {
+			if ( false === $hook ) {
 				wp_die( $error );
 			}
 
