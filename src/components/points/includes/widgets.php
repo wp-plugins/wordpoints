@@ -108,6 +108,8 @@ class WordPoints_My_Points_Widget extends WordPoints_Points_Widget {
 			'alt_text'    => __( 'You must be logged in to view your points.', 'wordpoints' ),
 			'number_logs' => 5,
 		);
+
+		add_filter( 'wordpoints_points_widget_text', 'esc_html', 20 );
 	}
 
 	/**
@@ -184,14 +186,20 @@ class WordPoints_My_Points_Widget extends WordPoints_Points_Widget {
 		/**
 		 * The my points widget text.
 		 *
+		 * By default, esc_html() is hooked to this filter at the priority 20. To
+		 * allow HTML in the widget, you can use this code:
+		 *
+		 * remove_filter( 'wordpoints_points_widget_text', 'esc_html', 20 );
+		 *
 		 * @since 1.0.0
+		 * @since 1.5.0 esc_html() is now hooked, and at priority 20 by default.
 		 *
 		 * @param string $text The text for the widget set by the user.
 		 * @param array  $instance The settings for this instance of the widget.
 		 */
 		$text = apply_filters( 'wordpoints_points_widget_text', $text, $instance );
 
-		echo '<div class="wordpoints-points-widget-text">', esc_html( $text ), '</div><br />';
+		echo '<div class="wordpoints-points-widget-text">', $text, '</div><br />';
 
 		if ( $instance['number_logs'] != 0 ) {
 
@@ -200,6 +208,7 @@ class WordPoints_My_Points_Widget extends WordPoints_Points_Widget {
 			$query_args['limit'] = $instance['number_logs'];
 
 			$logs_query = new WordPoints_Points_Logs_Query( $query_args );
+			$logs_query->prime_cache( 'current_user:%points_type%:%user_id%' );
 
 			wordpoints_show_points_logs( $logs_query, array( 'datatable' => false, 'show_users' => false ) );
 		}
@@ -252,7 +261,7 @@ class WordPoints_My_Points_Widget extends WordPoints_Points_Widget {
 	 */
 	public function form( $instance ) {
 
-		$instance = wp_parse_args( $instance, $this->defaults );
+		$instance = array_merge( $this->defaults, $instance );
 
 		$dropdown_args = array(
 			'selected' => $instance['points_type'],
@@ -442,7 +451,7 @@ class WordPoints_Top_Users_Points_Widget extends WordPoints_Points_Widget {
 	 */
 	public function form( $instance ) {
 
-		$instance = wp_parse_args( $instance, $this->defaults );
+		$instance = array_merge( $this->defaults, $instance );
 
 		$dropdown_args = array(
 			'selected' => $instance['points_type'],
@@ -543,6 +552,7 @@ class WordPoints_Points_Logs_Widget extends WordPoints_Points_Widget {
 		$query_args['limit'] = $instance['number_logs'];
 
 		$logs_query = new WordPoints_Points_Logs_Query( $query_args );
+		$logs_query->prime_cache();
 
 		wordpoints_show_points_logs( $logs_query, array( 'datatable' => false ) );
 

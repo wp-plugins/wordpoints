@@ -17,7 +17,7 @@ WordPoints_Points_Hooks::register( 'WordPoints_Post_Delete_Points_Hook' );
  *
  * @since 1.4.0
  */
-class WordPoints_Post_Delete_Points_Hook extends WordPoints_Points_Hook {
+class WordPoints_Post_Delete_Points_Hook extends WordPoints_Post_Type_Points_Hook_Base {
 
 	/**
 	 * The default values.
@@ -26,7 +26,7 @@ class WordPoints_Post_Delete_Points_Hook extends WordPoints_Points_Hook {
 	 *
 	 * @type array $defaults
 	 */
-	private $defaults = array( 'points' => 20, 'post_type' => 'ALL' );
+	protected $defaults = array( 'points' => 20, 'post_type' => 'ALL' );
 
 	//
 	// Public Methods.
@@ -42,7 +42,10 @@ class WordPoints_Post_Delete_Points_Hook extends WordPoints_Points_Hook {
 		parent::init(
 			_x( 'Post Delete', 'points hook name', 'wordpoints' )
 			,array(
-				'description' => __( 'A post is permanently deleted.', 'wordpoints' ),
+				'description'  => __( 'A post is permanently deleted.', 'wordpoints' ),
+				'points_label' => __( 'Points removed when deleted:', 'wordpoints' ),
+				/* translators: the post type name. */
+				'post_type_description' => __( '%s permanently deleted.', 'wordpoints' ),
 			)
 		);
 
@@ -68,15 +71,7 @@ class WordPoints_Post_Delete_Points_Hook extends WordPoints_Points_Hook {
 			$instance = array_merge( $this->defaults, $instance );
 
 			if (
-				! empty( $instance['post_type'] )
-				&& (
-					$instance['post_type'] == $post->post_type
-					|| (
-						$instance['post_type'] == 'ALL'
-						&& post_type_exists( $post->post_type )
-						&& get_post_type_object( $post->post_type )->public
-					)
-				)
+				$this->is_matching_post_type( $post->post_type, $instance['post_type'] )
 				&& $post->post_status !== 'auto-draft'
 				&& $post->post_title !== __( 'Auto Draft', 'default' )
 			) {
@@ -134,7 +129,7 @@ class WordPoints_Post_Delete_Points_Hook extends WordPoints_Points_Hook {
 	 *
 	 * @param int $number The ID number of the instance.
 	 *
-	 * @return int|bool The number of points, or false.
+	 * @return int|false The number of points, or false.
 	 */
 	public function get_points( $number = null ) {
 
@@ -145,92 +140,5 @@ class WordPoints_Post_Delete_Points_Hook extends WordPoints_Points_Hook {
 		}
 
 		return $points;
-	}
-
-	//
-	// Protected Methods.
-	//
-
-	/**
-	 * Generate a description for an instance of this hook.
-	 *
-	 * @since 1.4.0
-	 *
-	 * @param array $instance The settings for the instance the description is for.
-	 *
-	 * @return string A description for the hook instance.
-	 */
-	protected function generate_description( $instance = array() ) {
-
-		if ( ! empty( $instance['post_type'] ) && $instance['post_type'] !== 'ALL' ) {
-			$post_type = get_post_type_object( $instance['post_type'] );
-
-			if ( $post_type ) {
-				/* translators: the post type name. */
-				return sprintf( __( '%s permanently deleted.', 'wordpoints' ), $post_type->labels->singular_name );
-			}
-		}
-
-		return parent::generate_description( $instance );
-	}
-
-	/**
-	 * Update a particular instance of this hook.
-	 *
-	 * @since 1.4.0
-	 *
-	 * @param array $new_instance New settings for this instance.
-	 * @param array $old_instance Old settings for this instance.
-	 *
-	 * @return array Settings to save.
-	 */
-	protected function update( $new_instance, $old_instance ) {
-
-		$new_instance = array_merge( $this->defaults, $old_instance, $new_instance );
-
-		wordpoints_posint( $new_instance['points'] );
-
-		return $new_instance;
-	}
-
-	/**
-	 * Echo the settings update form.
-	 *
-	 * @since 1.4.0
-	 *
-	 * @param array $instance Current settings.
-	 *
-	 * @return bool True.
-	 */
-	protected function form( $instance ) {
-
-		$instance = array_merge( $this->defaults, $instance );
-
-		?>
-
-		<p>
-			<label for="<?php $this->the_field_id( 'post_type' ); ?>"><?php _e( 'Select post type:', 'wordpoints' ); ?></label>
-			<?php
-
-			wordpoints_list_post_types(
-				array(
-					'selected' => $instance['post_type'],
-					'id'       => $this->get_field_id( 'post_type' ),
-					'name'     => $this->get_field_name( 'post_type' ),
-					'class'    => 'widefat',
-				)
-				, array( 'public' => true )
-			);
-
-			?>
-		</p>
-		<p>
-			<label for="<?php $this->the_field_id( 'points' ); ?>"><?php _e( 'Points removed when deleted:', 'wordpoints' ); ?></label>
-			<input class="widefat" name="<?php $this->the_field_name( 'points' ); ?>"  id="<?php $this->the_field_id( 'points' ); ?>" type="text" value="<?php echo wordpoints_posint( $instance['points'] ); ?>" />
-		</p>
-
-		<?php
-
-		return true;
 	}
 }

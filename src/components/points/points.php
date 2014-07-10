@@ -163,12 +163,15 @@ function wordpoints_points_component_update() {
 			wordpoints_points_update_1_2_0();
 		// fallthru
 
-		case version_compare( '1.3.0', $db_version ):
-			wordpoints_points_update_1_3_0();
-		// fallthru
-
 		case version_compare( '1.4.0', $db_version ):
 			wordpoints_points_update_1_4_0();
+		// fallthru
+
+		case version_compare( '1.5.0', $db_version ):
+			if ( 1 != version_compare( '1.4.0', $db_version ) ) {
+				// This doesn't need to run if we just ran the 1.4.0 update.
+				wordpoints_points_update_1_5_0();
+			}
 		// fallthru
 	}
 
@@ -220,6 +223,13 @@ include_once WORDPOINTS_DIR . 'components/points/includes/class-wordpoints-point
  * @since 1.0.0
  */
 include_once WORDPOINTS_DIR . 'components/points/includes/class-wordpoints-points-hook.php';
+
+/**
+ * Post type points hook abstract class.
+ *
+ * @since 1.5.0
+ */
+include_once WORDPOINTS_DIR . 'components/points/includes/hooks/abstracts/post-type.php';
 
 /**
  * The registration points hook

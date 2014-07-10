@@ -270,9 +270,9 @@ function wordpoints_get_module_data( $module_file, $markup = true, $translate = 
 			if ( $textdomain ) {
 
 				if ( $module_data['domain_path'] ) {
-					wordpoints_load_module_textdomain( $textdomain, false, dirname( $module_file ) . $module_data['domain_path'] );
+					wordpoints_load_module_textdomain( $textdomain, dirname( $module_file ) . $module_data['domain_path'] );
 				} else {
-					wordpoints_load_module_textdomain( $textdomain, false, dirname( $module_file ) );
+					wordpoints_load_module_textdomain( $textdomain, dirname( $module_file ) );
 				}
 
 				foreach ( array( 'name', 'module_uri', 'description', 'author', 'author_uri', 'version' ) as $field ) {
@@ -343,8 +343,9 @@ function wordpoints_get_module_data( $module_file, $markup = true, $translate = 
  *
  * @since 1.1.0
  *
- * @param string $domain The module's text domain.
- * @param bool   $module_rel_path The module path relative to the modules directory.
+ * @param string      $domain          The module's text domain.
+ * @param string|bool $module_rel_path The module path relative to the modules
+ *                                     directory where the .mo files are, or false.
  *
  * @return bool Whether the textdoamin was loaded successfully.
  */
@@ -400,12 +401,12 @@ function wordpoints_load_module_textdomain( $domain, $module_rel_path = false ) 
  */
 function wordpoints_get_modules( $module_folder = '' ) {
 
-	if ( ! $cache_plugins = wp_cache_get( 'wordpoints_modules', 'wordpoints_modules' ) ) {
-		$cache_plugins = array();
+	if ( ! $cache_modules = wp_cache_get( 'wordpoints_modules', 'wordpoints_modules' ) ) {
+		$cache_modules = array();
 	}
 
-	if ( isset( $cache_plugins[ $module_folder ] ) ) {
-		return $cache_plugins[ $module_folder ];
+	if ( isset( $cache_modules[ $module_folder ] ) ) {
+		return $cache_modules[ $module_folder ];
 	}
 
 	$modules      = array();
@@ -808,11 +809,10 @@ function wordpoints_deactivate_modules( $modules, $silent = false, $network_wide
  * @since 1.1.0
  *
  * @param array  $modules  A list of modules to delete.
- * @param string $redirect Redirect to page when complete.
  *
  * @return bool|WP_Error True if all modules deleted successfully.
  */
-function wordpoints_delete_modules( $modules, $redirect = '' ) {
+function wordpoints_delete_modules( $modules ) {
 
 	global $wp_filesystem;
 

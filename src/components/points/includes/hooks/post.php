@@ -20,7 +20,7 @@ WordPoints_Points_Hooks::register( 'WordPoints_Post_Points_Hook' );
  *
  * @see WordPoints_Post_Delete_Points_Hook
  */
-class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
+class WordPoints_Post_Points_Hook extends WordPoints_Post_Type_Points_Hook_Base {
 
 	/**
 	 * The default values.
@@ -29,7 +29,7 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 	 *
 	 * @type array $defaults
 	 */
-	private $defaults = array( 'points' => 20, 'post_type' => 'ALL' );
+	protected $defaults = array( 'points' => 20, 'post_type' => 'ALL' );
 
 	/**
 	 * Set up the hook.
@@ -43,7 +43,11 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 
 		parent::init(
 			_x( 'Post Publish', 'points hook name', 'wordpoints' )
-			, array( 'description' => __( 'New post published.', 'wordpoints' ) )
+			, array(
+				'description' => __( 'New post published.', 'wordpoints' ),
+				/* translators: the post type name. */
+				'post_type_description' => __( 'New %s published.', 'wordpoints' ),
+			)
 		);
 
 		add_action( 'transition_post_status', array( $this, 'publish_hook' ), 10, 3 );
@@ -78,14 +82,7 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 			$points_type = $this->points_type( $number );
 
 			if (
-				(
-					$instance['post_type'] == $post->post_type
-					|| (
-						$instance['post_type'] == 'ALL'
-						&& post_type_exists( $post->post_type )
-						&& get_post_type_object( $post->post_type )->public
-					)
-				)
+				$this->is_matching_post_type( $post->post_type, $instance['post_type'] )
 				&& ! $this->awarded_points_already( $post->ID, $points_type )
 			) {
 
@@ -218,7 +215,6 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 	 * @since 1.0.0
 	 *
 	 * @param int    $post_id     The ID of the post.
-	 * @param int    $user_id     The ID of the user.
 	 * @param string $points_type The points type to check.
 	 *
 	 * @return bool Whether points have been awarded for publishing this post before.
@@ -267,8 +263,8 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 					array(
 						'key'   => 'post_id',
 						'value' => $post_id,
-					)
-				)
+					),
+				),
 			)
 		);
 
@@ -342,88 +338,5 @@ class WordPoints_Post_Points_Hook extends WordPoints_Points_Hook {
 		}
 
 		return $can_view;
-	}
-
-	/**
-	 * Generate a description for an instance of this hook.
-	 *
-	 * @since 1.4.0
-	 *
-	 * @param array $instance The settings for the instance the description is for.
-	 *
-	 * @return string A description for the hook instance.
-	 */
-	protected function generate_description( $instance = array() ) {
-
-		if ( ! empty( $instance['post_type'] ) && $instance['post_type'] !== 'ALL' ) {
-			$post_type = get_post_type_object( $instance['post_type'] );
-
-			if ( $post_type ) {
-				/* translators: the post type name. */
-				return sprintf( __( 'New %s published.', 'wordpoints' ), $post_type->labels->singular_name );
-			}
-		}
-
-		return parent::generate_description( $instance );
-	}
-
-	/**
-	 * Update a particular instance of this hook.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $new_instance New settings for this instance.
-	 * @param array $old_instance Old settings for this instance.
-	 *
-	 * @return array Settings to save.
-	 */
-	protected function update( $new_instance, $old_instance ) {
-
-		$new_instance = array_merge( $this->defaults, $old_instance, $new_instance );
-
-		wordpoints_posint( $new_instance['points'] );
-
-		return $new_instance;
-	}
-
-	/**
-	 * Echo the settings update form.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $instance Current settings.
-	 *
-	 * @return bool True.
-	 */
-	protected function form( $instance ) {
-
-		$instance = array_merge( $this->defaults, $instance );
-
-		?>
-
-		<p>
-			<label for="<?php $this->the_field_id( 'post_type' ); ?>"><?php _e( 'Select post type:', 'wordpoints' ); ?></label>
-			<?php
-
-			wordpoints_list_post_types(
-				array(
-					'selected' => $instance['post_type'],
-					'id'       => $this->get_field_id( 'post_type' ),
-					'name'     => $this->get_field_name( 'post_type' ),
-					'class'    => 'widefat',
-				)
-				, array( 'public' => true )
-			);
-
-			?>
-		</p>
-		<p>
-			<label for="<?php $this->the_field_id( 'points' ); ?>"><?php _e( 'Points:', 'wordpoints' ); ?></label>
-			<input class="widefat" name="<?php $this->the_field_name( 'points' ); ?>"  id="<?php $this->the_field_id( 'points' ); ?>" type="text" value="<?php echo wordpoints_posint( $instance['points'] ); ?>" />
-		</p>
-
-		<?php
-
-		return true;
 	}
 }

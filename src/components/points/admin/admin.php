@@ -201,7 +201,11 @@ function wordpoints_points_hook_description_form( $has_form, $instance, $hook ) 
 
 	?>
 
-	<hr />
+	<?php if ( $has_form ) : ?>
+		<hr />
+	<?php else : ?>
+		<br />
+	<?php endif; ?>
 
 	<div class="hook-instance-description">
 		<label for="<?php $hook->the_field_name( '_description' ); ?>"><?php _ex( 'Description (optional):', 'points hook', 'wordpoints' ); ?></label>
@@ -379,13 +383,15 @@ function wordpoints_points_admin_settings_save() {
 
 	if ( isset( $_POST['default_points_type'] ) ) {
 
-		if ( '-1' == $_POST['default_points_type'] ) {
+		$points_type = sanitize_key( $_POST['default_points_type'] );
 
-			wordpoints_delete_network_option( 'wordpoints_default_points_type' );
+		if ( '-1' === $points_type ) {
 
-		} elseif ( wordpoints_is_points_type( $_POST['default_points_type'] ) ) {
+			wordpoints_update_network_option( 'wordpoints_default_points_type', '' );
 
-			wordpoints_update_network_option( 'wordpoints_default_points_type', $_POST['default_points_type'] );
+		} elseif ( wordpoints_is_points_type( $points_type ) ) {
+
+			wordpoints_update_network_option( 'wordpoints_default_points_type', $points_type );
 		}
 	}
 }
