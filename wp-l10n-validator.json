@@ -4,6 +4,8 @@
 	"cache": "./tools/wp-l10n-validator/cache.json",
 	"ignores-cache": "./tools/wp-l10n-validator/ignores-cache.json",
 	"ignored-functions": {
+		"_doing_it_wrong": true,
+
 		"wordpoints_add_network_option": true,
 		"wordpoints_add_points": true,
 		"wordpoints_alter_points": true,
@@ -41,6 +43,7 @@
 		"WordPoints_Points_Logs_Query::_prepare__in": true,
 		"WordPoints_Points_Logs_Query::_prepare_posint__in": true,
 		"WordPoints_Points_Logs_Query::get": true,
+		"WordPoints_Points_Logs_Query::prime_cache": true,
 		"WordPoints_Points_Widget::__construct": [1],
 		"WordPoints_Points_Widget::get_field_id": true,
 		"WordPoints_Points_Widget::get_field_name": true,

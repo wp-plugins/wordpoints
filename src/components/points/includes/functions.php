@@ -385,7 +385,7 @@ function wordpoints_format_points( $points, $type, $context ) {
 	wordpoints_int( $_points );
 
 	if ( false === $_points || ! wordpoints_is_points_type( $type ) ) {
-		return $points;
+		return (string) $points;
 	}
 
 	/**
@@ -413,7 +413,7 @@ function wordpoints_format_points( $points, $type, $context ) {
  * @param string $type    The type of points to retrieve.
  * @param string $context The context in which the users points will be displayed.
  *
- * @return string|bool The user's points formatted for display, or false on failure.
+ * @return string|false The user's points formatted for display, or false on failure.
  */
 function wordpoints_get_formatted_points( $user_id, $type, $context ) {
 
@@ -436,9 +436,9 @@ function wordpoints_get_formatted_points( $user_id, $type, $context ) {
  * @uses wordpoints_get_points()    To get the user's points.
  * @uses wordpoints_format_points() To format the points for display.
  *
- * @param int    $user_id     The ID of the user whose points to display.
- * @param string $points_type The type of points to display.
- * @param string $context     The context in which the points will be displayed.
+ * @param int    $user_id The ID of the user whose points to display.
+ * @param string $type    The type of points to display.
+ * @param string $context The context in which the points will be displayed.
  *
  * @return void This function does not return a value, it displays directly.
  */
@@ -676,18 +676,11 @@ function wordpoints_alter_points( $user_id, $points, $points_type, $log_type, $m
 
 	if ( $result !== false ) {
 
-		if ( is_array( $meta ) ) {
+		$insert_id = $wpdb->insert_id;
 
-			$insert_id = $wpdb->insert_id;
+		foreach ( $meta as $meta_key => $meta_value ) {
 
-			foreach ( $meta as $meta_key => $meta_value ) {
-
-				wordpoints_add_points_log_meta( $insert_id, $meta_key, $meta_value );
-			}
-
-		} else {
-
-			wordpoints_debug_message( 'Log meta must be an array, ' . gettype( $meta ) . ' given', __FUNCTION__, __FILE__, __LINE__ );
+			wordpoints_add_points_log_meta( $insert_id, $meta_key, $meta_value );
 		}
 
 		/**
@@ -1077,7 +1070,7 @@ function wordpoints_regenerate_points_logs( $log_ids ) {
  *
  * @since 1.0.0
  *
- * @param array  $users       The number of users to retrieve.
+ * @param array  $num_users   The number of users to retrieve.
  * @param string $points_type The type of points.
  *
  * @return int[] The IDs of the users with the most points.
@@ -1088,22 +1081,65 @@ function wordpoints_points_get_top_users( $num_users, $points_type ) {
 		return;
 	}
 
-	global $wpdb;
+	$cache = wp_cache_get( $points_type, 'wordpoints_points_top_users' );
 
-	return $wpdb->get_col(
-		$wpdb->prepare(
-			"
-				SELECT `user_ID`
-				FROM {$wpdb->usermeta}
-				WHERE `meta_key` = %s
-				ORDER BY CONVERT(`meta_value`, SIGNED INTEGER) DESC
-				LIMIT 0,%d
-			",
-			wordpoints_get_points_user_meta_key( $points_type ),
-			$num_users
-		)
-	);
+	if ( ! is_array( $cache ) ) {
+		$cache = array( 'is_max' => false, 'top_users' => array() );
+	}
+
+	$cached_users = count( $cache['top_users'] );
+
+	if ( $num_users > $cached_users && ! $cache['is_max'] ) {
+
+		global $wpdb;
+
+		$top_users = $wpdb->get_col(
+			$wpdb->prepare(
+				"
+					SELECT `user_ID`
+					FROM {$wpdb->usermeta}
+					WHERE `meta_key` = %s
+					ORDER BY CONVERT(`meta_value`, SIGNED INTEGER) DESC
+					LIMIT %d,%d
+				",
+				wordpoints_get_points_user_meta_key( $points_type ),
+				$cached_users,
+				$num_users
+			)
+		);
+
+		if ( ! is_array( $top_users ) ) {
+			return array();
+		}
+
+		$cache['top_users'] = array_merge( $cache['top_users'], $top_users );
+
+		if ( count( $cache['top_users'] ) < $num_users ) {
+			$cache['is_max'] = true;
+		}
+
+		wp_cache_set( $points_type, $cache, 'wordpoints_points_top_users' );
+	}
+
+	return array_slice( $cache['top_users'], 0, $num_users );
 }
+
+/**
+ * Clear the top users cache when a user's points are altered.
+ *
+ * @since 1.5.0
+ *
+ * @action wordpoints_points_altered
+ *
+ * @param int    $user_id     The ID of the user being awarded points. Not used.
+ * @param int    $points      The number of points. Not used.
+ * @param string $points_type The type of points being awarded.
+ */
+function wordpoints_clean_points_top_users_cache( $user_id, $points, $points_type ) {
+
+	wp_cache_delete( $points_type, 'wordpoints_points_top_users' );
+}
+add_action( 'wordpoints_points_altered', 'wordpoints_clean_points_top_users_cache', 10, 3 );
 
 /**
  * Get the custom caps added by the points component.
@@ -1122,6 +1158,27 @@ function wordpoints_points_get_custom_caps() {
 }
 
 /**
+ * Add custom capabilities to new sites on creation when in network mode.
+ *
+ * @since 1.5.0
+ *
+ * @action wpmu_new_blog
+ *
+ * @param int $blog_id The ID of the new site.
+ */
+function wordpoints_points_add_custom_caps_to_new_sites( $blog_id ) {
+
+	if ( ! is_wordpoints_network_active() ) {
+		return;
+	}
+
+	switch_to_blog( $blog_id );
+	wordpoints_add_custom_caps( wordpoints_points_get_custom_caps() );
+	restore_current_blog();
+}
+add_action( 'wpmu_new_blog', 'wordpoints_points_add_custom_caps_to_new_sites' );
+
+/**
  * Format points for display.
  *
  * @since 1.0.0
@@ -1132,11 +1189,10 @@ function wordpoints_points_get_custom_caps() {
  * @param string $formatted The formatted points value.
  * @param int    $points    The raw points value.
  * @param string $type      The type of $points.
- * @param string $context   The context in which the value will be displayed.
  *
  * @return string $points formatted with prefix and suffix.
  */
-function wordpoints_format_points_filter( $formatted, $points, $type, $context ) {
+function wordpoints_format_points_filter( $formatted, $points, $type ) {
 
 	$points_type = wordpoints_get_points_type( $type );
 
@@ -1153,7 +1209,7 @@ function wordpoints_format_points_filter( $formatted, $points, $type, $context )
 
 	return $formatted;
 }
-add_filter( 'wordpoints_format_points', 'wordpoints_format_points_filter', 5, 4 );
+add_filter( 'wordpoints_format_points', 'wordpoints_format_points_filter', 5, 3 );
 
 /**
  * Display a dropdown of points types.
@@ -1318,5 +1374,18 @@ function wordpoints_points_logs_custom_meta_key_message( $points_type ) {
 	}
 }
 add_action( 'wordpoints_admin_points_logs_tab', 'wordpoints_points_logs_custom_meta_key_message' );
+
+/**
+ * Register the global cache groups used by this component.
+ *
+ * @since 1.5.0
+ *
+ * @action init 5 Earlier than the default so that the groups will be registered.
+ */
+function wordpoints_points_add_global_cache_groups() {
+
+	wp_cache_add_global_groups( 'wordpoints_network_points_logs_query' );
+}
+add_action( 'init', 'wordpoints_points_add_global_cache_groups', 5 );
 
 // end of file /components/points/includes/functions.php

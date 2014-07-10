@@ -18,7 +18,7 @@ WordPoints_Points_Hooks::register( 'WordPoints_Comment_Points_Hook' );
  * @since 1.0.0
  * @since 1.4.0 No longer subtracts points for comment removal.
  */
-class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
+class WordPoints_Comment_Points_Hook extends WordPoints_Post_Type_Points_Hook_Base {
 
 	/**
 	 * The default values.
@@ -27,7 +27,7 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 	 *
 	 * @type array $defaults
 	 */
-	private $defaults = array( 'points' => 10 );
+	protected $defaults = array( 'points' => 10, 'post_type' => 'ALL' );
 
 	/**
 	 * Initialize the hook.
@@ -41,7 +41,11 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 
 		parent::init(
 			_x( 'Comment', 'points hook name', 'wordpoints' )
-			, array( 'description' => __( 'Leaving a new comment.', 'wordpoints' ) )
+			, array(
+				'description' => __( 'Leaving a new comment.', 'wordpoints' ),
+				/* translators: the post type name. */
+				'post_type_description' => __( 'Leaving a new comment on a %s.', 'wordpoints' ),
+			)
 		);
 
 		add_action( 'transition_comment_status', array( $this, 'hook' ), 10, 3 );
@@ -78,6 +82,8 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 			return;
 		}
 
+		$post = get_post( $comment->comment_post_ID );
+
 		if ( 'approved' == $new_status ) {
 
 			foreach ( $this->get_instances() as $number => $instance ) {
@@ -91,7 +97,10 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 
 				$points_type = $this->points_type( $number );
 
-				if ( ! $this->awarded_points_already( $comment->comment_ID, $points_type ) ) {
+				if (
+					$this->is_matching_post_type( $post->post_type, $instance['post_type'] )
+					&& ! $this->awarded_points_already( $comment->comment_ID, $points_type )
+				) {
 					wordpoints_add_points(
 						$comment->user_id
 						, $instance['points']
@@ -144,7 +153,7 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 
 			// Comment is 'spam' (or 'trash').
 			default:
-				$new_status = $status;
+				$new_status = $comment->comment_approved;
 				$old_status = 'approved';
 		}
 
@@ -232,7 +241,7 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 
 		_deprecated_function( __METHOD__, '1.4.0', 'WordPoints_Comment_Removed_Points_Hook::logs()' );
 
-		$hook = WordPoints_Points_Hooks::get_handler_by_id_base( 'WordPoints_Comment_Removed_Points_Hook' );
+		$hook = WordPoints_Points_Hooks::get_handler_by_id_base( 'wordpoints_comment_removed_points_hook' );
 
 		if ( $hook ) {
 			$text = $hook->logs( $text, $points, $points_type, $user_id, $log_type, $meta );
@@ -252,8 +261,7 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param int    $post_id     The ID of the post.
-	 * @param int    $user_id     The ID of the user.
+	 * @param int    $comment_id  The ID of a comment.
 	 * @param string $points_type The points type to check.
 	 *
 	 * @return bool Whether points have been awarded.
@@ -337,7 +345,7 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 					$wpdb->wordpoints_points_log_meta
 					, array(
 						'meta_key'   => 'post_id',
-						'meta_value' => $comment->comment_post_ID
+						'meta_value' => $comment->comment_post_ID,
 					)
 					, array(
 						'meta_key'   => 'comment_id',
@@ -398,7 +406,7 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 				, array(
 					'meta_key'   => 'post_id',
 					'meta_value' => $post_id,
-					'log_id'     => $log_id
+					'log_id'     => $log_id,
 				)
 				, array( '%s', '%d', '%d' )
 			);
@@ -430,49 +438,5 @@ class WordPoints_Comment_Points_Hook extends WordPoints_Points_Hook {
 		}
 
 		return $can_view;
-	}
-
-	/**
-	 * Update a particular instance of this hook.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $new_instance New settings for this instance as input by user.
-	 * @param array $old_instance Old settings for this instance.
-	 *
-	 * @return array Settings to save.
-	 */
-	protected function update( $new_instance, $old_instance ) {
-
-		$new_instance = array_merge( $this->defaults, $old_instance, $new_instance );
-
-		wordpoints_posint( $new_instance['points'] );
-
-		return $new_instance;
-	}
-
-	/**
-	 * Echo the settings update form.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $instance Current settings.
-	 *
-	 * @return bool True.
-	 */
-	protected function form( $instance ) {
-
-		$instance = array_merge( $this->defaults, $instance );
-
-		?>
-
-		<p>
-			<label for="<?php $this->the_field_id( 'points' ); ?>"><?php _e( 'Points:', 'wordpoints' ); ?></label>
-			<input class="widefat" name="<?php $this->the_field_name( 'points' ); ?>"  id="<?php $this->the_field_id( 'points' ); ?>" type="text" value="<?php echo wordpoints_posint( $instance['points'] ); ?>" />
-		</p>
-
-		<?php
-
-		return true;
 	}
 }
