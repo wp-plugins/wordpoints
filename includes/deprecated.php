@@ -337,3 +337,91 @@ if ( defined( 'WORDPOINTS_SYMLINK' ) ) {
 	_deprecated_function( 'wordpoints_symlink_fix', '1.4.0' );
 	add_filter( 'plugins_url', 'wordpoints_symlink_fix', 10, 3 );
 }
+
+/**
+ * Include once all .php files in a directory and subdirectories.
+ *
+ * Gets the paths of all files in $dir and in any subdirectories of $dir. Paths of
+ * files in subdirectories are filtered out unless the filename matches the name of
+ * the subdirectory.
+ *
+ * Used to include modules and components.
+ *
+ * @since 1.0.0
+ * @deprecated 1.5.0
+ *
+ * @uses trailingslashit() To ensure $dir has a trailing slash.
+ *
+ * @param string $dir The directory to include the files from.
+ */
+function wordpoints_dir_include( $dir ) {
+
+	_deprecated_function( 'wordpoints_dir_include', '1.5.0' );
+
+	$dir = trailingslashit( $dir );
+
+	foreach ( glob( $dir . '*.php' ) as $file ) {
+
+		include_once $file;
+	}
+
+	foreach ( glob( $dir . '*/*.php' ) as $file ) {
+
+		if ( preg_match( '~/([^/]+)/\1.php$~', $file ) ) {
+			include_once $file;
+		}
+	}
+}
+
+/**
+ * Check if debugging is on.
+ *
+ * @since 1.0.0
+ * @deprecated 1.5.0
+ * @deprecated Use WP_DEBUG instead.
+ *
+ * @return bool
+ */
+function wordpoints_debug() {
+
+	_deprecated_function( 'wordpoints_debug', '1.5.0', 'WP_DEBUG' );
+
+	if ( defined( 'WORDPOINTS_DEBUG' ) ) {
+
+		$debug = WORDPOINTS_DEBUG;
+
+	} else {
+
+		$debug = WP_DEBUG;
+	}
+
+	return $debug;
+}
+
+if ( defined( 'WORDPOINTS_DEBUG' ) ) {
+	_doing_it_wrong( 'wordpoints_debug', 'The WORDPOINTS_DEBUG constant is deprecated', '1.5.0' );
+}
+
+/**
+ * Issue a debug message that may be logged or displayed.
+ *
+ * We call do_action( 'wordpoints_debug_message' ) so folks can generate a stack
+ * trace if they want.
+ *
+ * @since 1.0.0
+ * @deprecated 1.5.0
+ * @deprecated Use _doing_it_wrong() insstead.
+ *
+ * @param string $message  The message.
+ * @param string $function The function in which the message was issued.
+ * @param string $file     The file in which the message was issued.
+ * @param int    $line     The line on which the message was issued.
+ */
+function wordpoints_debug_message( $message, $function, $file, $line ) {
+
+	_deprecated_function( 'wordpoints_debug_message', '1.5.0', '_doing_it_wrong()' );
+
+	_doing_it_wrong( $function, "WordPoints Debug Error: {$message}" );
+}
+
+// EOF

@@ -3,8 +3,13 @@
 /**
  * Functions to update the points component.
  *
+ * This file is loaded only when WordPoints is being updated. This functions should
+ * be considered private, and are not intended for general use.
+ *
  * @package WordPoints\Points
  * @since 1.2.0
+ *
+ * @access private
  */
 
 /**
@@ -89,17 +94,6 @@ function wordpoints_points_update_1_2_0() {
 	}
 
 } // function wordpoints_points_update_1_2_0()
-
-/**
- * Update the points component to 1.3.0.
- *
- * @since 1.3.0
- */
-function wordpoints_points_update_1_3_0() {
-
-	// Add the custom caps to the desired roles.
-	wordpoints_add_custom_caps( wordpoints_points_get_custom_caps() );
-}
 
 /**
  * Update the points component to 1.4.0.
@@ -350,5 +344,33 @@ function wordpoints_points_update_1_4_0_clean_points_logs() {
 		foreach ( $post_ids AS $post_id ) {
 			$hook->clean_logs_on_post_deletion( $post_id );
 		}
+	}
+}
+
+/**
+ * Update the points component to 1.5.0.
+ *
+ * Prior to 1.5.0, capabilities weren't automatically added to new sites when
+ * WordPoints was in network mode.
+ *
+ * @since 1.5.0
+ */
+function wordpoints_points_update_1_5_0() {
+
+	if ( ! is_wordpoints_network_active() ) {
+		return;
+	}
+
+	global $wpdb;
+
+	$capabilities = wordpoints_points_get_custom_caps();
+
+	$blog_ids = $wpdb->get_col( "SELECT blog_id FROM {$wpdb->blogs}" );
+
+	foreach ( $blog_ids as $blog_id ) {
+
+		switch_to_blog( $blog_id );
+		wordpoints_add_custom_caps( $capabilities );
+		restore_current_blog();
 	}
 }
