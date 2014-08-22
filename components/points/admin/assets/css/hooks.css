@@ -40,6 +40,7 @@
 .hook-top a.hook-action,
 .hook-top a.hook-action:hover {
 	text-decoration: none;
+	box-shadow: none; /* :focus styles */
 }
 
 .hook-title h4 {
@@ -444,6 +445,10 @@ div#hooks-right .closed .hooks-sortables {
     margin: 10px;
     margin-top: 20px;
     border-top: 1px #ddd dotted;
+}
+
+#hooks-right .in-hook-title {
+	color: #888;
 }
 
 /*

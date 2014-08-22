@@ -50,6 +50,42 @@ class WordPoints_Points_Logs_Query {
 	private $_query_ready = false;
 
 	/**
+	 * Whether query is supposed to use caching.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @type bool $_is_cached_query
+	 */
+	private $_is_cached_query = false;
+
+	/**
+	 * The cache key for this query.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @type string $_cache_key
+	 */
+	private $_cache_key;
+
+	/**
+	 * The cache group for this query.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @type string $_cache_group
+	 */
+	private $_cache_group;
+
+	/**
+	 * The MD5 hash of the query for looking it up the the cache.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @type string $_cache_query_md5
+	 */
+	private $_cache_query_md5;
+
+	/**
 	 * The type of select being performed.
 	 *
 	 * @since 1.0.0
@@ -122,15 +158,6 @@ class WordPoints_Points_Logs_Query {
 	private $_order;
 
 	/**
-	 * Holds the results for the query and count.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @type array $_cache
-	 */
-	private $_cache = array();
-
-	/**
 	 * Holds the meta query object when a meta query is being performed.
 	 *
 	 * @since 1.1.0
@@ -175,8 +202,11 @@ class WordPoints_Points_Logs_Query {
 	 *        @type string       $log_type            Return only logs of this type.
 	 *        @type string[]     $log_type__in        Return only logs of these types.
 	 *        @type string[]     $log_type__not_in    Exclude these log types from the results.
-	 *        @type int          $points              Limit results to transactions of this amount. More uses when used with $points_compare.
-	 *        @type string       $points_compare      Comparison operator for logs comparison with $points. May be any of these: '=', '<', '>', '<>', '!=', '<=', '>='. Default is '='.
+	 *        @type int          $points              Limit results to transactions of this amount. More uses when used with $points__compare.
+	 *        @type string       $points__compare     Comparison operator for logs comparison with $points. May be any of these: '=', '<', '>', '<>', '!=', '<=', '>='. Default is '='.
+	 *        @type string       $text                Log text must match this. Method of comparison is determined by $text__compare. Wildcards (% and _)
+	 *                                                must be escaped to be treated literally when doing LIKE comparisons.
+	 *        @type string       $text__compare       Comparison operator for $text. May be any of these:  '=', '<>', '!=', 'LIKE', 'NOT LIKE'. Default is 'LIKE'.
 	 *        @type int          $blog_id             Limit results to those from this blog within the network (mulitsite). Default is $wpdb->blogid (current blog).
 	 *        @type int[]        $blog__in            Limit results to these blogs.
 	 *        @type int[]        $blog__not_in        Exclude these blogs.
@@ -223,6 +253,8 @@ class WordPoints_Points_Logs_Query {
 			'log_type__not_in'    => array(),
 			'points'              => null,
 			'points__compare'     => '=',
+			'text'                => null,
+			'text__compare'       => 'LIKE',
 			'blog_id'             => $wpdb->blogid,
 			'blog__in'            => array(),
 			'blog__not_in'        => array(),
@@ -268,6 +300,22 @@ class WordPoints_Points_Logs_Query {
 				}
 			}
 		}
+
+	} // public function __construct()
+
+	/**
+	 * Set arguments for the query.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @param array $args A list of arguments to set and their values.
+	 */
+	public function set_args( array $args ) {
+
+		$this->_args = array_merge( $this->_args, $args );
+
+		$this->_query_ready = false;
+		$this->_cache_query_md5 = null;
 	}
 
 	/**
@@ -279,26 +327,33 @@ class WordPoints_Points_Logs_Query {
 	 * relied upon. Make inquiry before assuming the constancy of this behaviour.
 	 *
 	 * @since 1.0.0
+	 * @since 1.6.0 The $use_cache argument is deprecated.
 	 *
-	 * @param bool $use_cache Whether to return a cached result if one is available.
-	 *        The cache is not persistent and covers only the instance.
+	 * @param bool $use_cache Deprecated, and no longer used.
 	 *
 	 * @return int The number of results.
 	 */
 	public function count( $use_cache = true ) {
 
-		// Return the cached value if available.
-		if ( $use_cache && isset( $this->_cache['count'] ) ) {
-			return $this->_cache['count'];
+		if ( true !== $use_cache ) {
+			_deprecated_argument( __METHOD__, '1.6.0', 'The $use_cache argument is deprecated and should no longer be used.' );
+		}
+
+		if ( $this->_is_cached_query ) {
+			$cache = $this->_cache_get( 'count' );
+
+			if ( false !== $cache ) {
+				return $cache;
+			}
 		}
 
 		$this->_select_type = 'SELECT COUNT';
-		$this->_prepare_query();
 
 		$count = (int) $this->_get( 'var' );
 
-		// Cache the result.
-		$this->_cache['count'] = $count;
+		if ( $this->_is_cached_query ) {
+			$this->_cache_set( $count, 'count' );
+		}
 
 		return $count;
 	}
@@ -307,15 +362,21 @@ class WordPoints_Points_Logs_Query {
 	 * Get the results for the query.
 	 *
 	 * @since 1.0.0
+	 * @since 1.6.0 The $use_cache parameter was deprecated.
 	 *
-	 * @param string $method The method to use. Options are 'results', 'row', and
-	 *        'col', and 'var'.
+	 * @param string $method    The method to use. Options are 'results', 'row', and
+	 *                          'col', and 'var'.
+	 * @param bool   $use_cache Deprecated, no longer used.
 	 *
 	 * @return mixed The results of the query, or false on failure.
 	 */
 	public function get( $method = 'results', $use_cache = true ) {
 
 		$methods = array( 'results', 'row', 'col', 'var' );
+
+		if ( true !== $use_cache ) {
+			_deprecated_argument( __METHOD__, '1.6.0', 'The $use_cache argument is deprecated and should no longer be used.' );
+		}
 
 		if ( ! in_array( $method, $methods ) ) {
 
@@ -324,14 +385,95 @@ class WordPoints_Points_Logs_Query {
 			return false;
 		}
 
-		if ( $use_cache && isset( $this->_cache[ "get_{$method}" ] ) ) {
-			return $this->_cache[ "get_{$method}" ];
+		if ( $this->_is_cached_query ) {
+			$cache = $this->_cache_get( "get_{$method}" );
+
+			if ( false !== $cache ) {
+				return $cache;
+			}
 		}
 
 		$this->_select_type = 'SELECT';
-		$this->_prepare_query();
 
-		return $this->_get( $method );
+		$result = $this->_get( $method );
+
+		if ( $this->_is_cached_query ) {
+			$this->_cache_set( $result, "get_{$method}" );
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Get a page of the results.
+	 *
+	 * Useful for displaying paginated results, this function lets you get a slice
+	 * of the results.
+	 *
+	 * If your query is already using the 'start' argument, the results are
+	 * calculated relative to that. If your query has a 'limit' set, results will not
+	 * be returned beyond the limit.
+	 *
+	 * The cache is used if it has been primed. If not, only the requested results
+	 * are pulled from the database, and these are not cached.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @param int $page     The page number to get. Pages are numbered starting at 1.
+	 * @param int $per_page The number of logs being displayed per page.
+	 *
+	 * @return stdClass[]|false The logs for this page, or false if $page or $per_page is invalid.
+	 */
+	public function get_page( $page, $per_page = 25 ) {
+
+		if ( ! wordpoints_posint( $page ) || ! wordpoints_posint( $per_page ) ) {
+			return false;
+		}
+
+		$start = ( $page - 1 ) * $per_page;
+
+		// First try the cache.
+		if ( $this->_is_cached_query ) {
+
+			$cache = $this->_cache_get( 'get_results' );
+
+			if ( false !== $cache ) {
+				return array_slice(
+					$cache
+					, $start - $this->_args['start']
+					, $per_page
+				);
+			}
+		}
+
+		// Stash the args so we can restore them later.
+		$args = $this->_args;
+
+		$this->_args['start'] += $start;
+
+		if ( $this->_args['limit'] ) {
+			$this->_args['limit'] -= $start;
+		}
+
+		if ( ! $this->_args['limit'] || $this->_args['limit'] > $per_page ) {
+			$this->_args['limit'] = $per_page;
+		}
+
+		// Regenerate the query limit after changing the start and limit args.
+		$this->_prepare_limit();
+
+		$this->_select_type = 'SELECT';
+
+		$results = $this->_get( 'results' );
+
+		// Restore the originial arguments.
+		$this->_args = $args;
+
+		// Restore the original limit query portion.
+		$this->_limit = '';
+		$this->_prepare_limit();
+
+		return $results;
 	}
 
 	/**
@@ -355,8 +497,6 @@ class WordPoints_Points_Logs_Query {
 		if ( isset( $select_type ) ) {
 			$this->_select_type = $select_type;
 		}
-
-		$this->_prepare_query();
 
 		return $this->_get_sql();
 	}
@@ -413,7 +553,9 @@ class WordPoints_Points_Logs_Query {
 	 */
 	public function prime_cache( $key = 'default:%points_type%', $methods = 'results', $network = false ) {
 
-		$key = str_replace(
+		$this->_is_cached_query = true;
+
+		$this->_cache_key = str_replace(
 			array(
 				'%points_type%',
 				'%user_id%',
@@ -426,62 +568,56 @@ class WordPoints_Points_Logs_Query {
 		);
 
 		if ( $network ) {
-			$group = 'wordpoints_network_points_logs_query';
+			$this->_cache_group = 'wordpoints_network_points_logs_query';
 		} else {
-			$group = 'wordpoints_points_logs_query';
+			$this->_cache_group = 'wordpoints_points_logs_query';
 		}
 
-		$cache = wp_cache_get( $key, $group );
+		$cache = $this->_cache_get();
 
 		if ( ! is_array( $cache ) ) {
 			$cache = array();
-		}
-
-		$query = md5( $this->get_sql() );
-
-		if ( ! isset( $cache[ $query ] ) ) {
-			$cache[ $query ] = array();
 		}
 
 		$methods = array_unique( (array) $methods );
 
 		foreach ( $methods as $method ) {
 
-			if (
-				(
-					'count' === $method
-					&& ! isset( $cache[ $query ]['count'] )
-				)
-				|| ! isset( $cache[ $query ][ "get_{$method}" ] )
-			) {
+			if ( 'count' !== $method ) {
+				$method_key = "get_{$method}";
+			} else {
+				$method_key = 'count';
+			}
 
-				switch ( $method ) {
+			if ( isset( $cache[ $method_key ] ) ) {
+				continue;
+			}
 
-					case 'results':
-						$cache[ $query ]['get_results'] = $this->get();
-						$cache[ $query ]['count'] = count( $cache[ $query ]['get_results'] );
-					break;
+			switch ( $method ) {
 
-					case 'count':
-						$cache[ $query ]['count'] = $this->count();
-					break;
+				case 'results':
+					$cache['get_results'] = $this->get();
+					$cache['count'] = count( $cache['get_results'] );
+				break;
 
-					case 'var':
-					case 'col':
-					case 'row':
-						$cache[ $query ][ "get_{$method}" ] = $this->get( $method );
-					break;
+				case 'count':
+					$cache['count'] = $this->count();
+				break;
 
-					default:
-						return;
-				}
+				case 'var':
+				case 'col':
+				case 'row':
+					$cache[ "get_{$method}" ] = $this->get( $method );
+				break;
 
-				wp_cache_set( $key, $cache, $group );
+				default:
+					return;
 			}
 		}
 
-		$this->_cache = array_merge( $this->_cache, $cache[ $query ] );
-	}
+		$this->_cache_set( $cache );
+
+	} // public function prime_cache()
 
 	/**
 	 * Filter date query valid columns for WP_Date_Query.
@@ -537,7 +673,9 @@ class WordPoints_Points_Logs_Query {
 
 		global $wpdb;
 
-		$select = ( 'SELECT COUNT' == $this->_select_type ) ? $this->_select_count : $this->_select;
+		$this->_prepare_query();
+
+		$select = ( 'SELECT COUNT' === $this->_select_type ) ? $this->_select_count : $this->_select;
 
 		return $select . "\n"
 			. "FROM `{$wpdb->wordpoints_points_logs}`" . "\n"
@@ -565,6 +703,84 @@ class WordPoints_Points_Logs_Query {
 		$get = "get_{$method}";
 
 		return $wpdb->$get( $this->_get_sql() );
+	}
+
+	/**
+	 * Get the cached query.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @param string $type Optional result type to get from the cache. Default is
+	 *                     null, or all result types.
+	 *
+	 * @return mixed Cached value, or false if none.
+	 */
+	private function _cache_get( $type = null ) {
+
+		$cache = wp_cache_get( $this->_cache_key, $this->_cache_group );
+
+		if ( ! is_array( $cache ) ) {
+			return false;
+		}
+
+		$this->_calc_cache_query_md5();
+
+		if ( ! isset( $cache[ $this->_cache_query_md5 ] ) ) {
+			return false;
+		}
+
+		if ( isset( $type ) ) {
+			if ( isset( $cache[ $this->_cache_query_md5 ][ $type ] ) ) {
+				return $cache[ $this->_cache_query_md5 ][ $type ];
+			} else {
+				return false;
+			}
+		}
+
+		return $cache[ $this->_cache_query_md5 ];
+	}
+
+	/**
+	 * Set the cache value for this query.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @param mixed  $value The value to cache.
+	 * @param string $type  Optionally specify a results type to cache. Default is
+	 *                      null, or all types.
+	 */
+	private function _cache_set( $value, $type = null ) {
+
+		$cache = wp_cache_get( $this->_cache_key, $this->_cache_group );
+
+		$this->_calc_cache_query_md5();
+
+		if (
+			! isset( $cache[ $this->_cache_query_md5 ] )
+			|| ! is_array( $cache[ $this->_cache_query_md5 ] )
+		) {
+			$cache[ $this->_cache_query_md5 ] = array();
+		}
+
+		if ( isset( $type ) ) {
+			$cache[ $this->_cache_query_md5 ][ $type ] = $value;
+		} else {
+			$cache[ $this->_cache_query_md5 ] = $value;
+		}
+
+		wp_cache_set( $this->_cache_key, $cache, $this->_cache_group );
+	}
+
+	/**
+	 * Caclulate the MD5 hash of the query.
+	 *
+	 * @since 1.6.0
+	 */
+	private function _calc_cache_query_md5() {
+
+		if ( ! isset( $this->_cache_query_md5 ) ) {
+			$this->_cache_query_md5 = md5( $this->get_sql() );
+		}
 	}
 
 	/**
@@ -597,17 +813,17 @@ class WordPoints_Points_Logs_Query {
 
 		$var_type = gettype( $_fields );
 
-		if ( 'string' == $var_type ) {
+		if ( 'string' === $var_type ) {
 
-			if ( 'all' == $_fields ) {
-				$fields = '`' . implode( '` ,`', $this->_fields ) . '`';
+			if ( 'all' === $_fields ) {
+				$fields = '`' . implode( '`, `', $this->_fields ) . '`';
 			} elseif ( in_array( $_fields, $this->_fields ) ) {
 				$fields = $_fields;
 			} else {
 				_doing_it_wrong( __METHOD__, "WordPoints Debug Error: invalid field {$_fields}, possible values are " . implode( ', ', $this->_fields ), '1.0.0' );
 			}
 
-		} elseif ( 'array' == $var_type ) {
+		} elseif ( 'array' === $var_type ) {
 
 			$diff    = array_diff( $_fields, $this->_fields );
 			$_fields = array_intersect( $this->_fields, $_fields );
@@ -622,7 +838,7 @@ class WordPoints_Points_Logs_Query {
 		}
 
 		if ( empty( $fields ) ) {
-			$fields = '`' . implode( '` ,`', $this->_fields ) . '`';
+			$fields = '`' . implode( '`, `', $this->_fields ) . '`';
 		}
 
 		$this->_select = "SELECT {$fields}";
@@ -705,6 +921,19 @@ class WordPoints_Points_Logs_Query {
 
 				$this->_wheres[] = $wpdb->prepare( "`points` {$this->_args['points__compare']} %d", $this->_args['points'] );
 			}
+		}
+
+		// Log text.
+		if ( ! empty( $this->_args['text'] ) ) {
+
+			$comparisons = array( '=', '<>', '!=', 'LIKE', 'NOT LIKE' );
+
+			if ( ! in_array( $this->_args['text__compare'], $comparisons ) ) {
+
+				_doing_it_wrong( __METHOD__, "WordPoints Debug Error: invalid 'text__compare' {$this->_args['text__compare']}, possible values are " . implode( ', ', $comparisons ), '1.6.0' );
+			}
+
+			$this->_wheres[] = $wpdb->prepare( "`text` {$this->_args['text__compare']} %s", $this->_args['text'] );
 		}
 
 		// Multisite isn't really supported. This is just theoretical... :)
@@ -824,7 +1053,7 @@ class WordPoints_Points_Logs_Query {
 		$order    = $this->_args['order'];
 		$order_by = $this->_args['orderby'];
 
-		if ( 'none' == $order_by ) {
+		if ( 'none' === $order_by ) {
 			return;
 		}
 

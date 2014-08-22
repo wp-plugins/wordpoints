@@ -50,7 +50,7 @@ switch ( $action ) {
 
 		if ( is_wp_error( $result ) ) {
 
-			if ( 'unexpected_output' == $result->get_error_code() ) {
+			if ( 'unexpected_output' === $result->get_error_code() ) {
 
 				wp_redirect(
 					add_query_arg(
@@ -167,7 +167,9 @@ switch ( $action ) {
 		 */
 		function wordpoints_module_sandbox_scrape( $module ) {
 
-			include( wordpoints_modules_dir() . '/' . $module );
+			$modules_dir = wordpoints_modules_dir();
+			WordPoints_Module_Paths::register( $modules_dir . '/' . $module );
+			include( $modules_dir . '/' . $module );
 		}
 
 		wordpoints_module_sandbox_scrape( $module );
@@ -295,7 +297,7 @@ switch ( $action ) {
 
 					foreach ( $modules as $module ) {
 
-						if ( '.' == dirname( $module ) ) {
+						if ( '.' === dirname( $module ) ) {
 
 							$files_to_delete[] = $module_dir . '/' . $module;
 							$data = wordpoints_get_module_data( $module_dir . '/' . $module );
@@ -375,7 +377,7 @@ switch ( $action ) {
 					}
 				?></p>
 
-				<form method="post" action="<?php echo esc_url( $_SERVER['REQUEST_URI'] ); ?>" style="display:inline;">
+				<form method="post" action="<?php echo esc_attr( esc_url( $_SERVER['REQUEST_URI'] ) ); ?>" style="display:inline;">
 					<input type="hidden" name="verify-delete" value="1" />
 					<input type="hidden" name="action" value="delete-selected" />
 					<?php
@@ -386,7 +388,7 @@ switch ( $action ) {
 					<?php wp_nonce_field( 'bulk-modules' ) ?>
 					<?php submit_button( $data_to_delete ? __( 'Yes, Delete these files and data', 'wordpoints' ) : __( 'Yes, Delete these files', 'wordpoints' ), 'button', 'submit', false ); ?>
 				</form>
-				<form method="post" action="<?php echo esc_url( wp_get_referer() ); ?>" style="display:inline;">
+				<form method="post" action="<?php echo esc_attr( esc_url( wp_get_referer() ) ); ?>" style="display:inline;">
 					<?php submit_button( __( 'No, Return me to the module list', 'wordpoints' ), 'button', 'submit', false ); ?>
 				</form>
 
@@ -442,7 +444,7 @@ $screen->add_help_tab(
 		'title'		=> __( 'Overview', 'wordpoints' ),
 		'content'	=>
 			'<p>' . __( 'Modules extend and expand the functionality of WordPoints. Once a module is installed, you may activate it or deactivate it here.', 'wordpoints' ) . '</p>' .
-			'<p>' . sprintf( __( 'You can find modules for your site by by browsing the <a href="%1$s" target="_blank">WordPoints Module Directory</a>. To install a module you generally just need to <a href="%2$s">upload the module file</a> into your <code>/wp-content/wordpoints-modules</code> directory. Once a module has been installed, you can activate it here.', 'wordpoints' ), 'http://wordpoints.org/modules/', esc_url( self_admin_url( 'admin.php?page=wordpoints_install_modules' ) ) ) . '</p>'
+			'<p>' . sprintf( __( 'You can find modules for your site by by browsing the <a href="%1$s" target="_blank">WordPoints Module Directory</a>. To install a module you generally just need to <a href="%2$s">upload the module file</a> into your <code>/wp-content/wordpoints-modules</code> directory. Once a module has been installed, you can activate it here.', 'wordpoints' ), 'http://wordpoints.org/modules/', esc_attr( esc_url( self_admin_url( 'admin.php?page=wordpoints_install_modules' ) ) ) ) . '</p>'
 	)
 );
 

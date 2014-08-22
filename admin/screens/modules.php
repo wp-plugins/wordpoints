@@ -67,7 +67,7 @@ if ( isset( $_GET['error'] ) ) {
 
 	$message = __( 'Selected modules <strong>deactivated</strong>.', 'wordpoints' );
 
-} elseif ( isset( $_REQUEST['action'] ) && 'update-selected' == $_REQUEST['action'] ) {
+} elseif ( isset( $_REQUEST['action'] ) && 'update-selected' === $_REQUEST['action'] ) {
 
 	$error_message = __( 'No out of date modules were selected.', 'wordpoints' );
 }
@@ -84,7 +84,7 @@ if ( isset( $error_message ) ) {
 $title = esc_html( __( 'WordPoints Modules', 'wordpoints' ) );
 
 if ( ( ! is_multisite() || is_network_admin() ) && current_user_can( 'install_wordpoints_modules' ) ) {
-	$title .= '<a href="' . esc_url( self_admin_url( 'admin.php?page=wordpoints_install_modules' ) ) . '" class="add-new-h2">' . esc_html_x( 'Add New', 'module' ) . '</a>';
+	$title .= '<a href="' . esc_attr( esc_url( self_admin_url( 'admin.php?page=wordpoints_install_modules' ) ) ) . '" class="add-new-h2">' . esc_html_x( 'Add New', 'module' ) . '</a>';
 }
 
 if ( ! empty( $_REQUEST['s'] ) ) {
