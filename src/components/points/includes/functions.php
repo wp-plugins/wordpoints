@@ -65,7 +65,7 @@ function wordpoints_get_points_types() {
  *
  * @param string $slug The slug of a points type.
  *
- * @return array|bool An array of settings for this points type. False on failure.
+ * @return array|false An array of settings for this points type. False on failure.
  */
 function wordpoints_get_points_type( $slug ) {
 
@@ -111,7 +111,7 @@ function wordpoints_get_points_type_setting( $slug, $setting ) {
  *
  * @param array $settings The data for this points type.
  *
- * @return string|bool The slug on success. False on failure.
+ * @return string|false The slug on success. False on failure.
  */
 function wordpoints_add_points_type( $settings ) {
 
@@ -152,7 +152,7 @@ function wordpoints_add_points_type( $settings ) {
  * @param string $slug     The slug for the points type to update.
  * @param array  $settings The new settings for this points type.
  *
- * @return bool False on failure, or if this points type does not exist.
+ * @return bool True, or false on failure, or if this points type does not exist.
  */
 function wordpoints_update_points_type( $slug, $settings ) {
 
@@ -255,7 +255,7 @@ function wordpoints_delete_points_type( $slug ) {
  *
  * @param string $points_type The slug of the points type to get the meta key for.
  *
- * @return string|bool The user meta meta_key for a points type, or false.
+ * @return string|false The user meta meta_key for a points type, or false.
  */
 function wordpoints_get_points_user_meta_key( $points_type ) {
 
@@ -293,7 +293,7 @@ function wordpoints_get_points_user_meta_key( $points_type ) {
  * @param int    $user_id The ID of a user.
  * @param string $type    A points type slug.
  *
- * @return int|bool The users points, or false on failure.
+ * @return int|false The user's points, or false on failure.
  */
 function wordpoints_get_points( $user_id, $type ) {
 
@@ -323,8 +323,9 @@ function wordpoints_get_points( $user_id, $type ) {
  * <code>
  * function my_wordpoints_minimum_score( $minimum, $type ) {
  *
- *     if ( 'score' == $type )
+ *     if ( 'score' === $type ) {
  *           $minimum = 5;
+ *     }
  *
  *     return $minimum;
  * }
@@ -342,7 +343,7 @@ function wordpoints_get_points( $user_id, $type ) {
  *
  * @param string $type The slug for a points type.
  *
- * @return int|bool The minimum for this type of points. False if $type is bad.
+ * @return int|false The minimum for this type of points. False if $type is bad.
  */
 function wordpoints_get_points_minimum( $type ) {
 
@@ -471,7 +472,7 @@ function wordpoints_display_points( $user_id, $type, $context ) {
  * @param int    $user_id The ID of the user.
  * @param string $type    The type of points.
  *
- * @return int|bool False on failure.
+ * @return int|false False on failure.
  */
 function wordpoints_get_points_above_minimum( $user_id, $type ) {
 
@@ -575,7 +576,13 @@ function wordpoints_alter_points( $user_id, $points, $points_type, $log_type, $m
 	/**
 	 * Number of points to add/subtract.
 	 *
+	 * If 0 is returned, the transaction will be aborted, but true will still be
+	 * returned by wordpoints_alter_points(). If the result is a non-integer value,
+	 * wordpoints_alter_points() will return false.
+	 *
 	 * @since 1.0.0
+	 * @since 1.6.0 If the result is a non-integer value, wordpoints_alter_points()
+	 *              will return false. Previously it returned true.
 	 *
 	 * @param int    $points      The number of points.
 	 * @param string $points_type The type of points.
@@ -585,8 +592,10 @@ function wordpoints_alter_points( $user_id, $points, $points_type, $log_type, $m
 	 */
 	$points = apply_filters( 'wordpoints_alter_points', $points, $points_type, $user_id, $log_type, $meta );
 
-	if ( wordpoints_int( $points ) == 0 ) {
+	if ( wordpoints_int( $points ) === 0 ) {
 		return true;
+	} elseif ( false === $points ) {
+		return false;
 	}
 
 	// Get the current points so we can check this won't go below the minimum.
@@ -716,7 +725,7 @@ function wordpoints_alter_points( $user_id, $points, $points_type, $log_type, $m
  * @param string $log_type    The type of transaction.
  * @param array  $meta        The metadata for the transaction.
  *
- * @return bool
+ * @return bool Whether the points were added successfully.
  */
 function wordpoints_add_points( $user_id, $points, $points_type, $log_type, $meta = array() ) {
 
@@ -738,7 +747,7 @@ function wordpoints_add_points( $user_id, $points, $points_type, $log_type, $met
  * @param string $log_type    The type of transaction.
  * @param array  $meta        The metadata for the transaction.
  *
- * @return bool
+ * @return bool Whether the points were subtracted successfully.
  */
 function wordpoints_subtract_points( $user_id, $points, $points_type, $log_type, $meta = array() ) {
 
@@ -756,7 +765,7 @@ function wordpoints_subtract_points( $user_id, $points, $points_type, $log_type,
  * @param string $meta_key   The meta key. Expected unslashed.
  * @param mixed  $meta_value The meta value. Expected unslashed.
  *
- * @return bool
+ * @return bool Whether the metadata was added successfully.
  */
 function wordpoints_add_points_log_meta( $log_id, $meta_key, $meta_value ) {
 
@@ -952,7 +961,7 @@ function wordpoints_delete_points_log_meta( $log_id, $meta_key = '', $meta_value
  *
  * @since 1.0.0
  *
- * @return string|bool The default points type if one exists, or false.
+ * @return string|false The default points type if one exists, or false.
  */
 function wordpoints_get_default_points_type() {
 
@@ -1005,25 +1014,31 @@ function wordpoints_render_points_log_text( $user_id, $points, $points_type, $lo
  * Regenerate points logs messages.
  *
  * @since 1.2.0
+ * @since 1.6.0 Now expects an array of log objects, instead of an array of log IDs.
  *
- * @param array $log_ids The IDs of the logs to regenerate the log messages for.
+ * @param stdClass[] $logs The logs to regenerate the log messages for.
  *
  * @return void
  */
-function wordpoints_regenerate_points_logs( $log_ids ) {
+function wordpoints_regenerate_points_logs( $logs ) {
 
-	if ( empty( $log_ids ) || ! is_array( $log_ids ) ) {
+	if ( empty( $logs ) || ! is_array( $logs ) ) {
 		return;
+	}
+
+	if ( ! is_object( current( $logs ) ) ) {
+
+		_deprecated_argument( __FUNCTION__, '1.6.0', 'The first parameter should be an array of log objects, not log IDs.' );
+
+		$logs = new WordPoints_Points_Logs_Query( array( 'id__in' => $logs ) );
+		$logs = $logs->get();
+
+		if ( ! is_array( $logs ) ) {
+			return;
+		}
 	}
 
 	global $wpdb;
-
-	$logs = new WordPoints_Points_Logs_Query( array( 'id__in' => $log_ids ) );
-	$logs = $logs->get();
-
-	if ( ! is_array( $logs ) ) {
-		return;
-	}
 
 	foreach ( $logs as $log ) {
 
@@ -1049,7 +1064,7 @@ function wordpoints_regenerate_points_logs( $log_ids ) {
 			, $meta
 		);
 
-		if ( $new_log_text != $log->text ) {
+		if ( $new_log_text !== $log->text ) {
 
 			$wpdb->update(
 				$wpdb->wordpoints_points_logs
@@ -1282,7 +1297,7 @@ function wordpoints_delete_points_logs_for_user( $user_id ) {
 
 	$where = array( 'user_id' => $user_id );
 
-	if ( $blog_only != '' ) {
+	if ( $blog_only !== '' ) {
 		$where['blog_id'] = $wpdb->blogid;
 	}
 

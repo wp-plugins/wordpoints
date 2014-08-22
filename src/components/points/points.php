@@ -146,7 +146,7 @@ function wordpoints_points_component_update() {
 	}
 
 	// If the DB version isn't less than the code version, we don't need to upgrade.
-	if ( version_compare( $db_version, WORDPOINTS_VERSION ) != -1 ) {
+	if ( version_compare( $db_version, WORDPOINTS_VERSION ) !== -1 ) {
 		return;
 	}
 
@@ -168,7 +168,7 @@ function wordpoints_points_component_update() {
 		// fallthru
 
 		case version_compare( '1.5.0', $db_version ):
-			if ( 1 != version_compare( '1.4.0', $db_version ) ) {
+			if ( 1 !== version_compare( '1.4.0', $db_version ) ) {
 				// This doesn't need to run if we just ran the 1.4.0 update.
 				wordpoints_points_update_1_5_0();
 			}
@@ -200,6 +200,13 @@ function wordpoints_points_register_scripts() {
 	wp_register_style(
 		'wordpoints-top-users'
 		,$assets_url . 'css/top-users.css'
+		,null
+		,WORDPOINTS_VERSION
+	);
+
+	wp_register_style(
+		'wordpoints-points-logs'
+		,$assets_url . 'css/points-logs.css'
 		,null
 		,WORDPOINTS_VERSION
 	);

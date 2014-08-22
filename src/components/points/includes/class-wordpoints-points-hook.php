@@ -145,7 +145,7 @@ abstract class WordPoints_Points_Hook {
 	 *                            via form().
 	 * @param array $old_instance Old settings for this instance.
 	 *
-	 * @return array|bool Settings to save, or false to cancel saving.
+	 * @return array|false Settings to save, or false to cancel saving.
 	 */
 	protected function update( $new_instance, $old_instance ) {
 
@@ -540,7 +540,7 @@ abstract class WordPoints_Points_Hook {
 
 		$all_instances = $this->get_instances( $type );
 
-		if ( 0 == $this->number ) {
+		if ( 0 === $this->number || '0' === $this->number ) {
 
 			// We echo out a form where 'number' can be set later.
 			$this->set_number( '__i__' );

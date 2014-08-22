@@ -309,7 +309,7 @@ final class WordPoints_Points_Hooks {
 	 */
 	public static function list_by_points_type( $slug ) {
 
-		if ( $slug != '_inactive_hooks' && ! wordpoints_is_points_type( $slug ) ) {
+		if ( $slug !== '_inactive_hooks' && ! wordpoints_is_points_type( $slug ) ) {
 			return;
 		}
 
@@ -358,7 +358,7 @@ final class WordPoints_Points_Hooks {
 	 */
 	public static function set_network_mode( $on ) {
 
-		if ( $on != self::$network_mode ) {
+		if ( $on !== self::$network_mode ) {
 
 			self::$network_mode = (bool) $on;
 
@@ -447,7 +447,7 @@ final class WordPoints_Points_Hooks {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param string|bool $hook_id The ID of the hook. False if not found.
+	 * @param string|false $hook_id The ID of the hook. False if not found.
 	 */
 	public static function get_points_type( $hook_id ) {
 
@@ -519,7 +519,7 @@ final class WordPoints_Points_Hooks {
 			,$points_type
 		);
 
-		if ( ! isset( $slug ) && 'hook' == $wrap ) {
+		if ( ! isset( $slug ) && 'hook' === $wrap ) {
 			$wrap = 'hook-content';
 		}
 
@@ -588,16 +588,16 @@ final class WordPoints_Points_Hooks {
 						?>
 
 						<p>
-							<label for="points-name"><?php _ex( 'Name:', 'points type', 'wordpoints' ); ?></label>
-							<input class="widefat" type="text" name="points-name" class="points-name" value="<?php echo esc_attr( $points_type['name'] ); ?>" />
+							<label for="points-name-<?php echo esc_attr( $slug ); ?>"><?php _ex( 'Name:', 'points type', 'wordpoints' ); ?></label>
+							<input class="widefat" type="text" id="points-name-<?php echo esc_attr( $slug ); ?>" name="points-name" class="points-name" value="<?php echo esc_attr( $points_type['name'] ); ?>" />
 						</p>
 						<p>
-							<label for="points-prefix"><?php echo esc_html( $prefix ); ?></label>
-							<input class="widefat" type="text" name="points-prefix" class="points-prefix" value="<?php echo esc_attr( $points_type['prefix'] ); ?>" />
+							<label for="points-prefix-<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $prefix ); ?></label>
+							<input class="widefat" type="text" id="points-prefix-<?php echo esc_attr( $slug ); ?>" name="points-prefix" class="points-prefix" value="<?php echo esc_attr( $points_type['prefix'] ); ?>" />
 						</p>
 						<p>
-							<label for="points-suffix"><?php echo esc_html( $suffix ); ?></label>
-							<input class="widefat" type="text" name="points-suffix" class="points-suffix" value="<?php echo esc_attr( $points_type['suffix'] ); ?>" />
+							<label for="points-suffix-<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $suffix ); ?></label>
+							<input class="widefat" type="text" id="points-suffix-<?php echo esc_attr( $slug ); ?>" name="points-suffix" class="points-suffix" value="<?php echo esc_attr( $points_type['suffix'] ); ?>" />
 						</p>
 
 						<?php
@@ -688,14 +688,14 @@ final class WordPoints_Points_Hooks {
 			$query_arg['points_type'] = $points_type;
 		}
 
-		if ( isset( $options['_display'] ) && 'template' == $options['_display'] && $number ) {
+		if ( isset( $options['_display'] ) && 'template' === $options['_display'] && $number ) {
 
 			/*
 			 * We aren't outputting the form for a hook, but a template form for this
 			 * hook type. (In other words, we are in the "Available Hooks" section.)
 			 */
 
-			// number == 0 implies a template where id numbers are replaced by a generic '__i__'.
+			// number === 0 implies a template where id numbers are replaced by a generic '__i__'.
 			$number = 0;
 
 			// With id_base hook id's are constructed like {$id_base}-{$id_number}.
@@ -711,7 +711,7 @@ final class WordPoints_Points_Hooks {
 		<div class="hook-top">
 			<div class="hook-title-action">
 				<a class="hook-action hide-if-no-js" href="#available-hooks"></a>
-				<a class="hook-control-edit hide-if-js" href="<?php echo esc_url( add_query_arg( $query_arg ) ); ?>">
+				<a class="hook-control-edit hide-if-js" href="<?php echo esc_attr( esc_url( add_query_arg( $query_arg ) ) ); ?>">
 					<span class="edit"><?php _ex( 'Edit', 'hook', 'wordpoints' ); ?></span>
 					<span class="add"><?php _ex( 'Add', 'hook', 'wordpoints' ); ?></span>
 					<span class="screen-reader-text"><?php echo $title; ?></span>
