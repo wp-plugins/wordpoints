@@ -464,41 +464,37 @@ function wordpoints_enqueue_datatables( $for = null, array $args = array() ) {
 			);
 		}
 
-		$lang_defaults = array(
-			'sEmptyTable'     => _x( 'No data available in table', 'datatable', 'wordpoints' ),
-			/* translators: _START_, _END_, and _TOTAL_ will be replaced with the correct values. */
-			'sInfo'           => _x( 'Showing _START_ to _END_ of _TOTAL_ entries', 'datatable', 'wordpoints' ),
-			'sInfoEmpty'      => _x( 'Showing 0 to 0 of 0 entries', 'datatable', 'wordpoints' ),
-			/* translators: _MAX_ will be replaced with the total. */
-			'sInfoFiltered'   => _x( '(filtered from _MAX_ total entries)', 'datatable', 'wordpoints' ),
-			'sInfoPostFix'    => '',
-			'sInfoThousands'  => $wp_locale->number_format['thousands_sep'],
-			/* translators: _MENU_ will be replaced with a dropdown menu. */
-			'sLengthMenu'     => _x( 'Show _MENU_ entries', 'datatable', 'wordpoints' ),
-			'sLoadingRecords' => _x( 'Loading...', 'datatable', 'wordpoints' ),
-			'sProcessing'     => _x( 'Processing...', 'datatable', 'wordpoints' ),
-			'sSearch'         => _x( 'Search:', 'datatable', 'wordpoints' ),
-			'sZeroRecords'    => _x( 'No matching records found', 'datatable', 'wordpoints' ),
-			'oPaginate' => array(
-				'sFirst'    => _x( 'First', 'datatable', 'wordpoints' ),
-				'sLast'     => _x( 'Last', 'datatable', 'wordpoints' ),
-				'sNext'     => _x( 'Next', 'datatable', 'wordpoints' ),
-				'sPrevious' => _x( 'Previous', 'datatable', 'wordpoints' ),
-			),
-		);
-
-		if ( isset( $args['oLanguage'] ) ) {
-
-			$args['oLanguage'] = array_merge( $lang_defaults, $args['oLanguage'] );
-			$args['oLanguage']['oPaginate'] = array_merge( $lang_defaults['oPaginate'], $args['oLanguage']['oPaginate'] );
-
-		} else {
-
-			$args['oLanguage'] = $lang_defaults;
-		}
-
 		wp_localize_script( 'wordpoints-datatables-init', 'WordPointsDataTable', array( 'selector' => $for, 'args' => $args ) );
 	}
+}
+
+/**
+ * Check if a table exists in the database.
+ *
+ * @since 1.0.0
+ * @deprecated 1.7.0 No longer used.
+ *
+ * @uses $wpdb
+ *
+ * @param string $table The name of the table to check for.
+ *
+ * @return bool Whether the table exists.
+ */
+function wordpoints_db_table_exists( $table ) {
+
+	_deprecated_function( __FUNCTION__, '1.7.0' );
+
+	global $wpdb, $wp_version;
+
+	if ( version_compare( $wp_version, '4.0-alpha-28611-src', '>=' ) ) {
+		$esc_table = $wpdb->esc_like( $table );
+	} else {
+		$esc_table = like_escape( $table );
+	}
+
+	$_table = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $esc_table ) );
+
+	return ( $_table === $table ) ? true : false;
 }
 
 // EOF

@@ -7,6 +7,10 @@
  * @since 1.0.0
  */
 
+if ( ! current_user_can( 'manage_options' ) ) {
+	return;
+}
+
 if (
 	isset( $_POST['wordpoints_settings_nonce'], $_POST['excluded_users'] )
 	&& wp_verify_nonce( $_POST['wordpoints_settings_nonce'], 'wordpoints_settings_submit' )
@@ -34,13 +38,13 @@ if (
 	 */
 	do_action( 'wordpoints_admin_settings_update' );
 
-	wordpoints_show_admin_message( __( 'Settings updated.', 'wordpoints' ) );
+	wordpoints_show_admin_message( esc_html__( 'Settings updated.', 'wordpoints' ) );
 }
 
 ?>
 
-<p><?php _e( 'Configure WordPoints to your liking.', 'wordpoints' ); ?></p>
-<form id="wordpoints-settings" method="post" action="">
+<p><?php esc_html_e( 'Configure WordPoints to your liking.', 'wordpoints' ); ?></p>
+<form id="wordpoints-settings" method="post">
 
 	<?php
 
@@ -53,13 +57,13 @@ if (
 
 	?>
 
-	<h3><?php _e( 'Excluded Users', 'wordpoints' ); ?></h3>
-	<p><?php _e( 'Enter the IDs of users to exclude from leader boards, logs, etc. This may be useful if you use certain accounts for testing.', 'wordpoints' ); ?></p>
+	<h3><?php esc_html_e( 'Excluded Users', 'wordpoints' ); ?></h3>
+	<p><?php esc_html_e( 'Enter the IDs of users to exclude from leader boards, logs, etc. This may be useful if you use certain accounts for testing.', 'wordpoints' ); ?></p>
 	<table class="form-table">
 		<tbody>
 			<tr>
 				<th>
-					<label for="excluded_users"><?php _e( 'Excluded Users', 'wordpoints' ); ?></label>
+					<label for="excluded_users"><?php esc_html_e( 'Excluded Users', 'wordpoints' ); ?></label>
 				</th>
 				<td>
 					<input type="text" name="excluded_users" id="excluded_users" value="<?php echo esc_attr( implode( ', ', wordpoints_get_array_option( 'wordpoints_excluded_users', 'network' ) ) ); ?>" />

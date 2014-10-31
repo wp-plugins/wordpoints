@@ -8,16 +8,16 @@
  */
 
 if ( is_network_admin() ) {
-	$title = __( 'WordPoints - Network Points Logs', 'wordpoints' );
+	$title = __( 'WordPoints — Network Points Logs', 'wordpoints' );
 } else {
-	$title = __( 'WordPoints - Points Logs', 'wordpoints' );
+	$title = __( 'WordPoints — Points Logs', 'wordpoints' );
 }
 
 ?>
 
 <div class="wrap">
 	<h2><?php echo esc_html( $title ); ?></h2>
-	<p class="wordpoints-admin-panel-desc"><?php _e( 'View recent points transactions.', 'wordpoints' ); ?></p>
+	<p class="wordpoints-admin-panel-desc"><?php esc_html_e( 'View recent points transactions.', 'wordpoints' ); ?></p>
 
 	<?php
 

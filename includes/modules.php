@@ -200,7 +200,7 @@ final class WordPoints_Module_Paths {
 		}
 
 		foreach ( self::$paths as $path ) {
-			if ( strpos( $file, $path['module_realpath'] ) === 0 ) {
+			if ( 0 === strpos( $file, $path['module_realpath'] ) ) {
 				$file = $path['module_path'] . substr( $file, $path['realpath_length'] );
 			}
 		}
@@ -458,13 +458,11 @@ function wordpoints_get_module_data( $module_file, $markup = true, $translate = 
 
 			if ( $module_data['module_uri'] && $module_data['name'] ) {
 				$module_data['title'] = '<a href="' . $module_data['module_uri']
-					. '" title="' . esc_attr__( 'Visit module homepage', 'wordpoints' )
 					. '">' . $module_data['name'] . '</a>';
 			}
 
 			if ( $module_data['author_uri'] && $module_data['author'] ) {
 				$module_data['author'] = '<a href="' . $module_data['author_uri']
-					. '" title="' . esc_attr__( 'Visit author homepage', 'wordpoints' )
 					. '">' . $module_data['author'] . '</a>';
 			}
 
@@ -714,7 +712,7 @@ function _wordpoints_sort_uname_callback( $a, $b ) {
  *
  * @since 1.1.0
  *
- * @param stirng $module The basename path tot he main file of the module to activate.
+ * @param string $module The basename path tot he main file of the module to activate.
  * @param string $redirect The URL to redirect to on failure.
  * @param bool   $network_wide Whether to activate the module network wide. False by
  *                             default. Only applicable on multisite and when the
@@ -748,7 +746,7 @@ function wordpoints_activate_module( $module, $redirect = '', $network_wide = fa
 		return;
 	}
 
-	if ( ! empty($redirect) ) {
+	if ( ! empty( $redirect ) ) {
 
 		/*
 		 * Redirect. We'll override this later if the module can be included
@@ -1052,7 +1050,19 @@ function wordpoints_delete_modules( $modules ) {
 	do_action( 'wordpoints_deleted_modules', $modules, $errors );
 
 	if ( ! empty( $errors ) ) {
-		return new WP_Error( 'could_not_remove_module', sprintf( __( 'Could not fully remove the module(s) %s.', 'wordpoints' ), implode( ', ', $errors ) ) );
+		return new WP_Error(
+			'could_not_remove_module'
+			, sprintf(
+				/* translators: A module or list of modules. */
+				_n(
+					'Could not fully remove the module %s.'
+					, 'Could not fully remove the modules %s.'
+					, count( $errors )
+					, 'wordpoints'
+				)
+				, implode( ', ', $errors )
+			)
+		);
 	}
 
 	return true;
@@ -1183,4 +1193,4 @@ function wordpoints_register_module_deactivation_hook( $file, $function ) {
 	add_action( "wordpoints_deactivate_module-{$module_file}", $function );
 }
 
-// end of file /includes/modules.php
+// EOF

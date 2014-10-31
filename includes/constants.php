@@ -16,13 +16,24 @@
  *
  * @const WORDPOINTS_VERSION
  */
-define( 'WORDPOINTS_VERSION', '1.6.0' );
+define( 'WORDPOINTS_VERSION', '1.7.0' );
 
 /**
- * You are here.
+ * The full path to the plugin's main directory.
  *
  * @since 1.0.0
  *
  * @const WORDPOINTS_DIR
  */
 define( 'WORDPOINTS_DIR', plugin_dir_path( dirname( __FILE__ ) ) );
+
+/**
+ * The full URL to the plugin's main directory.
+ *
+ * @since 1.7.0
+ *
+ * @const WORDPOINTS_URL
+ */
+define( 'WORDPOINTS_URL', plugins_url( '', WORDPOINTS_DIR . 'wordpoints.php' ) );
+
+// EOF

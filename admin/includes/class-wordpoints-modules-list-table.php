@@ -248,7 +248,7 @@ final class WordPoints_Modules_List_Table extends WP_List_Table {
 
 		foreach ( $module_data as $value ) {
 
-			if ( stripos( $value, $term ) !== false ) {
+			if ( false !== stripos( $value, $term ) ) {
 				return true;
 			}
 		}
@@ -298,7 +298,7 @@ final class WordPoints_Modules_List_Table extends WP_List_Table {
 		if ( ! empty( $modules['all'] ) ) {
 			esc_html_e( 'No modules found.', 'wordpoints' );
 		} else {
-			printf( __( 'You do not appear to have any modules available at this time. <a href="%s">Install some</a>.', 'wordpoints' ), esc_attr( esc_url( self_admin_url( 'admin.php?page=wordpoints_install_modules' ) ) ) );
+			esc_html_e( 'There are not any modules installed.', 'wordpoints' );
 		}
 	}
 
@@ -445,7 +445,7 @@ final class WordPoints_Modules_List_Table extends WP_List_Table {
 
 		global $status;
 
-		if ( $status !== 'recently_activated' ) {
+		if ( 'recently_activated' !== $status ) {
 			return;
 		}
 
@@ -631,7 +631,7 @@ final class WordPoints_Modules_List_Table extends WP_List_Table {
 						$author = $module_data['author'];
 
 						if ( ! empty( $module_data['author_uri'] ) ) {
-							$author = '<a href="' . esc_attr( esc_url( $module_data['author_uri'] ) ) . '" title="' . esc_attr__( 'Visit author homepage', 'wordpoints' ) . '">' . esc_html( $module_data['author'] ) . '</a>';
+							$author = '<a href="' . esc_attr( esc_url( $module_data['author_uri'] ) ) . '">' . esc_html( $module_data['author'] ) . '</a>';
 						}
 
 						$module_meta[] = sprintf( __( 'By %s', 'wordpoints' ), $author );
@@ -703,3 +703,5 @@ final class WordPoints_Modules_List_Table extends WP_List_Table {
 	} // function single_row()
 
 } // class WordPoints_Modules_List_Table
+
+// EOF

@@ -71,7 +71,7 @@ class WordPoints_Post_Points_Hook extends WordPoints_Post_Type_Points_Hook_Base 
 	 */
 	public function publish_hook( $new_status, $old_status, $post ) {
 
-		if ( $new_status !== 'publish' ) {
+		if ( 'publish' !== $new_status ) {
 			return;
 		}
 
@@ -338,4 +338,7 @@ class WordPoints_Post_Points_Hook extends WordPoints_Post_Type_Points_Hook_Base 
 
 		return $can_view;
 	}
-}
+
+} // class WordPoints_Post_Points_Hook
+
+// EOF

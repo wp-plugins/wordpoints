@@ -141,7 +141,7 @@ function wordpoints_get_array_option( $option, $context = 'default' ) {
 		break;
 
 		default:
-			_doing_it_wrong( __FUNCTION__, sprintf( 'Unknown option context "%s"', $context ), '1.2.0' );
+			_doing_it_wrong( __FUNCTION__, sprintf( 'Unknown option context "%s"', esc_html( $context ) ), '1.2.0' );
 			$value = array();
 	}
 
@@ -242,32 +242,6 @@ function wordpoints_delete_network_option( $option ) {
 }
 
 /**
- * Check if a table exists in the database.
- *
- * @since 1.0.0
- *
- * @uses $wpdb
- *
- * @param string $table The name of the table to check for.
- *
- * @return bool Whether the table exists.
- */
-function wordpoints_db_table_exists( $table ) {
-
-	global $wpdb, $wp_version;
-
-	if ( version_compare( $wp_version, '4.0-alpha-28611-src', '>=' ) ) {
-		$esc_table = $wpdb->esc_like( $table );
-	} else {
-		$esc_table = like_escape( $table );
-	}
-
-	$_table = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $esc_table ) );
-
-	return ( $_table === $table ) ? true : false;
-}
-
-/**
  * Prepare an IN or NOT IN condition for a database query.
  *
  * Example return: "'foo','bar','blah'".
@@ -290,6 +264,7 @@ function wordpoints_prepare__in( $_in, $format = '%s' ) {
 
 	if ( ! in_array( $format, $formats ) ) {
 
+		$format = esc_html( $format );
 		_doing_it_wrong( __FUNCTION__, "WordPoints Debug Error: invalid format '{$format}', allowed values are %s, %d, and %f", '1.0.0' );
 
 		$format = '%s';
@@ -421,7 +396,7 @@ class WordPoints_Dropdown_Builder {
 
 		if ( ! empty( $this->args['show_option_none'] ) ) {
 
-			echo '<option value="-1"', selected( '-1', $this->args['selected'] ), '>', esc_html( $this->args['show_option_none'] ), '</option>';
+			echo '<option value="-1"', selected( '-1', $this->args['selected'], false ), '>', esc_html( $this->args['show_option_none'] ), '</option>';
 		}
 
 		foreach ( $this->options as $value => $option ) {
@@ -479,7 +454,7 @@ function wordpoints_list_post_types( $options, $args = array() ) {
 	$options = array_merge( $defaults, $options );
 
 	echo '<select class="' . esc_attr( $options['class'] ) . '" name="' . esc_attr( $options['name'] ) . '" id="' . esc_attr( $options['id'] ) . '">';
-	echo '<option value="ALL"' . selected( $options['selected'], 'ALL' ) . '>' . esc_html( _x( 'Any', 'post type', 'wordpoints' ) ) . '</option>';
+	echo '<option value="ALL"' . selected( $options['selected'], 'ALL', false ) . '>' . esc_html_x( 'Any', 'post type', 'wordpoints' ) . '</option>';
 
 	foreach ( get_post_types( $args, 'objects' ) as $post_type ) {
 
@@ -487,7 +462,7 @@ function wordpoints_list_post_types( $options, $args = array() ) {
 			continue;
 		}
 
-		echo '<option value="' . $post_type->name . '"' . selected( $options['selected'], $post_type->name ) . '>' . $post_type->label . '</option>';
+		echo '<option value="' . $post_type->name . '"' . selected( $options['selected'], $post_type->name, false ) . '>' . $post_type->label . '</option>';
 	}
 
 	echo '</select>';
@@ -698,4 +673,56 @@ function wordpoints_add_custom_caps_to_new_sites( $blog_id ) {
 }
 add_action( 'wpmu_new_blog', 'wordpoints_add_custom_caps_to_new_sites' );
 
-// end of file /includes/functions.php
+/**
+ * Register the points component.
+ *
+ * @since 1.0.0
+ *
+ * @action wordpoints_components_register
+ *
+ * @uses wordpoints_component_register()
+ */
+function wordpoints_points_component_register() {
+
+	wordpoints_component_register(
+		array(
+			'slug'          => 'points',
+			'name'          => _x( 'Points', 'component name', 'wordpoints' ),
+			'version'       => WORDPOINTS_VERSION,
+			'author'        => _x( 'WordPoints', 'component author', 'wordpoints' ),
+			'author_uri'    => 'http://wordpoints.org/',
+			'component_uri' => 'http://wordpoints.org/',
+			'description'   => __( 'Enables a points system for your site.', 'wordpoints' ),
+			'file'          => WORDPOINTS_DIR . 'components/points/points.php',
+			'uninstall_file' => WORDPOINTS_DIR . 'components/points/uninstall.php',
+		)
+	);
+}
+add_action( 'wordpoints_components_register', 'wordpoints_points_component_register' );
+
+/**
+ * Register the ranks component.
+ *
+ * @since 1.7.0
+ *
+ * @action wordpoints_components_register
+ */
+function wordpoints_ranks_component_register() {
+
+	wordpoints_component_register(
+		array(
+			'slug'           => 'ranks',
+			'name'           => _x( 'Ranks', 'component name', 'wordpoints' ),
+			'version'        => WORDPOINTS_VERSION,
+			'author'         => _x( 'WordPoints', 'component author', 'wordpoints' ),
+			'author_uri'     => 'http://wordpoints.org/',
+			'component_uri'  => 'http://wordpoints.org/',
+			'description'    => __( 'Assign users ranks based on their points levels.', 'wordpoints' ),
+			'file'           => WORDPOINTS_DIR . 'components/ranks/ranks.php',
+			'uninstall_file' => WORDPOINTS_DIR . 'components/ranks/uninstall.php',
+		)
+	);
+}
+add_action( 'wordpoints_components_register', 'wordpoints_ranks_component_register' );
+
+// EOF

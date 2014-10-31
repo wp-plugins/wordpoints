@@ -158,9 +158,6 @@ final class WordPoints_Components {
 	 */
 	public function load() {
 
-		// Include core component(s).
-		include_once( WORDPOINTS_DIR . 'components/points/points.php' );
-
 		/**
 		 * Registration of included components.
 		 *
@@ -170,8 +167,23 @@ final class WordPoints_Components {
 		 * action instead.
 		 *
 		 * @since 1.0.0
+		 * @since 1.7.0 The components' code isn't loaded until after this hook.
 		 */
 		do_action( 'wordpoints_components_register' );
+
+		foreach ( $this->get() as $component ) {
+
+			// Back-compat < 1.7.0
+			if ( ! isset( $component['file'] ) ) {
+				continue;
+			}
+
+			if ( ! $this->is_active( $component['slug'] ) ) {
+				continue;
+			}
+
+			include_once( $component['file'] );
+		}
 
 		/**
 		 * Components loaded and registered.
@@ -242,6 +254,8 @@ final class WordPoints_Components {
 	 *        @type string $component_uri The component's webpage.
 	 *        @type string $description   A description of what the component does.
 	 *        @type string $version       The component's version number.
+	 *        @type string $file          The component's main file.
+	 *        @type string $uninstall_file A file which will uninstall the component.
 	 * }
 	 *
 	 * @return bool True, or false if the component's slug has already been registered.
@@ -256,6 +270,8 @@ final class WordPoints_Components {
 			'component_uri' => '',
 			'description'   => '',
 			'version'       => '',
+			'file'          => null,
+			'uninstall_file' => null,
 		);
 
 		$component = array_merge( $defaults, $args );
@@ -267,6 +283,10 @@ final class WordPoints_Components {
 		}
 
 		$this->registered[ $slug ] = array_intersect_key( $component, $defaults );
+
+		if ( empty( $this->registered[ $slug ]['file'] ) ) {
+			_doing_it_wrong( __METHOD__, 'Components should be registered with the the "file" argument, no loaded unconditionally.', '1.7.0' );
+		}
 
 		return true;
 	}
@@ -327,6 +347,10 @@ final class WordPoints_Components {
 
 			if ( ! wordpoints_update_network_option( 'wordpoints_active_components', $this->active ) ) {
 				return false;
+			}
+
+			if ( isset( $this->registered[ $slug ]['file'] ) ) { // Back-compat < 1.7.0
+				include_once( $this->registered[ $slug ]['file'] );
 			}
 
 			/**
@@ -409,6 +433,31 @@ final class WordPoints_Components {
 		 */
 		return apply_filters( 'wordpoints_component_active', $is_active, $slug );
 	}
+
+	/**
+	 * Uninstall a component.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param string $slug The component's slug.
+	 */
+	public function uninstall( $slug ) {
+
+		if ( ! $this->is_registered( $slug ) ) {
+			return;
+		}
+
+		/**
+		 * Uninstall a component.
+		 *
+		 * @since 1.0.0
+		 */
+		do_action( "wordpoints_uninstall_component-{$slug}" );
+
+		if ( isset( $this->registered[ $slug ]['uninstall_file'] ) ) { // Back-compat < 1.7.0
+			include_once( $this->registered[ $slug ]['uninstall_file'] );
+		}
+	}
 }
 
-// end of file /includes/class-wordpoints-components.php
+// EOF

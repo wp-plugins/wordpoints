@@ -273,7 +273,7 @@ class WordPoints_Points_Logs_Query {
 				if ( isset( $this->_args['meta_query'][ $key ] ) ) {
 
 					unset( $this->_args['meta_query'][ $key ] );
-					_deprecated_argument( __METHOD__, '1.1.0', sprintf( __( '%s is no longer supported.', 'wordpoints' ), "\$args['meta_query'][{$key}]" ) );
+					_deprecated_argument( __METHOD__, '1.1.0', sprintf( esc_html__( '%s is no longer supported.', 'wordpoints' ), "\$args['meta_query'][{$key}]" ) );
 				}
 			}
 
@@ -281,7 +281,7 @@ class WordPoints_Points_Logs_Query {
 
 				$this->_args['meta_key'] = $this->_args['meta_query']['key'];
 				unset( $this->_args['meta_query']['key'] );
-				_deprecated_argument( __METHOD__, '1.1.0', sprintf( __( '%s has been replaced by %s.', 'wordpoints' ), '$args["meta_query"]["key"]', '$args["meta_key"]' ) );
+				_deprecated_argument( __METHOD__, '1.1.0', sprintf( esc_html__( '%s has been replaced by %s.', 'wordpoints' ), '$args["meta_query"]["key"]', '$args["meta_key"]' ) );
 			}
 
 			foreach ( array( 'value', 'value__in', 'value__not_in' ) as $key ) {
@@ -290,7 +290,7 @@ class WordPoints_Points_Logs_Query {
 
 					$this->_args['meta_value'] = $this->_args['meta_query'][ $key ];
 					unset( $this->_args['meta_query'][ $key ] );
-					_deprecated_argument( __METHOD__, '1.1.0', sprintf( __( '%s has been replaced by %s.', 'wordpoints' ), "\$args['meta_query'][{$key}]", '$args["meta_value"]' ) );
+					_deprecated_argument( __METHOD__, '1.1.0', sprintf( esc_html__( '%s has been replaced by %s.', 'wordpoints' ), "\$args['meta_query'][{$key}]", '$args["meta_value"]' ) );
 
 					if ( 'value__not_in' === $key ) {
 						$this->_args['meta_compare'] = 'NOT IN';
@@ -936,7 +936,6 @@ class WordPoints_Points_Logs_Query {
 			$this->_wheres[] = $wpdb->prepare( "`text` {$this->_args['text__compare']} %s", $this->_args['text'] );
 		}
 
-		// Multisite isn't really supported. This is just theoretical... :)
 		if ( is_multisite() ) {
 
 			if ( wordpoints_posint( $this->_args['site_id'] ) ) {
@@ -1018,7 +1017,7 @@ class WordPoints_Points_Logs_Query {
 
 		$_var = $this->_args['limit'];
 
-		if ( wordpoints_int( $this->_args['limit'] ) === false ) {
+		if ( false === wordpoints_int( $this->_args['limit'] ) ) {
 
 			_doing_it_wrong( __METHOD__, "WordPoints Debug Error: 'limit' must be a positive integer, " . ( strval( $_var ) ? $_var : gettype( $_var ) ) . ' given', '1.0.0' );
 
@@ -1027,7 +1026,7 @@ class WordPoints_Points_Logs_Query {
 
 		$_var = $this->_args['start'];
 
-		if ( wordpoints_int( $this->_args['start'] ) === false ) {
+		if ( false === wordpoints_int( $this->_args['start'] ) ) {
 
 			_doing_it_wrong( __METHOD__, "WordPoints Debug Error: 'start' must be a positive integer, " . ( strval( $_var ) ? $_var : gettype( $_var ) ) . ' given', '1.0.0' );
 
@@ -1124,6 +1123,7 @@ class WordPoints_Points_Logs_Query {
 		$in = array_filter( array_map( 'wordpoints_posint', $in ) );
 		$this->_prepare__in( $in, $column, $type, '%d' );
 	}
-}
 
-// end of file /components/points/includes/class-WordPoints_Points_Logs_Query.php
+} // class WordPoints_Points_Logs_Query
+
+// EOF

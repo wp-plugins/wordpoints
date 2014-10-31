@@ -73,8 +73,7 @@ if ( isset( $_GET['wordpoints_component'], $_GET['_wpnonce'] ) && $wordpoints_co
 
 ?>
 
-<p><?php _e( 'View installed WordPoints components.', 'wordpoints' ); ?></p>
-<p><?php _e( 'Currently WordPoints only has one component.', 'wordpoints' ); ?> <?php _e( 'More components are planned for future versions of the plugin.', 'wordpoints' ); ?></p>
+<p><?php esc_html_e( 'View installed WordPoints components.', 'wordpoints' ); ?></p>
 
 <?php
 
@@ -90,18 +89,18 @@ do_action( 'wordpoints_admin_components_top' );
 <table id="wordpoints_components_table" class="widefat">
 	<thead>
 		<tr>
-			<th scope="col" width="150"><?php _ex( 'Component', 'components table heading', 'wordpoints' ); ?></th>
-			<th scope="col"><?php _ex( 'Description', 'components table heading', 'wordpoints' ); ?></th>
-			<th scope="col" width="80"><?php _ex( 'Version', 'components table heading', 'wordpoints' ); ?></th>
-			<th scope="col" width="70"><?php _ex( 'Action', 'components table heading', 'wordpoints' ); ?></th>
+			<th scope="col" width="150"><?php echo esc_html_x( 'Component', 'components table heading', 'wordpoints' ); ?></th>
+			<th scope="col"><?php echo esc_html_x( 'Description', 'components table heading', 'wordpoints' ); ?></th>
+			<th scope="col" width="80"><?php echo esc_html_x( 'Version', 'components table heading', 'wordpoints' ); ?></th>
+			<th scope="col" width="70"><?php echo esc_html_x( 'Action', 'components table heading', 'wordpoints' ); ?></th>
 		</tr>
 	</thead>
 	<tfoot>
 		<tr>
-			<th scope="col"><?php _ex( 'Component', 'components table heading', 'wordpoints' ); ?></th>
-			<th scope="col"><?php _ex( 'Description', 'components table heading', 'wordpoints' ); ?></th>
-			<th scope="col"><?php _ex( 'Version', 'components table heading', 'wordpoints' ); ?></th>
-			<th scope="col"><?php _ex( 'Action', 'components table heading', 'wordpoints' ); ?></th>
+			<th scope="col"><?php echo esc_html_x( 'Component', 'components table heading', 'wordpoints' ); ?></th>
+			<th scope="col"><?php echo esc_html_x( 'Description', 'components table heading', 'wordpoints' ); ?></th>
+			<th scope="col"><?php echo esc_html_x( 'Version', 'components table heading', 'wordpoints' ); ?></th>
+			<th scope="col"><?php echo esc_html_x( 'Action', 'components table heading', 'wordpoints' ); ?></th>
 		</tr>
 	</tfoot>
 
@@ -173,4 +172,4 @@ do_action( 'wordpoints_admin_components_top' );
  */
 do_action( 'wordpoints_admin_components_bottom' );
 
-// end of file.
+// EOF

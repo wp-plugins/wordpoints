@@ -26,7 +26,7 @@
  */
 function wordpoints_register_scripts() {
 
-	$assets_url = plugins_url( 'assets/', dirname( __FILE__ ) );
+	$assets_url = WORDPOINTS_URL . '/assets/';
 
 	// - JS
 
@@ -59,4 +59,4 @@ function wordpoints_register_scripts() {
 add_action( 'wp_enqueue_scripts', 'wordpoints_register_scripts', 5 );
 add_action( 'admin_enqueue_scripts', 'wordpoints_register_scripts', 5 );
 
-// end of file /includes/scripts.php
+// EOF

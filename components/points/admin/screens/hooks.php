@@ -9,7 +9,10 @@
 
 if ( current_user_can( 'manage_wordpoints_points_types' ) ) {
 
-	if ( isset( $_POST['add_new'], $_POST['save-points-type'] ) && 1 === (int) $_POST['add_new'] ) {
+	if (
+		isset( $_POST['add_new'], $_POST['save-points-type'] )
+		&& wp_verify_nonce( $_POST['add_new'], 'wordpoints_add_new_points_type' )
+	) {
 
 		// - We are creating a new points type.
 
@@ -27,13 +30,17 @@ if ( current_user_can( 'manage_wordpoints_points_types' ) ) {
 			$_GET['error'] = 2;
 		}
 
-	} elseif ( ! empty( $_POST['delete-points-type'] ) ) {
+	} elseif (
+		! empty( $_POST['delete-points-type'] )
+		&& isset( $_POST['delete-points-type-nonce'], $_POST['points-slug'] )
+		&& wp_verify_nonce( $_POST['delete-points-type-nonce'], "wordpoints_delete_points_type-{$_POST['points-slug']}" )
+	) {
 
 		// - We are deleting a points type.
 
 		unset( $_GET['error'], $_GET['message'] );
 
-		if ( isset( $_POST['points-slug'] ) && wordpoints_delete_points_type( $_POST['points-slug'] ) ) {
+		if ( wordpoints_delete_points_type( $_POST['points-slug'] ) ) {
 
 			$_GET['message'] = 1;
 
@@ -76,7 +83,7 @@ if ( is_network_admin() ) {
 
 	if ( empty( $points_types ) && ! current_user_can( 'manage_wordpoints_points_types' ) ) {
 
-		wordpoints_show_admin_error( __( 'No points types have been created yet. Only network administrators can create points types.', 'wordpoints' ) );
+		wordpoints_show_admin_error( esc_html__( 'No points types have been created yet. Only network administrators can create points types.', 'wordpoints' ) );
 
 		echo '</div>';
 		return;
@@ -84,11 +91,11 @@ if ( is_network_admin() ) {
 
 	if ( isset( $_GET['message'] ) && isset( $messages[ (int) $_GET['message'] ] ) ) {
 
-		wordpoints_show_admin_message( $messages[ (int) $_GET['message'] ] );
+		wordpoints_show_admin_message( esc_html( $messages[ (int) $_GET['message'] ] ) );
 
 	} elseif ( isset( $_GET['error'] ) && isset( $errors[ (int) $_GET['error'] ] ) ) {
 
-		wordpoints_show_admin_error( $errors[ (int) $_GET['error'] ] );
+		wordpoints_show_admin_error( esc_html( $errors[ (int) $_GET['error'] ] ) );
 	}
 
 	if ( is_network_admin() && current_user_can( 'manage_network_wordpoints_points_hooks' ) ) {
@@ -111,10 +118,10 @@ if ( is_network_admin() ) {
 			<div id="available-hooks" class="hooks-holder-wrap hooks-holder-wrap">
 				<div class="points-type-name">
 					<div class="points-type-name-arrow"><br /></div>
-					<h3><?php esc_html_e( 'Available Hooks', 'wordpoints' ); ?> <span id="removing-hook"><?php _ex( 'Deactivate', 'removing-hook', 'wordpoints' ); ?> <span></span></span></h3>
+					<h3><?php esc_html_e( 'Available Hooks', 'wordpoints' ); ?> <span id="removing-hook"><?php echo esc_html_x( 'Deactivate', 'removing-hook', 'wordpoints' ); ?> <span></span></span></h3>
 				</div>
 				<div class="hook-holder hook-holder">
-					<p class="description"><?php _e( 'Drag hooks from here to a points type on the right to activate them. Drag hooks back here to deactivate them and delete their settings.', 'wordpoints' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Drag hooks from here to a points type on the right to activate them. Drag hooks back here to deactivate them and delete their settings.', 'wordpoints' ); ?></p>
 					<div id="hook-list">
 						<?php WordPoints_Points_Hooks::list_hooks(); ?>
 					</div>
@@ -134,7 +141,7 @@ if ( is_network_admin() ) {
 					<div id="_inactive_hooks" class="hooks-sortables">
 						<div class="points-type-description">
 							<p class="description">
-								<?php _e( 'Drag hooks here to remove them from the points type but keep their settings.', 'wordpoints' ); ?>
+								<?php esc_html_e( 'Drag hooks here to remove them from the points type but keep their settings.', 'wordpoints' ); ?>
 							</p>
 						</div>
 						<?php WordPoints_Points_Hooks::list_by_points_type( '_inactive_hooks' ); ?>
@@ -213,7 +220,7 @@ if ( is_network_admin() ) {
 
 		</div>
 	</div>
-	<form action="" method="post">
+	<form method="post">
 		<?php
 
 		if ( WordPoints_Points_Hooks::get_network_mode() ) {
@@ -241,11 +248,11 @@ if ( is_network_admin() ) {
 	<br class="clear" />
 
 	<div class="hooks-chooser">
-		<h3><?php _e( 'Choose a points type:', 'wordpoints' ); ?></h3>
+		<h3><?php esc_html_e( 'Choose a points type:', 'wordpoints' ); ?></h3>
 		<ul class="hooks-chooser-points-types"></ul>
 		<div class="hooks-chooser-actions">
-			<button class="button-secondary"><?php _e( 'Cancel', 'wordpoints' ); ?></button>
-			<button class="button-primary"><?php _e( 'Add Hook', 'wordpoints' ); ?></button>
+			<button class="button-secondary"><?php esc_html_e( 'Cancel', 'wordpoints' ); ?></button>
+			<button class="button-primary"><?php esc_html_e( 'Add Hook', 'wordpoints' ); ?></button>
 		</div>
 	</div>
 </div>

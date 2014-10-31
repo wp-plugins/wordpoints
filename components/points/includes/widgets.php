@@ -201,7 +201,7 @@ class WordPoints_My_Points_Widget extends WordPoints_Points_Widget {
 
 		echo '<div class="wordpoints-points-widget-text">', $text, '</div><br />';
 
-		if ( $instance['number_logs'] !== 0 ) {
+		if ( 0 !== $instance['number_logs'] ) {
 
 			$query_args = wordpoints_get_points_logs_query_args( $instance['points_type'], 'current_user' );
 
@@ -273,28 +273,40 @@ class WordPoints_My_Points_Widget extends WordPoints_Points_Widget {
 		?>
 
 		<p>
-			<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _ex( 'Title', 'form label', 'wordpoints' ); ?></label>
+			<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php echo esc_html_x( 'Title', 'form label', 'wordpoints' ); ?></label>
 			<input type="text" class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" value="<?php echo esc_attr( $instance['title'] ); ?>" />
 		</p>
 		<p>
-			<label for="<?php echo $dropdown_args['id']; ?>"><?php _e( 'Points type to display', 'wordpoints' ); ?></label>
+			<label for="<?php echo $dropdown_args['id']; ?>"><?php esc_html_e( 'Points type to display', 'wordpoints' ); ?></label>
 			<br />
 			<?php echo wordpoints_points_types_dropdown( $dropdown_args ); ?>
 		</p>
 		<p>
-			<label for="<?php echo $this->get_field_id( 'text' ); ?>"><?php _e( 'Widget text', 'wordpoints' ); ?></label>
+			<label for="<?php echo $this->get_field_id( 'text' ); ?>"><?php esc_html_e( 'Widget text', 'wordpoints' ); ?></label>
 			<input type="text" class="widefat" id="<?php echo $this->get_field_id( 'text' ); ?>" name="<?php echo $this->get_field_name( 'text' ); ?>" value="<?php echo esc_attr( $instance['text'] ); ?>" />
-			<small><i><?php _e( '%points% will be replaced with the points of the logged in user', 'wordpoints' ); ?></i></small>
+			<small><i><?php echo esc_html( sprintf( __( '%s will be replaced with the points of the logged in user', 'wordpoints' ), '%points%' ) ); ?></i></small>
+			<?php
+
+			/**
+			 * Display content below the text field of the My Points widget.
+			 *
+			 * @since 1.7.0
+			 *
+			 * @param array $instance The settings of the current widget instance.
+			 */
+			do_action( 'wordpoints_my_points_widget_below_text_field', $instance );
+
+			?>
 		</p>
 		<p>
-			<label for="<?php echo $this->get_field_id( 'alt_text' ); ?>"><?php _e( 'Text if the user is not logged in', 'wordpoints' ); ?></label>
+			<label for="<?php echo $this->get_field_id( 'alt_text' ); ?>"><?php esc_html_e( 'Text if the user is not logged in', 'wordpoints' ); ?></label>
 			<input type="text" class="widefat" id="<?php echo $this->get_field_id( 'alt_text' ); ?>" name="<?php echo $this->get_field_name( 'alt_text' ); ?>" value="<?php echo esc_attr( $instance['alt_text'] ); ?>" />
-			<small><i><?php _e( 'Leave this field blank to hide the widget if the user is not logged in', 'wordpoints' ); ?></i></small>
+			<small><i><?php esc_html_e( 'Leave this field blank to hide the widget if the user is not logged in', 'wordpoints' ); ?></i></small>
 		</p>
 		<p>
-			<label for="<?php echo $this->get_field_id( 'number_logs' ); ?>"><?php _e( 'Number of latest log entries for this user to display', 'wordpoints' ); ?></label>
-			<input type="text" class="widefat" id="<?php echo $this->get_field_id( 'number_logs' ); ?>" name="<?php echo $this->get_field_name( 'number_logs' ); ?>" value="<?php echo esc_attr( $instance['number_logs'] ); ?>" />
-			<small><i><?php _e( 'Set this to 0 to keep from showing any logs', 'wordpoints' ); ?></i></small>
+			<label for="<?php echo $this->get_field_id( 'number_logs' ); ?>"><?php esc_html_e( 'Number of latest log entries for this user to display', 'wordpoints' ); ?></label>
+			<input type="number" min="0" class="widefat" id="<?php echo $this->get_field_id( 'number_logs' ); ?>" name="<?php echo $this->get_field_name( 'number_logs' ); ?>" value="<?php echo esc_attr( $instance['number_logs'] ); ?>" />
+			<small><i><?php esc_html_e( 'Set this to 0 to keep from showing any logs', 'wordpoints' ); ?></i></small>
 		</p>
 
 		<?php
@@ -364,14 +376,6 @@ class WordPoints_Top_Users_Points_Widget extends WordPoints_Points_Widget {
 			$instance['num_users'] = $this->defaults['num_users'];
 		}
 
-		$top_users = wordpoints_points_get_top_users( $instance['num_users'], $instance['points_type'] );
-
-		if ( ! $top_users ) {
-			return;
-		}
-
-		wp_enqueue_style( 'wordpoints-top-users' );
-
 		/**
 		 * Before the top users widget.
 		 *
@@ -381,29 +385,11 @@ class WordPoints_Top_Users_Points_Widget extends WordPoints_Points_Widget {
 		 */
 		do_action( 'wordpoints_top_users_widget_before', $instance );
 
-		echo '<table class="wordpoints-points-top-users">';
-
-		$position = 1;
-
-		foreach ( $top_users as $user_id ) {
-
-			$user = get_userdata( $user_id );
-
-			?>
-
-			<tr class="top-<?php echo $position; ?>">
-				<td><?php echo number_format_i18n( $position ); ?></td>
-				<td><?php echo get_avatar( $user_id, 32 ); ?></td>
-				<td><?php echo sanitize_user_field( 'display_name', $user->display_name, $user_id, 'display' ); ?></td>
-				<td><?php wordpoints_display_points( $user_id, $instance['points_type'], 'top_users_widget' ); ?></td>
-			</tr>
-
-			<?php
-
-			$position++;
-		}
-
-		echo '</table>';
+		wordpoints_points_show_top_users(
+			$instance['num_users']
+			, $instance['points_type']
+			, 'widget'
+		);
 
 		/**
 		 * After the top users widget.
@@ -467,16 +453,16 @@ class WordPoints_Top_Users_Points_Widget extends WordPoints_Points_Widget {
 		?>
 
 		<p>
-			<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _ex( 'Title', 'form label', 'wordpoints' ); ?></label>
+			<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php echo esc_html_x( 'Title', 'form label', 'wordpoints' ); ?></label>
 			<input type="text" class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" value="<?php echo esc_attr( $instance['title'] ); ?>" />
 		</p>
 		<p>
-			<label for="<?php echo $dropdown_args['id']; ?>"><?php _ex( 'Points type', 'form label', 'wordpoints' ); ?></label>
+			<label for="<?php echo $dropdown_args['id']; ?>"><?php echo esc_html_x( 'Points type', 'form label', 'wordpoints' ); ?></label>
 			<?php wordpoints_points_types_dropdown( $dropdown_args ); ?>
 		</p>
 		<p>
-			<label for="<?php echo $this->get_field_id( 'num_users' ); ?>"><?php _e( 'Number of top users to show', 'wordpoints' ); ?></label>
-			<input type="text" class="widefat" id="<?php echo $this->get_field_id( 'num_users' ); ?>" name="<?php echo $this->get_field_name( 'num_users' ); ?>" value="<?php echo absint( $instance['num_users'] ); ?>" />
+			<label for="<?php echo $this->get_field_id( 'num_users' ); ?>"><?php esc_html_e( 'Number of top users to show', 'wordpoints' ); ?></label>
+			<input type="number" min="1" class="widefat" id="<?php echo $this->get_field_id( 'num_users' ); ?>" name="<?php echo $this->get_field_name( 'num_users' ); ?>" value="<?php echo absint( $instance['num_users'] ); ?>" />
 		</p>
 
 		<?php
@@ -618,16 +604,16 @@ class WordPoints_Points_Logs_Widget extends WordPoints_Points_Widget {
 		?>
 
 		<p>
-			<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _ex( 'Title', 'form label', 'wordpoints' ); ?></label>
+			<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php echo esc_html_x( 'Title', 'form label', 'wordpoints' ); ?></label>
 			<input type="text" class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" value="<?php echo esc_attr( $instance['title'] ); ?>" />
 		</p>
 		<p>
-			<label for="<?php echo $dropdown_args['id']; ?>"><?php _ex( 'Points type', 'form label', 'wordpoints' ); ?></label>
+			<label for="<?php echo $dropdown_args['id']; ?>"><?php echo esc_html_x( 'Points type', 'form label', 'wordpoints' ); ?></label>
 			<?php wordpoints_points_types_dropdown( $dropdown_args ); ?>
 		</p>
 		<p>
-			<label for="<?php echo $this->get_field_id( 'number_logs' ); ?>"><?php _e( 'Number of log entries to display', 'wordpoints' ); ?></label>
-			<input type="text" class="widefat" id="<?php echo $this->get_field_id( 'number_logs' ); ?>" name="<?php echo $this->get_field_name( 'number_logs' ); ?>" value="<?php echo absint( $instance['number_logs'] ); ?>" />
+			<label for="<?php echo $this->get_field_id( 'number_logs' ); ?>"><?php esc_html_e( 'Number of log entries to display', 'wordpoints' ); ?></label>
+			<input type="number" min="1" class="widefat" id="<?php echo $this->get_field_id( 'number_logs' ); ?>" name="<?php echo $this->get_field_name( 'number_logs' ); ?>" value="<?php echo absint( $instance['number_logs'] ); ?>" />
 		</p>
 
 		<?php
@@ -636,4 +622,4 @@ class WordPoints_Points_Logs_Widget extends WordPoints_Points_Widget {
 	}
 }
 
-// end of file /components/points/includes/widgets.php
+// EOF
