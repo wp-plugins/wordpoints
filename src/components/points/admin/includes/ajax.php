@@ -16,20 +16,24 @@
  */
 function wordpoints_ajax_points_hooks_order() {
 
-	if (
-		check_ajax_referer( 'save-network-wordpoints-points-hooks', 'savehooks', false )
-		&& current_user_can( 'manage_network_wordpoints_points_hooks' )
-	) {
+	if ( check_ajax_referer( 'save-network-wordpoints-points-hooks', 'savehooks', false ) ) {
+
+		if ( ! current_user_can( 'manage_network_wordpoints_points_hooks' ) ) {
+			wp_die( -1 );
+		}
 
 		// Saving network hooks order, turn on network mode.
 		WordPoints_Points_Hooks::set_network_mode( true );
 
-	} elseif (
-		! check_ajax_referer( 'save-wordpoints-points-hooks', 'savehooks', false )
-		|| ! current_user_can( 'manage_options' )
-	) {
+	} elseif ( check_ajax_referer( 'save-wordpoints-points-hooks', 'savehooks', false ) ) {
 
-		// User doesn't have the required capababilities.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( -1 );
+		}
+
+	} else {
+
+		// CSRF attack (or, more probably, the user left the browser open too long).
 		wp_die( -1 );
 	}
 
@@ -48,7 +52,7 @@ function wordpoints_ajax_points_hooks_order() {
 
 				foreach ( $hooks as $order => $hook_id ) {
 
-					if ( strpos( $hook_id, 'hook-' ) === false ) {
+					if ( false === strpos( $hook_id, 'hook-' ) ) {
 						continue;
 					}
 
@@ -77,24 +81,28 @@ add_action( 'wp_ajax_wordpoints-points-hooks-order', 'wordpoints_ajax_points_hoo
  */
 function wordpoints_ajax_save_points_hook() {
 
-	if (
-		check_ajax_referer( 'save-network-wordpoints-points-hooks', 'savehooks', false )
-		&& current_user_can( 'manage_network_wordpoints_points_hooks' )
-	) {
+	if ( check_ajax_referer( 'save-network-wordpoints-points-hooks', 'savehooks', false ) ) {
+
+		if ( ! current_user_can( 'manage_network_wordpoints_points_hooks' ) ) {
+			wp_die( -1 );
+		}
 
 		// Saving network hooks, turn on network mode.
 		WordPoints_Points_Hooks::set_network_mode( true );
 
-	} elseif (
-		! check_ajax_referer( 'save-wordpoints-points-hooks', 'savehooks', false )
-		|| ! current_user_can( 'manage_options' )
-	) {
+	} elseif ( check_ajax_referer( 'save-wordpoints-points-hooks', 'savehooks', false ) ) {
 
-		// User doesn't have the required capababilities.
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( -1 );
+		}
+
+	} else {
+
+		// CSRF attack (or, more probably the user left the browser open too long).
 		wp_die( -1 );
 	}
 
-	$error = '<p>' . __( 'An error has occurred. Please reload the page and try again.', 'wordpoints' ) . '</p>';
+	$error = '<p>' . esc_html__( 'An error has occurred. Please reload the page and try again.', 'wordpoints' ) . '</p>';
 
 	if ( isset( $_POST['points-slug'] ) ) {
 
@@ -133,7 +141,7 @@ function wordpoints_ajax_save_points_hook() {
 		if ( ! wordpoints_update_points_type( $points_type, $settings ) ) {
 
 			// If this fails, show the user a message along with the form.
-			echo '<p>' . __( 'An error has occurred. Please try again.', 'wordpoints' ) . '</p>';
+			echo '<p>' . esc_html__( 'An error has occurred. Please try again.', 'wordpoints' ) . '</p>';
 
 			WordPoints_Points_Hooks::points_type_form( $points_type, 'none' );
 		}
@@ -240,3 +248,5 @@ function wordpoints_ajax_save_points_hook() {
 	wp_die();
 }
 add_action( 'wp_ajax_save-wordpoints-points-hook', 'wordpoints_ajax_save_points_hook' );
+
+// EOF

@@ -50,8 +50,8 @@ class WordPoints_Module_Installer extends WP_Upgrader {
 
 		$install_strings = array(
 			'no_package'           => esc_html__( 'Install package not available.', 'wordpoints' ),
-			'unpack_package'       => __( 'Unpacking the package&#8230;', 'wordpoints' ),
-			'installing_package'   => __( 'Installing the module&#8230;', 'wordpoints' ),
+			'unpack_package'       => esc_html__( 'Unpacking the package&#8230;', 'wordpoints' ),
+			'installing_package'   => esc_html__( 'Installing the module&#8230;', 'wordpoints' ),
 			'no_files'             => esc_html__( 'The module contains no files.', 'wordpoints' ),
 			'process_failed'       => esc_html__( 'Module install failed.', 'wordpoints' ),
 			'process_success'      => esc_html__( 'Module installed successfully.', 'wordpoints' ),
@@ -95,7 +95,7 @@ class WordPoints_Module_Installer extends WP_Upgrader {
 
 		$result = parent::install_package( $args );
 
-		if ( ( $key = array_search( $module_dir, $wp_theme_directories ) ) !== false ) {
+		if ( false !== ( $key = array_search( $module_dir, $wp_theme_directories ) ) ) {
 
 			unset( $wp_theme_directories[ $key ] );
 		}
@@ -215,3 +215,5 @@ class WordPoints_Module_Installer extends WP_Upgrader {
 	}
 
 } // class WordPoints_Module_Installer
+
+// EOF

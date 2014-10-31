@@ -235,7 +235,7 @@ class WordPoints_Periodic_Points_Hook extends WordPoints_Points_Hook {
 		?>
 
 		<p>
-			<label for="<?php $this->the_field_id( 'period' ); ?>"><?php _ex( 'Period:', 'length of time', 'wordpoints' ); ?></label>
+			<label for="<?php $this->the_field_id( 'period' ); ?>"><?php echo esc_html_x( 'Period:', 'length of time', 'wordpoints' ); ?></label>
 			<?php $dropdown->display(); ?>
 		</p>
 
@@ -272,4 +272,7 @@ class WordPoints_Periodic_Points_Hook extends WordPoints_Points_Hook {
 		 */
 		return apply_filters( 'wordpoints_points_periods', $periods );
 	}
-}
+
+} // class WordPoints_Periodic_Points_Hook
+
+// EOF

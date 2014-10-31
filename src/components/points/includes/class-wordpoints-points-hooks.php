@@ -251,6 +251,47 @@ final class WordPoints_Points_Hooks {
 	}
 
 	/**
+	 * Delete the database data for a list of hook types.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param array|string $hook_types The hook type(s) to uninstall.
+	 * @param int[]        $site_ids   List of site IDs where this hook type is
+	 *                                 installed. Only needed if on multisite. If
+	 *                                 omitted, the current site ID is used.
+	 */
+	public static function uninstall_hook_types( $hook_types, array $site_ids = null ) {
+
+		$hook_types = (array) $hook_types;
+
+		if ( is_multisite() ) {
+
+			foreach ( $hook_types as $hook_type ) {
+				delete_site_option( "wordpoints_hook-{$hook_type}" );
+			}
+
+			if ( ! isset( $site_ids ) ) {
+				$site_ids = array( get_current_blog_id() );
+			}
+
+			foreach ( $site_ids as $site_id ) {
+
+				switch_to_blog( $site_id );
+				foreach ( $hook_types as $hook_type ) {
+					delete_option( "wordpoints_hook-{$hook_type}" );
+				}
+				restore_current_blog( $site_id );
+			}
+
+		} else {
+
+			foreach ( $hook_types as $hook_type ) {
+				delete_option( "wordpoints_hook-{$hook_type}" );
+			}
+		}
+	}
+
+	/**
 	 * Displays a list of available hooks for the Points Hooks administration panel.
 	 *
 	 * @since 1.0.0
@@ -289,7 +330,7 @@ final class WordPoints_Points_Hooks {
 		if ( empty( $hook_types ) ) {
 
 			echo '<div class="wordpoints-no-hooks">'
-				. __( 'There are no points hooks currently available.', 'wordpoints' )
+				. esc_html__( 'There are no points hooks currently available.', 'wordpoints' )
 				. '</div>';
 		}
 	}
@@ -309,7 +350,7 @@ final class WordPoints_Points_Hooks {
 	 */
 	public static function list_by_points_type( $slug ) {
 
-		if ( $slug !== '_inactive_hooks' && ! wordpoints_is_points_type( $slug ) ) {
+		if ( '_inactive_hooks' !== $slug && ! wordpoints_is_points_type( $slug ) ) {
 			return;
 		}
 
@@ -507,7 +548,7 @@ final class WordPoints_Points_Hooks {
 		if ( ! $points_type ) {
 
 			$points_type = array();
-			$add_new     = 1;
+			$add_new     = wp_create_nonce( 'wordpoints_add_new_points_type' );
 		}
 
 		$points_type = array_merge(
@@ -552,12 +593,12 @@ final class WordPoints_Points_Hooks {
 		<?php endif; ?>
 
 			<?php if ( $hook_content_wrap ) : ?>
-				<form action="" method="post">
+				<form method="post">
 					<div class="hook-content">
 			<?php endif; ?>
 
 						<?php if ( $slug ) : ?>
-						<p><span class="wordpoints-points-slug"><em><?php _e( 'Slug', 'wordpoints' ); ?>: <?php echo esc_html( $slug ); ?></em></span></p>
+						<p><span class="wordpoints-points-slug"><em><?php esc_html_e( 'Slug', 'wordpoints' ); ?>: <?php echo esc_html( $slug ); ?></em></span></p>
 						<?php endif; ?>
 
 						<?php
@@ -588,16 +629,16 @@ final class WordPoints_Points_Hooks {
 						?>
 
 						<p>
-							<label for="points-name-<?php echo esc_attr( $slug ); ?>"><?php _ex( 'Name:', 'points type', 'wordpoints' ); ?></label>
-							<input class="widefat" type="text" id="points-name-<?php echo esc_attr( $slug ); ?>" name="points-name" class="points-name" value="<?php echo esc_attr( $points_type['name'] ); ?>" />
+							<label for="points-name-<?php echo esc_attr( $slug ); ?>"><?php echo esc_html_x( 'Name:', 'points type', 'wordpoints' ); ?></label>
+							<input class="widefat" type="text" id="points-name-<?php echo esc_attr( $slug ); ?>" name="points-name" value="<?php echo esc_attr( $points_type['name'] ); ?>" />
 						</p>
 						<p>
 							<label for="points-prefix-<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $prefix ); ?></label>
-							<input class="widefat" type="text" id="points-prefix-<?php echo esc_attr( $slug ); ?>" name="points-prefix" class="points-prefix" value="<?php echo esc_attr( $points_type['prefix'] ); ?>" />
+							<input class="widefat" type="text" id="points-prefix-<?php echo esc_attr( $slug ); ?>" name="points-prefix" value="<?php echo esc_attr( $points_type['prefix'] ); ?>" />
 						</p>
 						<p>
 							<label for="points-suffix-<?php echo esc_attr( $slug ); ?>"><?php echo esc_html( $suffix ); ?></label>
-							<input class="widefat" type="text" id="points-suffix-<?php echo esc_attr( $slug ); ?>" name="points-suffix" class="points-suffix" value="<?php echo esc_attr( $points_type['suffix'] ); ?>" />
+							<input class="widefat" type="text" id="points-suffix-<?php echo esc_attr( $slug ); ?>" name="points-suffix" value="<?php echo esc_attr( $points_type['suffix'] ); ?>" />
 						</p>
 
 						<?php
@@ -618,17 +659,18 @@ final class WordPoints_Points_Hooks {
 			<?php if ( $hook_content_wrap ) : ?>
 					</div>
 
-					<input type="hidden" name="points-slug" class="points-slug" value="<?php echo esc_attr( $slug ); ?>" />
-					<input type="hidden" name="add_new" class="add_new" value="<?php echo $add_new; ?>" />
+					<input type="hidden" name="points-slug" value="<?php echo esc_attr( $slug ); ?>" />
+					<input type="hidden" name="add_new" class="add_new" value="<?php echo esc_attr( $add_new ); ?>" />
 
 					<div class="hook-control-actions">
 						<div class="alignleft">
 							<?php
 								if ( ! $add_new ) {
-									submit_button( _x( 'Delete', 'points type', 'wordpoints' ), 'delete', 'delete-points-type', false );
+									wp_nonce_field( "wordpoints_delete_points_type-{$slug}", 'delete-points-type-nonce' );
+									submit_button( _x( 'Delete', 'points type', 'wordpoints' ), 'delete', 'delete-points-type', false, array( 'id' => "delete_points_type-{$slug}" ) );
 								}
 							?>
-							<a class="hook-control-close" href="#close"><?php _e( 'Close', 'wordpoints' ); ?></a>
+							<a class="hook-control-close" href="#close"><?php esc_html_e( 'Close', 'wordpoints' ); ?></a>
 						</div>
 						<div class="alignright">
 							<?php submit_button( _x( 'Save', 'points type', 'wordpoints' ), 'button-primary hook-control-save right', 'save-points-type', false, array( 'id' => "points-{$slug}-save" ) ); ?>
@@ -712,8 +754,8 @@ final class WordPoints_Points_Hooks {
 			<div class="hook-title-action">
 				<a class="hook-action hide-if-no-js" href="#available-hooks"></a>
 				<a class="hook-control-edit hide-if-js" href="<?php echo esc_attr( esc_url( add_query_arg( $query_arg ) ) ); ?>">
-					<span class="edit"><?php _ex( 'Edit', 'hook', 'wordpoints' ); ?></span>
-					<span class="add"><?php _ex( 'Add', 'hook', 'wordpoints' ); ?></span>
+					<span class="edit"><?php echo esc_html_x( 'Edit', 'hook', 'wordpoints' ); ?></span>
+					<span class="add"><?php echo esc_html_x( 'Add', 'hook', 'wordpoints' ); ?></span>
 					<span class="screen-reader-text"><?php echo $title; ?></span>
 				</a>
 			</div>
@@ -721,7 +763,7 @@ final class WordPoints_Points_Hooks {
 		</div>
 
 		<div class="hook-inside">
-			<form action="" method="post">
+			<form method="post">
 				<div class="hook-content">
 					<?php $has_form = $hook->form_callback( $number ); ?>
 				</div>
@@ -736,8 +778,8 @@ final class WordPoints_Points_Hooks {
 
 				<div class="hook-control-actions">
 					<div class="alignleft">
-						<a class="hook-control-remove" href="#remove"><?php _e( 'Delete', 'wordpoints' ); ?></a> |
-						<a class="hook-control-close" href="#close"><?php _e( 'Close', 'wordpoints' ); ?></a>
+						<a class="hook-control-remove" href="#remove"><?php esc_html_e( 'Delete', 'wordpoints' ); ?></a> |
+						<a class="hook-control-close" href="#close"><?php esc_html_e( 'Close', 'wordpoints' ); ?></a>
 					</div>
 					<div class="alignright<?php echo ( false === $has_form ? ' hook-control-noform' : '' ); ?>">
 						<?php submit_button( __( 'Save', 'wordpoints' ), 'button-primary hook-control-save right', 'savehook', false, array( 'id' => "hook-{$id_format}-savehook" ) ); ?>
@@ -856,4 +898,4 @@ final class WordPoints_Points_Hooks {
 
 } // class WordPoints_Points_Hooks
 
-// end of file /components/points/includes/class-WordPoints_Points_Hooks.php
+// EOF

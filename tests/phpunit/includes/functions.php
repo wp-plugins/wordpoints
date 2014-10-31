@@ -30,6 +30,9 @@ function wordpointstests_manually_load_plugin() {
 
 	$wpdb->query( "DROP TABLE IF EXISTS `{$wpdb->base_prefix}wordpoints_points_logs`" );
 	$wpdb->query( "DROP TABLE IF EXISTS `{$wpdb->base_prefix}wordpoints_points_log_meta`" );
+	$wpdb->query( "DROP TABLE IF EXISTS `{$wpdb->base_prefix}wordpoints_ranks`" );
+	$wpdb->query( "DROP TABLE IF EXISTS `{$wpdb->base_prefix}wordpoints_rankmeta`" );
+	$wpdb->query( "DROP TABLE IF EXISTS `{$wpdb->base_prefix}wordpoints_user_ranks`" );
 
 	$network_active = false;
 
@@ -207,7 +210,7 @@ function wordpointstests_selenium_is_running() {
 	$selenium_running = false;
 	$fp = fsockopen( 'localhost', 4444 );
 
-	if ( $fp !== false ) {
+	if ( false !== $fp ) {
 
 		$selenium_running = true;
 		fclose( $fp );
@@ -289,4 +292,4 @@ function wordpointstests_symlink_plugin( $plugin, $plugin_dir, $link_name = null
 	return true;
 }
 
-// end of file /tests/phpunit/includes/functions.php
+// EOF

@@ -21,14 +21,17 @@ if ( ! getenv( 'WP_TESTS_DIR' ) ) {
  */
 define( 'WORDPOINTS_TESTS_DIR', dirname( dirname( __FILE__ ) ) );
 
-/**
- * The WP plugin uninstall testing functions.
- *
- * We need this so we can check if the uninstall tests are being run.
- *
- * @since 1.2.0
- */
-require_once WORDPOINTS_TESTS_DIR . '/includes/uninstall/includes/functions.php';
+if ( ! defined( 'RUNNING_WORDPOINTS_MODULE_TESTS' ) ) {
+	/**
+	 * The WP plugin uninstall testing functions.
+	 *
+	 * We need this so we can check if the uninstall tests are being run.
+	 *
+	 * @since 1.2.0
+	 * @since 1.7.0 Only when not RUNNING_WORDPOINTS_MODULE_TESTS.
+	 */
+	require WORDPOINTS_TESTS_DIR . '/../../vendor/jdgrimes/wp-plugin-uninstall-tester/includes/functions.php';
+}
 
 /**
  * The WordPress tests functions.
@@ -52,8 +55,14 @@ require_once getenv( 'WP_TESTS_DIR' ) . 'includes/functions.php';
  */
 require_once WORDPOINTS_TESTS_DIR . '/includes/functions.php';
 
+if (
+	defined( 'RUNNING_WORDPOINTS_MODULE_TESTS' )
+	&& ! running_wordpoints_module_uninstall_tests()
+) {
+	tests_add_filter( 'muplugins_loaded', 'wordpointstests_manually_load_plugin' );
+
 // If we aren't running the uninstall tests, we need to hook in to load the plugin.
-if ( ! running_wp_plugin_uninstall_tests() ) {
+} elseif ( ! running_wp_plugin_uninstall_tests() ) {
 	tests_add_filter( 'muplugins_loaded', 'wordpointstests_manually_load_plugin' );
 }
 
@@ -83,33 +92,57 @@ require getenv( 'WP_TESTS_DIR' ) . '/includes/bootstrap.php';
  */
 require_once WORDPOINTS_TESTS_DIR . '/../../src/includes/constants.php';
 
-/**
- * The bootstrap for the uninstall tests.
- *
- * @since 1.2.0
- */
-require WORDPOINTS_TESTS_DIR . '/includes/uninstall/bootstrap.php';
+if ( ! defined( 'RUNNING_WORDPOINTS_MODULE_TESTS' ) ) {
+	/**
+	 * The bootstrap for the uninstall tests.
+	 *
+	 * @since 1.2.0
+	 * @since 1.7.0 Only when not RUNNING_WORDPOINTS_MODULE_TESTS.
+	 */
+	require WORDPOINTS_TESTS_DIR . '/../../vendor/jdgrimes/wp-plugin-uninstall-tester/bootstrap.php';
+}
 
 /**
  * The WordPoints_UnitTestCase class.
  *
  * @since 1.5.0
  */
-require_once WORDPOINTS_TESTS_DIR . '/includes/class-wordpoints-unittestcase.php';
+require_once WORDPOINTS_TESTS_DIR . '/includes/testcases/wordpoints.php';
+
+/**
+ * The Ajax unit test case class.
+ *
+ * @since 1.7.0
+ */
+require_once WORDPOINTS_TESTS_DIR . '/includes/testcases/ajax.php';
 
 /**
  * The WordPoints_Points_UnitTestCase class.
  *
  * @since 1.0.0
  */
-require_once WORDPOINTS_TESTS_DIR . '/includes/class-wordpoints-points-unittestcase.php';
+require_once WORDPOINTS_TESTS_DIR . '/includes/testcases/points.php';
 
 /**
  * The WordPoints_Points_AJAX_UnitTestCase class.
  *
  * @since 1.3.0
  */
-require_once WORDPOINTS_TESTS_DIR . '/includes/class-wordpoints-points-ajax-unittestcase.php';
+require_once WORDPOINTS_TESTS_DIR . '/includes/testcases/points-ajax.php';
+
+/**
+ * The ranks unit test case class.
+ *
+ * @since 1.7.0
+ */
+require_once WORDPOINTS_TESTS_DIR . '/includes/testcases/ranks.php';
+
+/**
+ * The ranks Ajax unit test case class.
+ *
+ * @since 1.7.0
+ */
+require_once WORDPOINTS_TESTS_DIR . '/includes/testcases/ranks-ajax.php';
 
 /**
  * The points log factory.
@@ -118,4 +151,20 @@ require_once WORDPOINTS_TESTS_DIR . '/includes/class-wordpoints-points-ajax-unit
  */
 require_once WORDPOINTS_TESTS_DIR . '/includes/factories/points-log.php';
 
-// end of file /tests/phpunit/includes/bootstrap.php
+/**
+ * The rank factory.
+ *
+ * @since 1.7.0
+ */
+require_once WORDPOINTS_TESTS_DIR . '/includes/factories/rank.php';
+
+if ( class_exists( 'WordPoints_Rank_Type' ) ) {
+	/**
+	 * The rank type mock.
+	 *
+	 * @since 1.7.0
+	 */
+	require_once( WORDPOINTS_TESTS_DIR . '/includes/mocks/rank-type.php' );
+}
+
+// EOF

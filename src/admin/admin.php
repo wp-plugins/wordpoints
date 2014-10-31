@@ -20,6 +20,13 @@
 include_once WORDPOINTS_DIR . 'admin/screens/configure.php';
 
 /**
+ * Deprecated administration-side code.
+ *
+ * @since 1.7.0
+ */
+include_once WORDPOINTS_DIR . 'admin/includes/deprecated.php';
+
+/**
  * Get the slug of the main administration menu item for the plugin.
  *
  * The main item changes in multisite when the plugin is network activated. In the
@@ -68,7 +75,7 @@ function wordpoints_admin_menu() {
 		// Main page.
 		add_menu_page(
 			$wordpoints
-			,$wordpoints
+			,esc_html( $wordpoints )
 			,'manage_options'
 			,'wordpoints_configure'
 			,'wordpoints_admin_screen_configure'
@@ -77,8 +84,8 @@ function wordpoints_admin_menu() {
 		// Settings page.
 		add_submenu_page(
 			'wordpoints_configure'
-			,__( 'WordPoints - Configure', 'wordpoints' )
-			,__( 'Configure', 'wordpoints' )
+			,__( 'WordPoints — Configure', 'wordpoints' )
+			,esc_html__( 'Configure', 'wordpoints' )
 			,'manage_options'
 			,'wordpoints_configure'
 			,'wordpoints_admin_screen_configure'
@@ -94,7 +101,7 @@ function wordpoints_admin_menu() {
 		// Main page.
 		add_menu_page(
 			$wordpoints
-			,$wordpoints
+			,esc_html( $wordpoints )
 			,'activate_wordpoints_modules'
 			,'wordpoints_modules'
 			,'wordpoints_admin_screen_modules'
@@ -104,8 +111,8 @@ function wordpoints_admin_menu() {
 	// Modules page.
 	add_submenu_page(
 		$main_menu
-		,__( 'WordPoints - Modules', 'wordpoints' )
-		,__( 'Modules', 'wordpoints' )
+		,__( 'WordPoints — Modules', 'wordpoints' )
+		,esc_html__( 'Modules', 'wordpoints' )
 		,'activate_wordpoints_modules'
 		,'wordpoints_modules'
 		,'wordpoints_admin_screen_modules'
@@ -114,8 +121,8 @@ function wordpoints_admin_menu() {
 	// Module install page.
 	add_submenu_page(
 		'_wordpoints_modules' // Fake menu.
-		,__( 'WordPoints - Install Modules', 'wordpoints' )
-		,__( 'Install Modules', 'wordpoints' )
+		,__( 'WordPoints — Install Modules', 'wordpoints' )
+		,esc_html__( 'Install Modules', 'wordpoints' )
 		,'install_wordpoints_modules'
 		,'wordpoints_install_modules'
 		,'wordpoints_admin_screen_install_modules'
@@ -123,18 +130,6 @@ function wordpoints_admin_menu() {
 }
 add_action( 'admin_menu', 'wordpoints_admin_menu' );
 add_action( 'network_admin_menu', 'wordpoints_admin_menu' );
-
-/**
- * Display one of the administration screens.
- *
- * @since 1.1.0
- */
-function wordpoints_display_admin_screen() {
-
-	$screen = str_replace( 'wordpoints_page_wordpoints_', '', current_filter() );
-
-	require WORDPOINTS_DIR . "admin/screens/{$screen}.php";
-}
 
 /**
  * Display the modules admin screen.
@@ -242,14 +237,14 @@ function wordpoints_show_admin_error( $message ) {
 /**
  * Display an update message.
  *
- * Note that $type is expected to be properly sanitized as needed (e.g., esc_attr()).
- * But you should use {@see wordpoints_show_admin_error()} instead for showing error
+ * You should use {@see wordpoints_show_admin_error()} instead for showing error
  * messages. Currently there aren't wrappers for the other types, as they aren't used
  * in WordPoints core.
  *
  * @since 1.0.0
+ * @since 1.2.0 The $type parameter is now properly escaped.
  *
- * @param string $message The text for the message. Must be pre-validated if needed.
+ * @param string $message The text for the message. Must be pre-escaped if needed.
  * @param string $type    The type of message to display. Default is 'updated'.
  */
 function wordpoints_show_admin_message( $message, $type = 'updated' ) {
@@ -310,7 +305,7 @@ function wordpoints_admin_show_tabs( $tabs, $show_heading = true ) {
 
 	if ( $show_heading ) {
 
-		echo '<h2>', esc_html( sprintf( __( 'WordPoints - %s', 'wordpoints' ), $tabs[ $current ] ) ), '</h2>';
+		echo '<h2>', esc_html( sprintf( __( 'WordPoints — %s', 'wordpoints' ), $tabs[ $current ] ) ), '</h2>';
 	}
 
 	echo '<h2 class="nav-tab-wrapper">';
@@ -415,7 +410,7 @@ function wordpoints_admin_settings_screen_sidebar() {
 		<div style="width:48%;float:left;">
 			<h4><?php esc_html_e( 'Like this plugin?', 'wordpoints' ); ?></h4>
 			<p><?php printf( __( 'If you think WordPoints is great, let everyone know by giving it a <a href="%s">5 star rating</a>.', 'wordpoints' ), 'http://wordpress.org/support/view/plugin-reviews/wordpoints?rate=5#postform' ); ?></p>
-			<p><?php _e( 'If you don&#8217;t think this plugin deserves 5 stars, please let us know how we can improve it.', 'wordpoints' ); ?></p>
+			<p><?php esc_html_e( 'If you don&#8217;t think this plugin deserves 5 stars, please let us know how we can improve it.', 'wordpoints' ); ?></p>
 		</div>
 		<div style="width:48%;float:left;">
 			<h4><?php esc_html_e( 'Need help?', 'wordpoints' ); ?></h4>
@@ -428,4 +423,4 @@ function wordpoints_admin_settings_screen_sidebar() {
 }
 add_action( 'wordpoints_admin_configure_foot', 'wordpoints_admin_settings_screen_sidebar', 5 );
 
-// end of file /admin/admin.php
+// EOF

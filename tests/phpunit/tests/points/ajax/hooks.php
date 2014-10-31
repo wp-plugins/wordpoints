@@ -86,8 +86,6 @@ class WordPoints_Points_Hooks_AJAX_Test extends WordPoints_Points_AJAX_UnitTestC
 		$instances = $hook->get_instances();
 		$this->assertCount( 1, $instances );
 		$this->assertEquals( array( 'points' => '15' ), $instances[1] );
-
-		$this->assertArrayHasKey( $hook->get_id(), WordPoints_Points_Hooks::get_all() );
 	}
 
 	/**
@@ -123,16 +121,10 @@ class WordPoints_Points_Hooks_AJAX_Test extends WordPoints_Points_AJAX_UnitTestC
 			unset( $e );
 		}
 
-		$this->assertTag(
-			array(
-				'tag' => 'p',
-				'child' => array(
-					'tag'  => 'input',
-					'attributes' => array( 'value' => '15' ),
-				),
-			)
-			, $this->_last_response
-		);
+		$document = new DOMDocument;
+		$document->loadHTML( $this->_last_response );
+		$xpath = new DOMXPath( $document );
+		$this->assertEquals( 1, $xpath->query( '//p/input[@value = "15"]' )->length );
 
 		$hooks = WordPoints_Points_Hooks::get_points_type_hooks( 'points' );
 		$hook = WordPoints_Points_Hooks::get_handler_by_id_base( 'wordpoints_registration_points_hook' );
@@ -187,7 +179,7 @@ class WordPoints_Points_Hooks_AJAX_Test extends WordPoints_Points_AJAX_UnitTestC
 		$hooks = WordPoints_Points_Hooks::get_points_type_hooks( 'points' );
 		$this->assertCount( 0, $hooks );
 
-		$this->assertArrayNotHasKey( $hook->get_id(), WordPoints_Points_Hooks::get_all() );
+		$this->assertArrayNotHasKey( $hook->get_id(), WordPoints_Points_Hooks::get_handlers() );
 	}
 
 	/**
@@ -268,3 +260,5 @@ class WordPoints_Points_Hooks_AJAX_Test extends WordPoints_Points_AJAX_UnitTestC
 		$this->assertEquals( array( 'points' => '15' ), $instances['network_1'] );
 	}
 }
+
+// EOF

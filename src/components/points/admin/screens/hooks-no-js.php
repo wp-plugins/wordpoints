@@ -29,7 +29,7 @@ if ( isset( $_GET['addnew'] ) ) {
 
 	if ( ! $points_type ) {
 
-		wordpoints_show_admin_error( __( 'You need to add a points type before you can add any hooks.', 'wordpoints' ) );
+		wordpoints_show_admin_error( esc_html__( 'You need to add a points type before you can add any hooks.', 'wordpoints' ) );
 		return;
 	}
 
@@ -40,7 +40,7 @@ if ( isset( $_GET['addnew'] ) ) {
 
 		if ( ! $hook ) {
 
-			wordpoints_show_admin_error( __( 'Unable to add the points hook, please try again.', 'wordpoints' ) );
+			wordpoints_show_admin_error( esc_html__( 'Unable to add the points hook, please try again.', 'wordpoints' ) );
 			return;
 		}
 
@@ -52,7 +52,7 @@ if ( isset( $_GET['addnew'] ) ) {
 
 	} else {
 
-		wordpoints_show_admin_error( __( 'Unable to add the points hook, please try again.', 'wordpoints' ) );
+		wordpoints_show_admin_error( esc_html__( 'Unable to add the points hook, please try again.', 'wordpoints' ) );
 		return;
 	}
 
@@ -66,7 +66,7 @@ if ( isset( $_GET['addnew'] ) ) {
 
 	if ( ! $hook ) {
 
-		wordpoints_show_admin_error( __( 'The hook you have asked to edit could not be found. Please go back and try again.', 'wordpoints' ) );
+		wordpoints_show_admin_error( esc_html__( 'The hook you have asked to edit could not be found. Please go back and try again.', 'wordpoints' ) );
 		return;
 	}
 
@@ -82,16 +82,16 @@ $name = esc_html( $hook->get_name() );
 ?>
 
 <div class="wrap">
-	<h2><?php echo esc_html( __( 'Points Hooks', 'wordpoints' ) ); ?></h2>
+	<h2><?php esc_html_e( 'Points Hooks', 'wordpoints' ); ?></h2>
 	<div class="edithook" style="width:<?php echo absint( $hook->get_option( 'width' ) ); ?>px">
-		<h3><?php printf( _x( 'Hook %s', 'hook name', 'wordpoints' ), $name ); ?></h3>
+		<h3><?php echo esc_html( sprintf( _x( 'Hook %s', 'hook name', 'wordpoints' ), $name ) ); ?></h3>
 
 		<form action="admin.php?page=wordpoints_points_hooks" method="post">
 			<div class="hook-inside">
 				<?php $hook->form_callback( $number ); ?>
 			</div>
 
-			<p class="describe"><?php _e( 'Select the points type to attach this hook to.', 'wordpoints' ); ?></p>
+			<p class="describe"><?php esc_html_e( 'Select the points type to attach this hook to.', 'wordpoints' ); ?></p>
 			<div class="hook-position">
 				<label for="points_type" class="screen-reader-text">
 					<?php esc_html_e( 'Points Type:', 'wordpoints' ); ?>
@@ -113,7 +113,7 @@ $name = esc_html( $hook->get_name() );
 			<br />
 			<div class="hook-control-actions">
 				<?php if ( isset( $_GET['addnew'] ) ) : ?>
-					<a href="admin.php?page=wordpoints_points_hooks" class="button alignleft"><?php _e( 'Cancel', 'wordpoints' ); ?></a>
+					<a href="admin.php?page=wordpoints_points_hooks" class="button alignleft"><?php esc_html_e( 'Cancel', 'wordpoints' ); ?></a>
 				<?php else :
 						submit_button( _x( 'Delete', 'points hook', 'wordpoints' ), 'button alignleft', 'removehook', false );
 					endif;
@@ -133,4 +133,4 @@ $name = esc_html( $hook->get_name() );
 
 <?php
 
-// end of file /components/points/admin/screens/points-hooks-no-js.php
+// EOF

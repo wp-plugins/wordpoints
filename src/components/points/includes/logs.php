@@ -341,7 +341,7 @@ function wordpoints_get_points_logs_query( $points_type, $query_slug = 'default'
  *
  * @see wordpoints_get_points_logs_query()
  *
- * @param WordPoints_Points_Logs_Query $lologs_query The query to use to get the logs.
+ * @param WordPoints_Points_Logs_Query $logs_query The query to use to get the logs.
  * @param array                        $args {
  *        Display arguments.
  *
@@ -485,21 +485,21 @@ function wordpoints_show_points_logs( $logs_query, array $args = array() ) {
 		<thead>
 			<tr>
 				<?php if ( $args['show_users'] ) : ?>
-				<th scope="col"><?php echo $columns['user']; ?></th>
+				<th scope="col"><?php echo esc_html( $columns['user'] ); ?></th>
 				<?php endif; ?>
-				<th scope="col"><?php echo $columns['points']; ?></th>
-				<th scope="col"><?php echo $columns['description']; ?></th>
-				<th scope="col"><?php echo $columns['time']; ?></th>
+				<th scope="col"><?php echo esc_html( $columns['points'] ); ?></th>
+				<th scope="col"><?php echo esc_html( $columns['description'] ); ?></th>
+				<th scope="col"><?php echo esc_html( $columns['time'] ); ?></th>
 			</tr>
 		</thead>
 		<tfoot>
 			<tr>
 				<?php if ( $args['show_users'] ) : ?>
-				<th scope="col"><?php echo $columns['user']; ?></th>
+				<th scope="col"><?php echo esc_html( $columns['user'] ); ?></th>
 				<?php endif; ?>
-				<th scope="col"><?php echo $columns['points']; ?></th>
-				<th scope="col"><?php echo $columns['description']; ?></th>
-				<th scope="col"><?php echo $columns['time']; ?></th>
+				<th scope="col"><?php echo esc_html( $columns['points'] ); ?></th>
+				<th scope="col"><?php echo esc_html( $columns['description'] ); ?></th>
+				<th scope="col"><?php echo esc_html( $columns['time'] ); ?></th>
 			</tr>
 		</tfoot>
 		<tbody>
@@ -696,4 +696,4 @@ function wordpoints_clean_points_logs_cache( $user_id, $points, $points_type ) {
 }
 add_action( 'wordpoints_points_altered', 'wordpoints_clean_points_logs_cache', 10, 3 );
 
-// end of file /components/points/includes/logs.php
+// EOF

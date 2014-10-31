@@ -18,6 +18,47 @@
 include_once WORDPOINTS_DIR . 'components/points/admin/includes/ajax.php';
 
 /**
+ * Register admin scripts.
+ *
+ * @since 1.7.0
+ */
+function wordpoints_admin_register_scripts() {
+
+	$assets_url = WORDPOINTS_URL . '/components/points/admin/assets';
+
+	// CSS
+
+	wp_register_style(
+		'wordpoints-admin-points-hooks'
+		, $assets_url . '/css/hooks.css'
+		, array( 'dashicons' )
+		, WORDPOINTS_VERSION
+	);
+
+	// JS
+
+	wp_register_script(
+		'wordpoints-admin-points-hooks'
+		, $assets_url . '/js/hooks.js'
+		, array( 'jquery', 'jquery-ui-droppable', 'jquery-ui-sortable', 'jquery-ui-dialog' )
+		, WORDPOINTS_VERSION
+	);
+
+	wp_localize_script(
+		'wordpoints-admin-points-hooks'
+		, 'WordPointsHooksL10n'
+		, array(
+			'confirmDelete' => __( 'Are you sure that you want to delete this points type? This will delete all related logs and hooks.', 'wordpoints' )
+				. ' ' . __( 'Once a points type has been deleted, you cannot bring it back.', 'wordpoints' ),
+			'confirmTitle'  => __( 'Are you sure?', 'wordpoints' ),
+			'deleteText'    => __( 'Delete', 'wordpoints' ),
+			'cancelText'    => __( 'Cancel', 'wordpoints' ),
+		)
+	);
+}
+add_action( 'init', 'wordpoints_admin_register_scripts' );
+
+/**
  * Add admin screens to the administration menu.
  *
  * @since 1.0.0
@@ -32,7 +73,7 @@ function wordpoints_points_admin_menu() {
 	// Hooks page.
 	add_submenu_page(
 		$wordpoints_menu
-		,__( 'WordPoints - Points Hooks', 'wordpoints' )
+		,__( 'WordPoints — Points Hooks', 'wordpoints' )
 		,__( 'Points Hooks', 'wordpoints' )
 		,'manage_options'
 		,'wordpoints_points_hooks'
@@ -42,7 +83,7 @@ function wordpoints_points_admin_menu() {
 	// Logs page.
 	add_submenu_page(
 		$wordpoints_menu
-		,__( 'WordPoints - Points Logs', 'wordpoints' )
+		,__( 'WordPoints — Points Logs', 'wordpoints' )
 		,__( 'Points Logs', 'wordpoints' )
 		,'manage_options'
 		,'wordpoints_points_logs'
@@ -162,9 +203,9 @@ function wordpoints_admin_points_hooks_screen_options( $screen_options, $screen 
 			}
 
 			$screen_options = '<p><a id="access-on" href="' . esc_attr( esc_url( $url ) ) . 'on">'
-				. __( 'Enable accessibility mode', 'wordpoints' )
+				. esc_html__( 'Enable accessibility mode', 'wordpoints' )
 				. '</a><a id="access-off" href="' . esc_attr( esc_url( $url ) ) . 'off">'
-				. __( 'Disable accessibility mode', 'wordpoints' ) . "</a></p>\n";
+				. esc_html__( 'Disable accessibility mode', 'wordpoints' ) . "</a></p>\n";
 		break;
 	}
 
@@ -208,9 +249,9 @@ function wordpoints_points_hook_description_form( $has_form, $instance, $hook ) 
 	<?php endif; ?>
 
 	<div class="hook-instance-description">
-		<label for="<?php $hook->the_field_id( '_description' ); ?>"><?php _ex( 'Description (optional):', 'points hook', 'wordpoints' ); ?></label>
+		<label for="<?php $hook->the_field_id( '_description' ); ?>"><?php echo esc_html_x( 'Description (optional):', 'points hook', 'wordpoints' ); ?></label>
 		<input type="text" id="<?php $hook->the_field_id( '_description' ); ?>" name="<?php $hook->the_field_name( '_description' ); ?>" class="widefat" value="<?php echo esc_attr( $description ); ?>" />
-		<p class="description"><?php printf( _x( 'Default: %s', 'points hook description', 'wordpoints' ), $hook->get_description( 'generated' ) ); ?></p>
+		<p class="description"><?php echo esc_html( sprintf( _x( 'Default: %s', 'points hook description', 'wordpoints' ), $hook->get_description( 'generated' ) ) ); ?></p>
 	</div>
 
 	<br />
@@ -236,9 +277,9 @@ function wordpoints_points_profile_options( $user ) {
 
 		</table>
 
-		<h3><?php _e( 'WordPoints', 'wordpoints' ); ?></h3>
-		<p><?php _e( "If you would like to change the value for a type of points, enter the desired value in the text field, and check the checkbox beside it. If you don't check the checkbox, the change will not be saved. To provide a reason for the change, fill out the text field below.", 'wordpoints' ); ?></p>
-		<lable><?php _e( 'Reason', 'wordpoints' ); ?> <input type="text" name="wordpoints_set_reason" />
+		<h3><?php esc_html_e( 'WordPoints', 'wordpoints' ); ?></h3>
+		<p><?php esc_html_e( "If you would like to change the value for a type of points, enter the desired value in the text field, and check the checkbox beside it. If you don't check the checkbox, the change will not be saved. To provide a reason for the change, fill out the text field below.", 'wordpoints' ); ?></p>
+		<lable><?php esc_html_e( 'Reason', 'wordpoints' ); ?> <input type="text" name="wordpoints_set_reason" />
 		<table class="form-table">
 
 		<?php
@@ -255,10 +296,10 @@ function wordpoints_points_profile_options( $user ) {
 				<th scope="row"><?php echo esc_html( $type['name'] ); ?></th>
 				<td>
 					<input type="hidden" name="<?php echo esc_attr( "wordpoints_points_old-{$slug}" ); ?>" value="<?php echo esc_attr( $points ); ?>" />
-					<input type="text" name="<?php echo esc_attr( "wordpoints_points-{$slug}" ); ?>" value="<?php echo esc_attr( $points ); ?>" autocomplete="off" />
+					<input type="number" name="<?php echo esc_attr( "wordpoints_points-{$slug}" ); ?>" value="<?php echo esc_attr( $points ); ?>" autocomplete="off" />
 					<input type="checkbox" value="1" name="<?php echo esc_attr( "wordpoints_points_set-{$slug}" ); ?>" />
 					<?php /* translators: %s is the number of points. */ ?>
-					<span><?php printf( __( '(current: %s)', 'wordpoints' ), $points ); ?></span>
+					<span><?php printf( esc_html__( '(current: %s)', 'wordpoints' ), $points ); ?></span>
 				</td>
 			</tr>
 
@@ -354,12 +395,12 @@ function wordpoints_points_admin_settings() {
 	?>
 
 	<h3><?php esc_html_e( 'Default Points Type', 'wordpoints' ); ?></h3>
-	<p><?php _e( 'You can optionally set one points type to be the default. The default points type will, for example, be used by shortcodes when no type is specified. This is also useful if you only have one type of points.', 'wordpoints' ); ?></p>
+	<p><?php esc_html_e( 'You can optionally set one points type to be the default. The default points type will, for example, be used by shortcodes when no type is specified. This is also useful if you only have one type of points.', 'wordpoints' ); ?></p>
 	<table class="form-table">
 		<tbody>
 			<tr>
 				<th>
-					<label for="default_points_type"><?php _e( 'Default', 'wordpoints' ); ?></label>
+					<label for="default_points_type"><?php esc_html_e( 'Default', 'wordpoints' ); ?></label>
 				</th>
 				<td>
 					<?php wordpoints_points_types_dropdown( $dropdown_args ); ?>
@@ -397,4 +438,4 @@ function wordpoints_points_admin_settings_save() {
 }
 add_action( 'wordpoints_admin_settings_update', 'wordpoints_points_admin_settings_save' );
 
-// end of file /components/points/admin/admin.php
+// EOF

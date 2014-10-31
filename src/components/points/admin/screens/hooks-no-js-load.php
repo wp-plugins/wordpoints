@@ -7,6 +7,10 @@
  * @since 1.2.0
  */
 
+if ( ! current_user_can( 'manage_options' ) ) {
+	return;
+}
+
 if ( ! isset( $_POST['hook-id'] ) ) {
 	return;
 }
@@ -125,3 +129,6 @@ WordPoints_Points_Hooks::save_points_types_hooks( $points_types_hooks );
 
 wp_redirect( $redirect_url . '&message=0' );
 exit;
+
+// EOF
+
