@@ -2,9 +2,9 @@
 Contributors: jdgrimes
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=TPXS6B98HURLJ&lc=US&item_name=WordPoints&item_number=wordpressorg&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_LG%2egif%3aNonHosted
 Tags: points, awards, rewards, cubepoints, credits, gamify, multisite, ranks
-Requires at least: 3.9
-Tested up to: 4.2-alpha-31546
-Stable tag: 1.10.0
+Requires at least: 4.2
+Tested up to: 4.3-alpha-32280
+Stable tag: 2.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,7 +15,7 @@ Gamify your site with points.
 = Features =
 
 This plugin lets you create one or multiple types of points which you can use to
-reward your users by "hooking into" different user actions. WordPoints also includes
+reward your users by "hooking into" different user actions. It also includes
 a Ranks component, which lets you create ranks for your users based on how many
 points they have.
 
@@ -45,14 +45,19 @@ More features are always being planned, and you can check out the roadmap on the
 plugin website, [WordPoints.org](http://wordpoints.org/roadmap/).
 
 Also on the plugin's website, you can [browse the available extensions](http://wordpoints.org/modules/),
-called "modules". We've just added [a module that imports from CubePoints to WordPoints](http://wordpoints.org/modules/importer/).
+called "modules". There's [a module that imports from CubePoints to WordPoints](http://wordpoints.org/modules/importer/),
+one that [integrates with WooCommerce](http://wordpoints.org/modules/woocommerce/),
+and another that let's you [reset your users' points](http://wordpoints.org/modules/reset-points/).
+More are being added regularly, so take a look to see what is new.
 
-= Localization =
+= Translations =
 
-WordPoints is fully localizable, and translations are already available in several
+WordPoints is fully translatable, and translations are already available in several
 languages:
 
+* **(el) Greek**
 * **(es) Spanish** — Thanks to Andrew Kurtis of WebHostingHub.
+* **(lt) Lithuanian**
 * **(ja) Japanese** — Thanks to Raymond Calla.
 * **(pt_BR) Brazilian Portuguese** — Thanks goes to Gabriel Galvão ([@threadsgeneration](https://profiles.wordpress.org/threadsgeneration)).
 * **(zh_CN) Simplified Chinese** — Thanks to Jack Lee ([@suifengtec](https://profiles.wordpress.org/suifengtec)).
@@ -122,6 +127,80 @@ manage the ranks used on your site.
 5. An example of the `[wordpoints_how_to_get_points]` shortcode.
 
 == Changelog ==
+
+This plugin adheres to [Semantic Versioning](http://semver.org/).
+
+= 2.0.0 - 2015-06-30 - (~70 hrs) =
+
+##### Added
+
+- Support for emoji! 🎉✨  You can now use them in points logs and rank names (and
+other places, too).
+
+##### Changed
+
+- Many internal improvements. Great stuff is coming soon!
+
+##### Removed
+
+- Some old code was removed. This could break some modules, so if you are using a
+custom module or plugin that integrates with WordPoints, you should test before
+updating. WordPoints will attempt to detect incompatible modules when it is updated,
+and will deactivate them if necessary.
+
+##### Fixed
+
+- The modules-per-page setting on the Modules screen was not being saved. You could
+enter whatever value you wanted, but it wouldn't change a thing. You no longer have
+to feel like your site is ignoring you.
+- An error on the confirmation screen when attempting to delete a module. This would
+happen for most modules, preventing them from being deleted. Your modules are no
+longer permanent.
+- The points logs cache was not being cleaned in certain cases, like when a user was
+deleted. This would cause deleted logs to continue to display, if persistent caching
+was being used. Your days of being haunted by zombie points logs are over.
+- The `[wordpoints_user_rank]` shortcode wasn't using the default points type by
+default. You always had to use the `points_type` attribute. Now that your fingers
+won't be getting that extra exercise from typing, you may want to take them to the
+gym.
+- The loading spinner was not displaying on the Ranks screen while a rank was being
+saved. It's now back, so you can stare at the center of it and see if you get
+mesmerized.
+
+= 1.10.4 — (~2 hrs) =
+* Fixed: Users would see 0 instead of the correct number of points on the profile
+admin screen.
+
+= 1.10.3 - (~10 hrs) =
+* Fixed: Closes 2 potential SQL injection vulnerabilities in the points logs query
+code. These are not exploitable within WordPoints itself, however, it is possible
+that they could be exploited through custom code if it passes untrusted data to
+the `points__compare` or `text__compare` query args.
+* Fixed: Avoids the potential for directory listing of the modules directory on
+improperly configured servers.
+* Fixed: Closes any potential XSS vulnerabilities through developer error messages
+on poorly configured installs (i.e., with `WP_DEBUG` enabled).
+
+= 1.10.2 — (~6 hrs) =
+* Fixed: There was a bug on multisite causing users from all sites to be displayed in
+the top users table, instead of just users from the current site. Your users will now
+stay out of each others leader boards.
+* Fixed: There was a bug in the ranks component which would cause a user to be
+promoted two ranks when they should have only been promoted one. Your users will no
+longer cut rank on you.
+* Fixed: There was a bug in the top users table that caused users who hadn't been
+awarded any points yet to be ignored, even when they should have been displayed. Your
+points-less users will no longer have to feel left out.
+* Fixed: There was another bug in the top users table that would only affect sites
+where users are allowed to have negative points. Any users with negative points would
+be displayed above users who had never been awarded any points.
+* Fixed: There was another bug in the top users table (yes, really!), for those using
+persistent caching. The cache for the top users wouldn't be cleared when a user
+registered or was deleted. This could cause the table to become stale in some cases.
+You no longer have to feel nostalgia when you view the leader board.
+
+= 1.10.1 — (~1/2 hr) =
+* Fixed: The My Points widget no longer displays points logs to logged-out users.
 
 = 1.10.0 — (~20 hrs) =
 * Requires: WordPress 3.9+
@@ -262,6 +341,28 @@ choosing the points type to add it to.
 * Initial release
 
 == Upgrade Notice ==
+= 2.0.0 =
+* This is a breaking update that includes emoji support, some bug fixes, and many
+internal code improvements in preparation for new features. Some old code has been
+removed, so you should test before upgrading if you are using your own custom
+modules.
+
+= 1.10.4 =
+* Fixes a bug that caused the number of points a non-admin user has to always be
+displayed to them as 0 on the profile screen.
+
+= 1.10.3 =
+* This is a security-fix release that addresses three security-related issues. One
+vulnerability is not exploitable by default, and the other two issues only occur on
+poorly configured servers. All users are still encouraged to upgrade, just in case.
+
+= 1.10.2 =
+* Fixes some bugs in the top users table, and also one causing users to be promoted
+to the wrong rank.
+
+= 1.10.1 =
+* Fixes a bug that caused the My Points widget to display points logs even when the
+user was not logged in.
 
 = 1.10.0 =
 * This is a minor release which contains a few small improvements and several fixed
