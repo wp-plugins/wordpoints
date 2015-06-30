@@ -84,11 +84,13 @@ class WordPoints_Module_Installer extends WP_Upgrader {
 		$modules_dir = wordpoints_modules_dir();
 
 		// Attempt to create the /wp-content/wordpoints-modules directory if needed.
-		if (
-			! $wp_filesystem->exists( $modules_dir )
-			&& ! $wp_filesystem->mkdir( $modules_dir, FS_CHMOD_DIR )
-		) {
-			return new WP_Error( 'mkdir_failed_modules', $this->strings['mkdir_failed_modules'], $modules_dir );
+		if ( ! $wp_filesystem->exists( $modules_dir ) ) {
+
+			if ( $wp_filesystem->mkdir( $modules_dir, FS_CHMOD_DIR ) ) {
+				$wp_filesystem->put_contents( $modules_dir . '/index.php', '<?php // Gold is silent.' );
+			} else {
+				return new WP_Error( 'mkdir_failed_modules', $this->strings['mkdir_failed_modules'], $modules_dir );
+			}
 		}
 
 		$wp_theme_directories[] = $module_dir = wordpoints_modules_dir();
@@ -119,7 +121,7 @@ class WordPoints_Module_Installer extends WP_Upgrader {
 
 		add_filter( 'upgrader_source_selection', array( $this, 'check_package' ) );
 
-		$this->run(
+		$result = $this->run(
 			array(
 				'package'           => $package,
 				'destination'       => wordpoints_modules_dir(),
@@ -130,6 +132,10 @@ class WordPoints_Module_Installer extends WP_Upgrader {
 		);
 
 		remove_filter( 'upgrader_source_selection', array( $this, 'check_package' ) );
+
+		if ( ! $result || is_wp_error( $result ) ) {
+			return $result;
+		}
 
 		if ( ! $this->result || is_wp_error( $this->result ) ) {
 			return $this->result;
